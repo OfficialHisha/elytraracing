@@ -1,0 +1,137 @@
+package com.hishacorp.elytraracing;
+
+import com.hishacorp.elytraracing.gui.screens.SetupGui;
+import com.hishacorp.elytraracing.input.events.CreateRaceInputEvent;
+import com.hishacorp.elytraracing.input.events.DeleteRaceInputEvent;
+import com.hishacorp.elytraracing.util.WorldUtil;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandExecutor;
+import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
+
+import static com.hishacorp.elytraracing.Permissions.*;
+
+public class ERCommand implements CommandExecutor {
+
+    private final Elytraracing plugin;
+
+    public ERCommand(Elytraracing plugin) {
+        this.plugin = plugin;
+    }
+
+    @Override
+    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+        if (args.length == 0) {
+            sender.sendMessage("§eUsage: /er <setup|tool|create|delete|time|setspawn|resetstats|join|leave>");
+            return true;
+        }
+
+        String sub = args[0].toLowerCase();
+
+        switch (sub) {
+            case "setup" -> {
+                if (!sender.hasPermission(SETUP.getPermission())) {
+                    sender.sendMessage("§cYou do not have permission to use this command");
+                    return true;
+                }
+
+                if (!(sender instanceof Player player)) {
+                    return true;
+                }
+
+                plugin.getGuiManager().openGui(player, new SetupGui(plugin));
+            }
+
+            case "tool" -> {
+                if (!sender.hasPermission(TOOL.getPermission())) {
+                    sender.sendMessage("§cYou do not have permission to use this command");
+                    return true;
+                }
+                sender.sendMessage("Giving ring tool...");
+            }
+
+            case "create" -> {
+                if (!sender.hasPermission(CREATE.getPermission())) {
+                    sender.sendMessage("§cYou do not have permission to use this command");
+                    return true;
+                }
+                if (args.length < 2) {
+                    sender.sendMessage("§cUsage: /er create <name>");
+                    return true;
+                }
+
+                if (sender instanceof Player player) {
+                    plugin.getRaceManager().createRace(new CreateRaceInputEvent(player, args[1]));
+                }
+            }
+
+            case "delete" -> {
+                if (!sender.hasPermission(DELETE.getPermission())) {
+                    sender.sendMessage("§cYou do not have permission to use this command");
+                    return true;
+                }
+                if (args.length < 2) {
+                    sender.sendMessage("§cUsage: /er delete <name>");
+                    return true;
+                }
+                if (sender instanceof Player player) {
+                    plugin.getRaceManager().deleteRace(new DeleteRaceInputEvent(player, args[1]));
+                }
+            }
+
+            case "time" -> {
+                if (!sender.hasPermission(TIME.getPermission())) {
+                    sender.sendMessage("§cYou do not have permission to use this command");
+                    return true;
+                }
+                if (args.length < 2) {
+                    sender.sendMessage("§cUsage: /er time <seconds>");
+                    return true;
+                }
+                sender.sendMessage("§aSetting finish time to " + args[1]);
+            }
+
+            case "setspawn" -> {
+                if (!sender.hasPermission(SETSPAWN.getPermission())) {
+                    sender.sendMessage("§cYou do not have permission to use this command");
+                    return true;
+                }
+                if (!(sender instanceof Player player)) {
+                    sender.sendMessage("Only players can use this command.");
+                    return true;
+                }
+
+                WorldUtil.setWorldSpawnFromPlayerLocation(player);
+
+                player.sendMessage("§aSpawn set to your location.");
+            }
+
+            case "resetstats" -> {
+                if (!sender.hasPermission(STATS.getPermission())) {
+                    sender.sendMessage("§cYou do not have permission to use this command");
+                    return true;
+                }
+                if (args.length < 2) {
+                    sender.sendMessage("§cUsage: /er resetstats <player|race>");
+                    return true;
+                }
+                sender.sendMessage("Resetting stats for " + args[1]);
+            }
+
+            case "join" -> {
+                if (args.length < 2) {
+                    sender.sendMessage("§cUsage: /er join <race>");
+                    return true;
+                }
+                sender.sendMessage("Joining race " + args[1]);
+            }
+
+            case "leave" -> sender.sendMessage("Leaving race...");
+
+            default -> sender.sendMessage("§cUnknown subcommand.");
+        }
+
+        return true;
+    }
+}
+

@@ -1,0 +1,24 @@
+name: elytraracing
+version: '0.1.0-SNAPSHOT'
+main: com.hishacorp.elytraracing.Elytraracing
+api-version: '1.21'
+prefix: elytraracing
+authors: [ Hisha ]
+description: An elytra racing mode for Minecraft
+permissions:
+  elytraracing.admin:
+    description: "Admin permissions for configuring the Elytra Racing plugin"
+    default: op
+    children:
+      elytraracing.admin.setup: true
+      elytraracing.admin.tool: true
+      elytraracing.admin.create: true
+      elytraracing.admin.delete: true
+      elytraracing.admin.time: true
+      elytraracing.admin.setspawn: true
+      elytraracing.admin.stats: true
+commands:
+  er:
+    description: "Command for interacting with the Elytra Racing plugin"
+    usage: "/er <setup|tool|create|delete|time|setspawn|resetstats|join|leave>"
+    aliases: [elytraracing]

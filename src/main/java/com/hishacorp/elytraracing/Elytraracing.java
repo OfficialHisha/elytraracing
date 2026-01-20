@@ -3,6 +3,8 @@ package com.hishacorp.elytraracing;
 import com.hishacorp.elytraracing.gui.GuiManager;
 import com.hishacorp.elytraracing.input.ChatInputListener;
 import com.hishacorp.elytraracing.input.InputManager;
+import com.hishacorp.elytraracing.listeners.FireworkUseListener;
+import com.hishacorp.elytraracing.listeners.PlayerQuitListener;
 import com.hishacorp.elytraracing.persistance.DatabaseManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -17,6 +19,8 @@ public class Elytraracing extends JavaPlugin {
 
     @Override
     public void onEnable() {
+        saveDefaultConfig();
+
         guiManager = new GuiManager(this);
         databaseManager = new DatabaseManager(this);
         inputManager = new InputManager(this, guiManager);
@@ -31,8 +35,12 @@ public class Elytraracing extends JavaPlugin {
             return;
         }
 
+        raceManager.loadRaces();
+
         getCommand("er").setExecutor(new ERCommand(this));
         getServer().getPluginManager().registerEvents(new ChatInputListener(this), this);
+        getServer().getPluginManager().registerEvents(new PlayerQuitListener(this), this);
+        getServer().getPluginManager().registerEvents(new FireworkUseListener(this), this);
         getLogger().info("ElytraRacing enabled!");
     }
 

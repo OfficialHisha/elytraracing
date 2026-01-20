@@ -82,7 +82,7 @@ public class Race {
         return inProgress;
     }
 
-    public void setInProgress(boolean inProgress) {
+    private void setInProgress(boolean inProgress) {
         this.inProgress = inProgress;
     }
 

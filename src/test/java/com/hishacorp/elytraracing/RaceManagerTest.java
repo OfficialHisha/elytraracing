@@ -99,7 +99,7 @@ public class RaceManagerTest {
     public void testCannotDeleteRaceInProgress() {
         // Given
         raceManager.createRace(new com.hishacorp.elytraracing.input.events.CreateRaceInputEvent(player, "test-race"));
-        raceManager.getRace("test-race").get().setInProgress(true);
+        raceManager.getRace("test-race").get().start();
 
         // When
         raceManager.deleteRace(new com.hishacorp.elytraracing.input.events.DeleteRaceInputEvent(player, "test-race"));

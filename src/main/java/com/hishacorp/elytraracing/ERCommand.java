@@ -30,6 +30,10 @@ public class ERCommand implements CommandExecutor {
 
         switch (sub) {
             case "start" -> {
+                if (!sender.hasPermission(START.getPermission())) {
+                    sender.sendMessage("§cYou do not have permission to use this command");
+                    return true;
+                }
                 if (args.length < 2) {
                     sender.sendMessage("§cUsage: /er start <race>");
                     return true;
@@ -37,6 +41,10 @@ public class ERCommand implements CommandExecutor {
                 plugin.getRaceManager().startRace(args[1]);
             }
             case "end" -> {
+                if (!sender.hasPermission(END.getPermission())) {
+                    sender.sendMessage("§cYou do not have permission to use this command");
+                    return true;
+                }
                 if (args.length < 2) {
                     sender.sendMessage("§cUsage: /er end <race>");
                     return true;

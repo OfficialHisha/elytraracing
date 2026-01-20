@@ -60,8 +60,9 @@ public class ERCommand implements CommandExecutor {
                     return true;
                 }
 
-                plugin.getToolManager().giveTool(player, args[1]);
-                player.sendMessage("§aYou have been given the ring tool for race " + args[1] + ".");
+                String raceName = args[1].toLowerCase();
+                plugin.getToolManager().giveTool(player, raceName);
+                player.sendMessage("§aYou have been given the ring tool for race " + raceName + ".");
             }
 
             case "create" -> {
@@ -75,7 +76,7 @@ public class ERCommand implements CommandExecutor {
                 }
 
                 if (sender instanceof Player player) {
-                    plugin.getRaceManager().createRace(new CreateRaceInputEvent(player, args[1]));
+                    plugin.getRaceManager().createRace(new CreateRaceInputEvent(player, args[1].toLowerCase()));
                 }
             }
 
@@ -89,7 +90,7 @@ public class ERCommand implements CommandExecutor {
                     return true;
                 }
                 if (sender instanceof Player player) {
-                    plugin.getRaceManager().deleteRace(new DeleteRaceInputEvent(player, args[1]));
+                    plugin.getRaceManager().deleteRace(new DeleteRaceInputEvent(player, args[1].toLowerCase()));
                 }
             }
 

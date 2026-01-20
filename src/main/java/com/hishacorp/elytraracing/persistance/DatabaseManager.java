@@ -83,7 +83,7 @@ public class DatabaseManager {
     public synchronized int getRaceId(String raceName) throws SQLException {
         try (var ps = connection.prepareStatement(
                 "SELECT id FROM races WHERE name = ?")) {
-            ps.setString(1, raceName);
+            ps.setString(1, raceName.toLowerCase());
             var rs = ps.executeQuery();
             if (rs.next()) {
                 return rs.getInt("id");
@@ -106,7 +106,7 @@ public class DatabaseManager {
         try {
             try (var ps = connection.prepareStatement(
                     "SELECT 1 FROM races WHERE name = ?")) {
-                ps.setString(1, raceName);
+                ps.setString(1, raceName.toLowerCase());
                 return ps.executeQuery().next();
             }
         } catch (SQLException e) {
@@ -118,7 +118,7 @@ public class DatabaseManager {
     public synchronized void createRace(String raceName) throws SQLException {
         try (var ps = connection.prepareStatement(
                 "INSERT INTO races (name) VALUES (?)")) {
-            ps.setString(1, raceName);
+            ps.setString(1, raceName.toLowerCase());
             ps.executeUpdate();
         }
     }
@@ -126,7 +126,7 @@ public class DatabaseManager {
     public synchronized int deleteRace(String raceName) throws SQLException {
         try (var ps = connection.prepareStatement(
                 "DELETE FROM races WHERE name = ?")) {
-            ps.setString(1, raceName);
+            ps.setString(1, raceName.toLowerCase());
             return ps.executeUpdate();
         }
     }

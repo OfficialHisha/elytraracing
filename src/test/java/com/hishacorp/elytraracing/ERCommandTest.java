@@ -3,8 +3,7 @@ package com.hishacorp.elytraracing;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import org.mockbukkit.mockbukkit.MockBukkit;
 import org.mockbukkit.mockbukkit.ServerMock;
 import org.mockbukkit.mockbukkit.entity.PlayerMock;
@@ -63,5 +62,28 @@ public class ERCommandTest {
     public void testToolCommandNoRace() {
         player.performCommand("er tool");
         player.assertSaid("§cUsage: /er tool <race>");
+    }
+
+    @Test
+    public void testCaseInsensitivity() {
+        // Test race creation
+        player.performCommand("er create MyRace");
+        player.assertSaid("§aRace 'myrace' created!");
+
+        // Test tool command
+        player.performCommand("er tool myrace");
+        player.assertSaid("§aYou have been given the ring tool for race myrace.");
+        assertNotNull(player.getInventory().getItemInMainHand());
+        player.getInventory().clear(); // Clean up for the next command
+
+        // Test tool command with different casing
+        player.performCommand("er tool MyRace");
+        player.assertSaid("§aYou have been given the ring tool for race myrace.");
+        assertNotNull(player.getInventory().getItemInMainHand());
+        player.getInventory().clear();
+
+        // Test race deletion
+        player.performCommand("er delete MYRACE");
+        player.assertSaid("§aRace 'myrace' deleted!");
     }
 }

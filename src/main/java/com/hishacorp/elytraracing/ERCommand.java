@@ -49,7 +49,7 @@ public class ERCommand implements CommandExecutor {
                     sender.sendMessage("§cUsage: /er end <race>");
                     return true;
                 }
-                plugin.getRaceManager().endRace(args[1]);
+                plugin.getRaceManager().endRace(sender, args[1]);
             }
             case "setup" -> {
                 if (!sender.hasPermission(SETUP.getPermission())) {

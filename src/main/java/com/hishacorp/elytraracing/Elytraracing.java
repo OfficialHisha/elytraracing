@@ -17,6 +17,8 @@ public class Elytraracing extends JavaPlugin {
 
     @Override
     public void onEnable() {
+        saveDefaultConfig();
+
         guiManager = new GuiManager(this);
         databaseManager = new DatabaseManager(this);
         inputManager = new InputManager(this, guiManager);
@@ -31,8 +33,12 @@ public class Elytraracing extends JavaPlugin {
             return;
         }
 
+        raceManager.loadRaces();
+
         getCommand("er").setExecutor(new ERCommand(this));
         getServer().getPluginManager().registerEvents(new ChatInputListener(this), this);
+        getServer().getPluginManager().registerEvents(new com.hishacorp.elytraracing.listeners.PlayerQuitListener(this), this);
+        getServer().getPluginManager().registerEvents(new com.hishacorp.elytraracing.listeners.PlayerJoinListener(this), this);
         getLogger().info("ElytraRacing enabled!");
     }
 

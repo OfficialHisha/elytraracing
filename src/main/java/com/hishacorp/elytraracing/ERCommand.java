@@ -29,6 +29,20 @@ public class ERCommand implements CommandExecutor {
         String sub = args[0].toLowerCase();
 
         switch (sub) {
+            case "start" -> {
+                if (args.length < 2) {
+                    sender.sendMessage("§cUsage: /er start <race>");
+                    return true;
+                }
+                plugin.getRaceManager().startRace(args[1]);
+            }
+            case "end" -> {
+                if (args.length < 2) {
+                    sender.sendMessage("§cUsage: /er end <race>");
+                    return true;
+                }
+                plugin.getRaceManager().endRace(args[1]);
+            }
             case "setup" -> {
                 if (!sender.hasPermission(SETUP.getPermission())) {
                     sender.sendMessage("§cYou do not have permission to use this command");
@@ -123,10 +137,16 @@ public class ERCommand implements CommandExecutor {
                     sender.sendMessage("§cUsage: /er join <race>");
                     return true;
                 }
-                sender.sendMessage("Joining race " + args[1]);
+                if (sender instanceof Player player) {
+                    plugin.getRaceManager().joinRace(player, args[1]);
+                }
             }
 
-            case "leave" -> sender.sendMessage("Leaving race...");
+            case "leave" -> {
+                if (sender instanceof Player player) {
+                    plugin.getRaceManager().leaveRace(player);
+                }
+            }
 
             default -> sender.sendMessage("§cUnknown subcommand.");
         }

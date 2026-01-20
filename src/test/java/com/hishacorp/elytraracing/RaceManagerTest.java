@@ -54,4 +54,57 @@ public class RaceManagerTest {
         raceManager.deleteRace(new com.hishacorp.elytraracing.input.events.DeleteRaceInputEvent(player, "non_existent_race"));
         assertFalse(plugin.getDatabaseManager().raceExists("non_existent_race"));
     }
+
+    @Test
+    public void testPlayerCannotJoinMultipleRaces() {
+        // Given
+        raceManager.createRace(new com.hishacorp.elytraracing.input.events.CreateRaceInputEvent(player, "test-race-1"));
+        raceManager.createRace(new com.hishacorp.elytraracing.input.events.CreateRaceInputEvent(player, "test-race-2"));
+
+        // When
+        raceManager.joinRace(player, "test-race-1");
+        raceManager.joinRace(player, "test-race-2");
+
+        // Then
+        assertTrue(raceManager.getRace("test-race-1").get().getPlayers().contains(player.getUniqueId()));
+        assertFalse(raceManager.getRace("test-race-2").get().getPlayers().contains(player.getUniqueId()));
+    }
+
+    @Test
+    public void testDeleteRaceRemovesFromMemory() {
+        // Given
+        raceManager.createRace(new com.hishacorp.elytraracing.input.events.CreateRaceInputEvent(player, "test-race"));
+
+        // When
+        raceManager.deleteRace(new com.hishacorp.elytraracing.input.events.DeleteRaceInputEvent(player, "test-race"));
+
+        // Then
+        assertTrue(raceManager.getRace("test-race").isEmpty());
+    }
+
+    @Test
+    public void testCannotDeleteRaceWithPlayers() {
+        // Given
+        raceManager.createRace(new com.hishacorp.elytraracing.input.events.CreateRaceInputEvent(player, "test-race"));
+        raceManager.joinRace(player, "test-race");
+
+        // When
+        raceManager.deleteRace(new com.hishacorp.elytraracing.input.events.DeleteRaceInputEvent(player, "test-race"));
+
+        // Then
+        assertTrue(raceManager.getRace("test-race").isPresent());
+    }
+
+    @Test
+    public void testCannotDeleteRaceInProgress() {
+        // Given
+        raceManager.createRace(new com.hishacorp.elytraracing.input.events.CreateRaceInputEvent(player, "test-race"));
+        raceManager.getRace("test-race").get().setInProgress(true);
+
+        // When
+        raceManager.deleteRace(new com.hishacorp.elytraracing.input.events.DeleteRaceInputEvent(player, "test-race"));
+
+        // Then
+        assertTrue(raceManager.getRace("test-race").isPresent());
+    }
 }

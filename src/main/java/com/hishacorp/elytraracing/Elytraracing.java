@@ -38,7 +38,6 @@ public class Elytraracing extends JavaPlugin {
         getCommand("er").setExecutor(new ERCommand(this));
         getServer().getPluginManager().registerEvents(new ChatInputListener(this), this);
         getServer().getPluginManager().registerEvents(new com.hishacorp.elytraracing.listeners.PlayerQuitListener(this), this);
-        getServer().getPluginManager().registerEvents(new com.hishacorp.elytraracing.listeners.PlayerJoinListener(this), this);
         getServer().getPluginManager().registerEvents(new com.hishacorp.elytraracing.listeners.FireworkUseListener(this), this);
         getLogger().info("ElytraRacing enabled!");
     }

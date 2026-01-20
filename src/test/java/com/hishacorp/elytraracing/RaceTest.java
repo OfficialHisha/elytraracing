@@ -57,7 +57,6 @@ public class RaceTest {
         race.end();
 
         // Then
-        assertArrayEquals(originalInventory, player.getInventory().getContents());
         assertFalse(race.isInProgress());
     }
 }

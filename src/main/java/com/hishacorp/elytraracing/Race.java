@@ -67,14 +67,6 @@ public class Race {
         cooldownTasks.values().forEach(BukkitTask::cancel);
         cooldownTasks.clear();
 
-        for (UUID playerUUID : players) {
-            Player player = Bukkit.getPlayer(playerUUID);
-            if (player != null) {
-                player.getInventory().setContents(plugin.getDatabaseManager().loadInventory(playerUUID));
-                plugin.getDatabaseManager().deleteInventory(playerUUID);
-            }
-        }
-
         players.clear();
     }
 
@@ -96,8 +88,6 @@ public class Race {
 
     public void addPlayer(Player player) {
         players.add(player.getUniqueId());
-        plugin.getDatabaseManager().saveInventory(player.getUniqueId(), player.getInventory().getContents());
-        player.getInventory().clear();
     }
 
     public void removePlayer(Player player) {
@@ -107,7 +97,5 @@ public class Race {
         }
 
         players.remove(player.getUniqueId());
-        player.getInventory().setContents(plugin.getDatabaseManager().loadInventory(player.getUniqueId()));
-        plugin.getDatabaseManager().deleteInventory(player.getUniqueId());
     }
 }

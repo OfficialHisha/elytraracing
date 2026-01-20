@@ -43,6 +43,7 @@ public class RaceTest {
         race.start();
 
         // Then
+        player.assertSaid("§aThe race has started!");
         assertNotNull(player.getInventory().getChestplate());
         assertEquals(Material.ELYTRA, player.getInventory().getChestplate().getType());
         assertTrue(player.getInventory().contains(Material.FIREWORK_ROCKET));
@@ -58,5 +59,6 @@ public class RaceTest {
 
         // Then
         assertFalse(race.isInProgress());
+        player.assertSaid("§aThe race has ended!");
     }
 }

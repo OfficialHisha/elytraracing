@@ -35,6 +35,7 @@ public class Race {
                 continue;
             }
 
+            player.sendMessage("§aThe race has started!");
             PlayerInventory inventory = player.getInventory();
             inventory.setChestplate(new ItemStack(Material.ELYTRA));
             inventory.addItem(new ItemStack(Material.FIREWORK_ROCKET));
@@ -66,6 +67,13 @@ public class Race {
 
         cooldownTasks.values().forEach(BukkitTask::cancel);
         cooldownTasks.clear();
+
+        for (UUID playerUUID : players) {
+            Player player = Bukkit.getPlayer(playerUUID);
+            if (player != null) {
+                player.sendMessage("§aThe race has ended!");
+            }
+        }
 
         players.clear();
     }

@@ -75,10 +75,12 @@ public class RaceManager {
     }
 
     public void endRace(org.bukkit.command.CommandSender sender, String raceName) {
-        getRace(raceName).ifPresentOrElse(race -> {
-            race.end();
+        if (getRace(raceName).isPresent()) {
+            getRace(raceName).get().end();
             sender.sendMessage("§aRace '" + raceName + "' ended.");
-        }, () -> sender.sendMessage("§cRace '" + raceName + "' not found."));
+        } else {
+            sender.sendMessage("§cRace '" + raceName + "' not found.");
+        }
     }
 
     public void prepareCreateRace(InventoryClickEvent event) {

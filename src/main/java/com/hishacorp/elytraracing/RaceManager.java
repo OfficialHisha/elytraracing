@@ -32,6 +32,10 @@ public class RaceManager {
         return races.stream().filter(race -> race.getName().equalsIgnoreCase(name)).findFirst();
     }
 
+    public Optional<Race> getRace(Player player) {
+        return races.stream().filter(race -> race.getPlayers().contains(player.getUniqueId())).findFirst();
+    }
+
     public List<Race> getRaces() {
         return races;
     }

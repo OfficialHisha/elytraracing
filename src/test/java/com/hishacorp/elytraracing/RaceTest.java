@@ -49,6 +49,7 @@ public class RaceTest {
 
         // Verify replenishment
         player.getInventory().removeItem(new ItemStack(Material.FIREWORK_ROCKET, 1));
+        race.startFireworkCooldown(player);
         server.getScheduler().performTicks(plugin.getConfig().getLong("firework-replenishment-cooldown") * 20);
         assertTrue(player.getInventory().contains(Material.FIREWORK_ROCKET));
 

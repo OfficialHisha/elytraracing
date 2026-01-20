@@ -18,8 +18,8 @@ public class Race {
     private final Elytraracing plugin;
     private final String name;
     private final List<UUID> players = new ArrayList<>();
+    private final Map<UUID, BukkitTask> cooldownTasks = new HashMap<>();
     private boolean inProgress = false;
-    private BukkitTask replenishmentTask;
 
     public Race(Elytraracing plugin, String name) {
         this.plugin = plugin;
@@ -39,26 +39,33 @@ public class Race {
             inventory.setChestplate(new ItemStack(Material.ELYTRA));
             inventory.addItem(new ItemStack(Material.FIREWORK_ROCKET));
         }
+    }
+
+    public void startFireworkCooldown(Player player) {
+        // Cancel any existing task for this player
+        if (cooldownTasks.containsKey(player.getUniqueId())) {
+            cooldownTasks.get(player.getUniqueId()).cancel();
+        }
 
         long cooldown = plugin.getConfig().getLong("firework-replenishment-cooldown", 5) * 20;
-        replenishmentTask = Bukkit.getScheduler().runTaskTimer(plugin, () -> {
-            for (UUID playerUUID : players) {
-                Player player = Bukkit.getPlayer(playerUUID);
-                if (player != null && !player.getInventory().contains(Material.FIREWORK_ROCKET)) {
-                    if (player.getInventory().firstEmpty() != -1) {
-                        player.getInventory().addItem(new ItemStack(Material.FIREWORK_ROCKET));
-                    }
+
+        BukkitTask task = Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            if (player.isOnline() && getPlayers().contains(player.getUniqueId())) {
+                if (player.getInventory().firstEmpty() != -1) {
+                    player.getInventory().addItem(new ItemStack(Material.FIREWORK_ROCKET));
                 }
             }
-        }, cooldown, cooldown);
+            cooldownTasks.remove(player.getUniqueId());
+        }, cooldown);
+
+        cooldownTasks.put(player.getUniqueId(), task);
     }
 
     public void end() {
         setInProgress(false);
 
-        if (replenishmentTask != null) {
-            replenishmentTask.cancel();
-        }
+        cooldownTasks.values().forEach(BukkitTask::cancel);
+        cooldownTasks.clear();
 
         for (UUID playerUUID : players) {
             Player player = Bukkit.getPlayer(playerUUID);
@@ -94,6 +101,11 @@ public class Race {
     }
 
     public void removePlayer(Player player) {
+        if (cooldownTasks.containsKey(player.getUniqueId())) {
+            cooldownTasks.get(player.getUniqueId()).cancel();
+            cooldownTasks.remove(player.getUniqueId());
+        }
+
         players.remove(player.getUniqueId());
         player.getInventory().setContents(plugin.getDatabaseManager().loadInventory(player.getUniqueId()));
         plugin.getDatabaseManager().deleteInventory(player.getUniqueId());

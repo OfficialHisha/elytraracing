@@ -55,7 +55,7 @@ public class DatabaseManager {
         }
     }
 
-    public Connection getConnection() {
+    private Connection getConnection() {
         return connection;
     }
 
@@ -80,6 +80,22 @@ public class DatabaseManager {
         } catch (SQLException e) {
             plugin.getLogger().severe("Failed to check if race exists: " + e.getMessage());
             return false;
+        }
+    }
+
+    public synchronized void createRace(String raceName) throws SQLException {
+        try (var ps = connection.prepareStatement(
+                "INSERT INTO races (name) VALUES (?)")) {
+            ps.setString(1, raceName);
+            ps.executeUpdate();
+        }
+    }
+
+    public synchronized int deleteRace(String raceName) throws SQLException {
+        try (var ps = connection.prepareStatement(
+                "DELETE FROM races WHERE name = ?")) {
+            ps.setString(1, raceName);
+            return ps.executeUpdate();
         }
     }
 }

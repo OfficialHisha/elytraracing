@@ -55,10 +55,6 @@ public class DatabaseManager {
         }
     }
 
-    private Connection getConnection() {
-        return connection;
-    }
-
     public void close() {
         try {
             if (connection != null && !connection.isClosed()) {
@@ -71,8 +67,7 @@ public class DatabaseManager {
 
     public boolean raceExists(String raceName) {
         try {
-            var conn = getConnection();
-            try (var ps = conn.prepareStatement(
+            try (var ps = connection.prepareStatement(
                     "SELECT 1 FROM races WHERE name = ?")) {
                 ps.setString(1, raceName);
                 return ps.executeQuery().next();

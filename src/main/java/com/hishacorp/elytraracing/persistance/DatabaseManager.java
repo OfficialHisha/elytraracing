@@ -68,4 +68,18 @@ public class DatabaseManager {
             plugin.getLogger().severe("Failed to close database: " + e.getMessage());
         }
     }
+
+    public boolean raceExists(String raceName) {
+        try {
+            var conn = getConnection();
+            try (var ps = conn.prepareStatement(
+                    "SELECT 1 FROM races WHERE name = ?")) {
+                ps.setString(1, raceName);
+                return ps.executeQuery().next();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
 }

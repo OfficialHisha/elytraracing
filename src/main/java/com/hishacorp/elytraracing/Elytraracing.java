@@ -8,7 +8,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.sql.SQLException;
 
-public final class Elytraracing extends JavaPlugin {
+public class Elytraracing extends JavaPlugin {
 
     private GuiManager guiManager;
     private DatabaseManager databaseManager;

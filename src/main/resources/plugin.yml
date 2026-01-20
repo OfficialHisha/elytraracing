@@ -5,6 +5,10 @@ api-version: '1.21'
 prefix: elytraracing
 authors: [ Hisha ]
 description: An elytra racing mode for Minecraft
+softdepend:
+  - PlaceholderAPI
+  - DecentHolograms
+  - SimpleScore
 permissions:
   elytraracing.admin:
     description: "Admin permissions for configuring the Elytra Racing plugin"

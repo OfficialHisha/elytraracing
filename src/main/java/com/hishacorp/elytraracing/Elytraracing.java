@@ -73,4 +73,8 @@ public class Elytraracing extends JavaPlugin {
     public ScoreboardManager getScoreboardManager() {
         return scoreboardManager;
     }
+
+    public void setScoreboardManager(ScoreboardManager scoreboardManager) {
+        this.scoreboardManager = scoreboardManager;
+    }
 }

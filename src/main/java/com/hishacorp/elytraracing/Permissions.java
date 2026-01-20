@@ -7,7 +7,8 @@ public enum Permissions {
     DELETE("elytraracing.admin.delete"),
     TIME("elytraracing.admin.time"),
     SETSPAWN("elytraracing.admin.setspawn"),
-    STATS("elytraracing.admin.stats");
+    STATS("elytraracing.admin.stats"),
+    RINGS("elytraracing.admin.rings");
 
     private final String permission;
 

@@ -4,6 +4,7 @@ import com.hishacorp.elytraracing.gui.GuiManager;
 import com.hishacorp.elytraracing.input.ChatInputListener;
 import com.hishacorp.elytraracing.input.InputManager;
 import com.hishacorp.elytraracing.persistance.DatabaseManager;
+import com.hishacorp.elytraracing.util.RingRenderer;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.sql.SQLException;
@@ -14,6 +15,9 @@ public class Elytraracing extends JavaPlugin {
     private DatabaseManager databaseManager;
     private InputManager inputManager;
     private RaceManager raceManager;
+    private RingManager ringManager;
+    private ToolManager toolManager;
+    private RingRenderer ringRenderer;
 
     @Override
     public void onEnable() {
@@ -21,6 +25,9 @@ public class Elytraracing extends JavaPlugin {
         databaseManager = new DatabaseManager(this);
         inputManager = new InputManager(this, guiManager);
         raceManager = new RaceManager(this);
+        ringManager = new RingManager(this);
+        toolManager = new ToolManager(this);
+        ringRenderer = new RingRenderer(this);
 
         try {
             databaseManager.connect();
@@ -33,6 +40,10 @@ public class Elytraracing extends JavaPlugin {
 
         getCommand("er").setExecutor(new ERCommand(this));
         getServer().getPluginManager().registerEvents(new ChatInputListener(this), this);
+        getServer().getPluginManager().registerEvents(toolManager, this);
+
+        ringRenderer.runTaskTimer(this, 0, 10);
+
         getLogger().info("ElytraRacing enabled!");
     }
 
@@ -57,5 +68,17 @@ public class Elytraracing extends JavaPlugin {
 
     public RaceManager getRaceManager() {
         return raceManager;
+    }
+
+    public RingManager getRingManager() {
+        return ringManager;
+    }
+
+    public ToolManager getToolManager() {
+        return toolManager;
+    }
+
+    public RingRenderer getRingRenderer() {
+        return ringRenderer;
     }
 }

@@ -27,6 +27,10 @@ public class GuiManager implements Listener {
         gui.onOpen(player);
     }
 
+    public Gui getOpenGui(Player player) {
+        return openGuis.get(player.getUniqueId());
+    }
+
     @EventHandler
     public void onInventoryClick(InventoryClickEvent event) {
         if (!(event.getWhoClicked() instanceof Player player)) return;

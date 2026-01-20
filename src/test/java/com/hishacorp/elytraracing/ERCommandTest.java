@@ -40,4 +40,28 @@ public class ERCommandTest {
         player.performCommand("er delete test_race");
         assertFalse(plugin.getDatabaseManager().raceExists("test_race"));
     }
+
+    @Test
+    public void testRingsCommand() throws Exception {
+        plugin.getDatabaseManager().createRace("test_race");
+        int raceId = plugin.getDatabaseManager().getRaceId("test_race");
+        plugin.getDatabaseManager().createRing(new com.hishacorp.elytraracing.model.Ring(0, raceId, player.getLocation(), 5, com.hishacorp.elytraracing.model.Ring.Orientation.HORIZONTAL, org.bukkit.Material.GOLD_BLOCK, 1));
+
+        player.performCommand("er rings test_race");
+
+        player.assertSaid("§aRings for race test_race:");
+        player.assertSaid("§e- Ring 1 at " + player.getLocation().toString());
+    }
+
+    @Test
+    public void testToolCommand() {
+        player.performCommand("er tool test_race");
+        player.assertSaid("§aYou have been given the ring tool for race test_race.");
+    }
+
+    @Test
+    public void testToolCommandNoRace() {
+        player.performCommand("er tool");
+        player.assertSaid("§cUsage: /er tool <race>");
+    }
 }

@@ -122,14 +122,26 @@ public class ERCommand implements CommandExecutor {
             }
 
             case "join" -> {
+                if (!(sender instanceof Player player)) {
+                    sender.sendMessage("§cOnly players can use this command.");
+                    return true;
+                }
                 if (args.length < 2) {
                     sender.sendMessage("§cUsage: /er join <race>");
                     return true;
                 }
+                plugin.getScoreboardManager().showScoreboard(player);
                 sender.sendMessage("Joining race " + args[1]);
             }
 
-            case "leave" -> sender.sendMessage("Leaving race...");
+            case "leave" -> {
+                if (!(sender instanceof Player player)) {
+                    sender.sendMessage("§cOnly players can use this command.");
+                    return true;
+                }
+                plugin.getScoreboardManager().removeScoreboard(player);
+                sender.sendMessage("Leaving race...");
+            }
 
             default -> sender.sendMessage("§cUnknown subcommand.");
         }

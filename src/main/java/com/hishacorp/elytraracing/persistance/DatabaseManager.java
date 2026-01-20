@@ -78,7 +78,7 @@ public class DatabaseManager {
                 return ps.executeQuery().next();
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            plugin.getLogger().severe("Failed to check if race exists: " + e.getMessage());
             return false;
         }
     }

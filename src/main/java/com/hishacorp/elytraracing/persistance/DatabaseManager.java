@@ -1,5 +1,6 @@
 package com.hishacorp.elytraracing.persistance;
 
+import com.hishacorp.elytraracing.persistance.data.RaceStat;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
@@ -7,6 +8,8 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
 
 public class DatabaseManager {
     private final JavaPlugin plugin;
@@ -92,5 +95,31 @@ public class DatabaseManager {
             ps.setString(1, raceName);
             return ps.executeUpdate();
         }
+    }
+
+    public synchronized RaceStat getTopTime(String raceName, int position) {
+        try {
+            try (var ps = connection.prepareStatement("""
+                SELECT player_uuid, best_time FROM race_stats
+                JOIN races ON race_stats.race_id = races.id
+                WHERE races.name = ?
+                ORDER BY best_time ASC
+                LIMIT 1
+                OFFSET ?
+            """)) {
+                ps.setString(1, raceName);
+                ps.setInt(2, position - 1);
+                var rs = ps.executeQuery();
+                if (rs.next()) {
+                    return new RaceStat(
+                            rs.getString("player_uuid"),
+                            rs.getInt("best_time")
+                    );
+                }
+            }
+        } catch (SQLException e) {
+            plugin.getLogger().severe("Failed to get top time: " + e.getMessage());
+        }
+        return null;
     }
 }

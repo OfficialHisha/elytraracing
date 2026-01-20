@@ -27,7 +27,7 @@ public class Race {
     }
 
     public void start() {
-        setInProgress(true);
+        this.inProgress = true;
 
         for (UUID playerUUID : players) {
             Player player = Bukkit.getPlayer(playerUUID);
@@ -62,7 +62,7 @@ public class Race {
     }
 
     public void end() {
-        setInProgress(false);
+        this.inProgress = false;
 
         cooldownTasks.values().forEach(BukkitTask::cancel);
         cooldownTasks.clear();
@@ -80,10 +80,6 @@ public class Race {
 
     public boolean isInProgress() {
         return inProgress;
-    }
-
-    private void setInProgress(boolean inProgress) {
-        this.inProgress = inProgress;
     }
 
     public void addPlayer(Player player) {

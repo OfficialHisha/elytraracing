@@ -33,7 +33,7 @@ public class PlayerQuitListenerTest {
     }
 
     @Test
-    public void testPlayerQuitRestoresInventory() {
+    public void testPlayerQuitRemovesPlayerFromRace() {
         // Given
         raceManager.getRaces().add(new Race(plugin, "test-race"));
         raceManager.joinRace(player, "test-race");

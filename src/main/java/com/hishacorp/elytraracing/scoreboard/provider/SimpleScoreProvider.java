@@ -35,7 +35,14 @@ public class SimpleScoreProvider implements ScoreboardProvider {
                 "§e00:00.000",
                 "§f",
                 "§f§lPlayers",
-                "§e1/1"
+                "§e1/1",
+                "§f",
+                "§f§lLineup",
+                "§e1. §aPlayer1 §7- §f00:00.000",
+                "§e2. §aPlayer2 §7- §f00:00.000",
+                "§e3. §aPlayer3 §7- §f00:00.000",
+                "§e4. §aPlayer4 §7- §f00:00.000",
+                "§e5. §aPlayer5 §7- §f00:00.000"
         );
         RaceScoreboard scoreboard = new RaceScoreboard(
                 "elytraracing",

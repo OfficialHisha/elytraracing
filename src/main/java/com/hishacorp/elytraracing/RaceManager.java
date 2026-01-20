@@ -46,7 +46,10 @@ public class RaceManager {
         }
 
         try {
-            plugin.getDatabaseManager().createRace(createRaceInputEvent.raceName);
+            plugin.getDatabaseManager().createRace(
+                    createRaceInputEvent.raceName,
+                    createRaceInputEvent.player.getWorld().getName()
+            );
             createRaceInputEvent.player.sendMessage("§aRace '" + createRaceInputEvent.raceName + "' created!");
         } catch (Exception ex) {
             createRaceInputEvent.player.sendMessage("§cA race with that name already exists.");

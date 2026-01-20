@@ -59,7 +59,7 @@ public class StatExpansion extends PlaceholderExpansion {
             return null;
         }
 
-        var stat = plugin.getDatabaseManager().getTopTime(worldName, position);
+        var stat = plugin.getDatabaseManager().getTopTimeByWorld(worldName, position);
 
         if (stat == null) {
             return "";

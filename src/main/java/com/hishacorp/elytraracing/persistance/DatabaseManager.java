@@ -31,6 +31,21 @@ public class DatabaseManager {
         plugin.getLogger().info("Connected to SQLite database.");
 
         createTables();
+        migrate();
+    }
+
+    private void migrate() {
+        try (Statement stmt = connection.createStatement()) {
+            stmt.executeUpdate("""
+                ALTER TABLE races
+                ADD COLUMN world TEXT NOT NULL DEFAULT 'world'
+            """);
+        } catch (SQLException e) {
+            // Ignore if the column already exists
+            if (!e.getMessage().contains("duplicate column name")) {
+                plugin.getLogger().severe("Failed to migrate database: " + e.getMessage());
+            }
+        }
     }
 
     private void createTables() throws SQLException {
@@ -40,7 +55,8 @@ public class DatabaseManager {
             stmt.executeUpdate("""
                 CREATE TABLE IF NOT EXISTS races (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    name TEXT UNIQUE NOT NULL
+                    name TEXT UNIQUE NOT NULL,
+                    world TEXT NOT NULL
                 );
             """);
 
@@ -81,10 +97,11 @@ public class DatabaseManager {
         }
     }
 
-    public synchronized void createRace(String raceName) throws SQLException {
+    public synchronized void createRace(String raceName, String world) throws SQLException {
         try (var ps = connection.prepareStatement(
-                "INSERT INTO races (name) VALUES (?)")) {
+                "INSERT INTO races (name, world) VALUES (?, ?)")) {
             ps.setString(1, raceName);
+            ps.setString(2, world);
             ps.executeUpdate();
         }
     }
@@ -97,17 +114,17 @@ public class DatabaseManager {
         }
     }
 
-    public synchronized RaceStat getTopTime(String raceName, int position) {
+    public synchronized RaceStat getTopTimeByWorld(String world, int position) {
         try {
             try (var ps = connection.prepareStatement("""
                 SELECT player_uuid, best_time FROM race_stats
                 JOIN races ON race_stats.race_id = races.id
-                WHERE races.name = ?
+                WHERE races.world = ?
                 ORDER BY best_time ASC
                 LIMIT 1
                 OFFSET ?
             """)) {
-                ps.setString(1, raceName);
+                ps.setString(1, world);
                 ps.setInt(2, position - 1);
                 var rs = ps.executeQuery();
                 if (rs.next()) {

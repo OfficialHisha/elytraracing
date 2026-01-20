@@ -60,8 +60,15 @@ public class ERCommand implements CommandExecutor {
                     return true;
                 }
 
+                // TODO: Allow console to specify world
                 if (sender instanceof Player player) {
                     plugin.getRaceManager().createRace(new CreateRaceInputEvent(player, args[1]));
+                } else {
+                    try {
+                        plugin.getDatabaseManager().createRace(args[1], "world");
+                    } catch (Exception ex) {
+                        sender.sendMessage("§cA race with that name already exists.");
+                    }
                 }
             }
 

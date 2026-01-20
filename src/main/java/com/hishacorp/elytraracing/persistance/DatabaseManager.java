@@ -31,21 +31,6 @@ public class DatabaseManager {
         plugin.getLogger().info("Connected to SQLite database.");
 
         createTables();
-        migrate();
-    }
-
-    private void migrate() {
-        try (Statement stmt = connection.createStatement()) {
-            stmt.executeUpdate("""
-                ALTER TABLE races
-                ADD COLUMN world TEXT NOT NULL DEFAULT 'world'
-            """);
-        } catch (SQLException e) {
-            // Ignore if the column already exists
-            if (!e.getMessage().contains("duplicate column name")) {
-                plugin.getLogger().severe("Failed to migrate database: " + e.getMessage());
-            }
-        }
     }
 
     private void createTables() throws SQLException {
@@ -115,24 +100,22 @@ public class DatabaseManager {
     }
 
     public synchronized RaceStat getTopTimeByWorld(String world, int position) {
-        try {
-            try (var ps = connection.prepareStatement("""
-                SELECT player_uuid, best_time FROM race_stats
-                JOIN races ON race_stats.race_id = races.id
-                WHERE races.world = ?
-                ORDER BY best_time ASC
-                LIMIT 1
-                OFFSET ?
-            """)) {
-                ps.setString(1, world);
-                ps.setInt(2, position - 1);
-                var rs = ps.executeQuery();
-                if (rs.next()) {
-                    return new RaceStat(
-                            rs.getString("player_uuid"),
-                            rs.getInt("best_time")
-                    );
-                }
+        try (var ps = connection.prepareStatement("""
+            SELECT player_uuid, best_time FROM race_stats
+            JOIN races ON race_stats.race_id = races.id
+            WHERE races.world = ?
+            ORDER BY best_time ASC
+            LIMIT 1
+            OFFSET ?
+        """)) {
+            ps.setString(1, world);
+            ps.setInt(2, position - 1);
+            var rs = ps.executeQuery();
+            if (rs.next()) {
+                return new RaceStat(
+                        rs.getString("player_uuid"),
+                        rs.getInt("best_time")
+                );
             }
         } catch (SQLException e) {
             plugin.getLogger().severe("Failed to get top time: " + e.getMessage());

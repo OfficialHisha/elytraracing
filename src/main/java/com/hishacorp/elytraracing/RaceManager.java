@@ -46,13 +46,7 @@ public class RaceManager {
         }
 
         try {
-            var conn = plugin.getDatabaseManager().getConnection();
-            try (var ps = conn.prepareStatement(
-                    "INSERT INTO races (name) VALUES (?)")) {
-                ps.setString(1, createRaceInputEvent.raceName);
-                ps.executeUpdate();
-            }
-
+            plugin.getDatabaseManager().createRace(createRaceInputEvent.raceName);
             createRaceInputEvent.player.sendMessage("§aRace '" + createRaceInputEvent.raceName + "' created!");
         } catch (Exception ex) {
             createRaceInputEvent.player.sendMessage("§cA race with that name already exists.");
@@ -75,20 +69,14 @@ public class RaceManager {
         }
 
         try {
-            var conn = plugin.getDatabaseManager().getConnection();
-            try (var ps = conn.prepareStatement(
-                    "DELETE FROM races WHERE name = ?")) {
-                ps.setString(1, deleteRaceInputEvent.raceName);
-                int deletedRows = ps.executeUpdate();
-
-                if (deletedRows == 1) {
-                    deleteRaceInputEvent.player.sendMessage("§aRace '" + deleteRaceInputEvent.raceName + "' deleted!");
-                } else {
-                    deleteRaceInputEvent.player.sendMessage("§cA Race '" + deleteRaceInputEvent.raceName + "' was not found!");
-                }
+            int deletedRows = plugin.getDatabaseManager().deleteRace(deleteRaceInputEvent.raceName);
+            if (deletedRows == 1) {
+                deleteRaceInputEvent.player.sendMessage("§aRace '" + deleteRaceInputEvent.raceName + "' deleted!");
+            } else {
+                deleteRaceInputEvent.player.sendMessage("§cA Race '" + deleteRaceInputEvent.raceName + "' was not found!");
             }
         } catch (Exception ex) {
-            ex.printStackTrace();
+            plugin.getLogger().severe("Failed to delete race: " + ex.getMessage());
             deleteRaceInputEvent.player.sendMessage("§cA Race could not be deleted.");
         }
     }

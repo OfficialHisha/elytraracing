@@ -55,10 +55,6 @@ public class DatabaseManager {
         }
     }
 
-    public Connection getConnection() {
-        return connection;
-    }
-
     public void close() {
         try {
             if (connection != null && !connection.isClosed()) {
@@ -66,6 +62,35 @@ public class DatabaseManager {
             }
         } catch (SQLException e) {
             plugin.getLogger().severe("Failed to close database: " + e.getMessage());
+        }
+    }
+
+    public boolean raceExists(String raceName) {
+        try {
+            try (var ps = connection.prepareStatement(
+                    "SELECT 1 FROM races WHERE name = ?")) {
+                ps.setString(1, raceName);
+                return ps.executeQuery().next();
+            }
+        } catch (SQLException e) {
+            plugin.getLogger().severe("Failed to check if race exists: " + e.getMessage());
+            return false;
+        }
+    }
+
+    public synchronized void createRace(String raceName) throws SQLException {
+        try (var ps = connection.prepareStatement(
+                "INSERT INTO races (name) VALUES (?)")) {
+            ps.setString(1, raceName);
+            ps.executeUpdate();
+        }
+    }
+
+    public synchronized int deleteRace(String raceName) throws SQLException {
+        try (var ps = connection.prepareStatement(
+                "DELETE FROM races WHERE name = ?")) {
+            ps.setString(1, raceName);
+            return ps.executeUpdate();
         }
     }
 }

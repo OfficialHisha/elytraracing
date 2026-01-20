@@ -37,9 +37,21 @@ public class RaceManagerTest {
     }
 
     @Test
+    public void testCreateRaceWithEmptyName() {
+        raceManager.createRace(new com.hishacorp.elytraracing.input.events.CreateRaceInputEvent(player, ""));
+        assertFalse(plugin.getDatabaseManager().raceExists(""));
+    }
+
+    @Test
     public void testDeleteRace() {
         raceManager.createRace(new com.hishacorp.elytraracing.input.events.CreateRaceInputEvent(player, "test_race"));
         raceManager.deleteRace(new com.hishacorp.elytraracing.input.events.DeleteRaceInputEvent(player, "test_race"));
         assertFalse(plugin.getDatabaseManager().raceExists("test_race"));
+    }
+
+    @Test
+    public void testDeleteNonExistentRace() {
+        raceManager.deleteRace(new com.hishacorp.elytraracing.input.events.DeleteRaceInputEvent(player, "non_existent_race"));
+        assertFalse(plugin.getDatabaseManager().raceExists("non_existent_race"));
     }
 }

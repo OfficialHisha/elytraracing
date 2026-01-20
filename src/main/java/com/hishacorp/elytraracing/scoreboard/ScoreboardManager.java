@@ -13,7 +13,7 @@ public class ScoreboardManager {
 
     public ScoreboardManager(Elytraracing plugin) {
         if (Bukkit.getPluginManager().isPluginEnabled("SimpleScore")) {
-            this.provider = ScoreboardProviderFactory.createSimpleScoreProvider();
+            this.provider = ScoreboardProviderFactory.createSimpleScoreProvider(plugin);
         } else {
             this.provider = new VanillaScoreboardProvider();
         }

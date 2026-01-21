@@ -4,14 +4,14 @@ import com.r4g3baby.simplescore.api.scoreboard.ScoreboardLine;
 import com.r4g3baby.simplescore.api.scoreboard.ScoreboardScore;
 import com.r4g3baby.simplescore.api.scoreboard.VarReplacer;
 import com.r4g3baby.simplescore.api.scoreboard.condition.Condition;
-import com.r4g3baby.simplescore.api.scoreboard.data.Viewer;
+import org.bukkit.entity.Player;
 
 import java.util.Collections;
 import java.util.List;
 
-public class StaticScoreboardScore implements ScoreboardScore<Viewer> {
+public class StaticScoreboardScore implements ScoreboardScore<Player> {
     private final String value;
-    private final List<ScoreboardLine<Viewer>> lines;
+    private final List<ScoreboardLine<Player>> lines;
 
     public StaticScoreboardScore(String value) {
         this.value = value;
@@ -29,7 +29,7 @@ public class StaticScoreboardScore implements ScoreboardScore<Viewer> {
     }
 
     @Override
-    public List<ScoreboardLine<Viewer>> getLines() {
+    public List<ScoreboardLine<Player>> getLines() {
         return lines;
     }
 
@@ -39,17 +39,17 @@ public class StaticScoreboardScore implements ScoreboardScore<Viewer> {
     }
 
     @Override
-    public Integer getValueAsInteger(Viewer viewer, VarReplacer<Viewer> varReplacer) {
+    public Integer getValueAsInteger(Player player, VarReplacer<Player> varReplacer) {
         return 0;
     }
 
     @Override
-    public ScoreboardLine<Viewer> getLine(Viewer viewer, VarReplacer<Viewer> varReplacer) {
+    public ScoreboardLine<Player> getLine(Player player, VarReplacer<Player> varReplacer) {
         return lines.get(0);
     }
 
     @Override
-    public List<Condition<Viewer>> getConditions() {
+    public List<Condition<Player>> getConditions() {
         return Collections.emptyList();
     }
 }

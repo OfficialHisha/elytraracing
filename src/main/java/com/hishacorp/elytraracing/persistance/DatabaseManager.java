@@ -8,8 +8,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.UUID;
 
 public class DatabaseManager {
     private final JavaPlugin plugin;
@@ -99,26 +98,23 @@ public class DatabaseManager {
         }
     }
 
-    public synchronized RaceStat getTopTimeByWorld(String world, int position) {
-        try (var ps = connection.prepareStatement("""
-            SELECT player_uuid, best_time FROM race_stats
-            JOIN races ON race_stats.race_id = races.id
-            WHERE races.world = ?
-            ORDER BY best_time ASC
-            LIMIT 1
-            OFFSET ?
-        """)) {
+    public RaceStat getTopTimeByWorld(String world, int position) {
+        try (var ps = connection.prepareStatement(
+                "SELECT player_uuid, best_time FROM race_stats rs " +
+                        "JOIN races r ON rs.race_id = r.id " +
+                        "WHERE r.world = ? AND rs.best_time IS NOT NULL " +
+                        "ORDER BY rs.best_time ASC LIMIT 1 OFFSET ?")) {
             ps.setString(1, world);
             ps.setInt(2, position - 1);
             var rs = ps.executeQuery();
             if (rs.next()) {
                 return new RaceStat(
-                        rs.getString("player_uuid"),
-                        rs.getInt("best_time")
+                        UUID.fromString(rs.getString("player_uuid")),
+                        rs.getLong("best_time")
                 );
             }
         } catch (SQLException e) {
-            plugin.getLogger().severe("Failed to get top time: " + e.getMessage());
+            plugin.getLogger().severe("Failed to get top time by world: " + e.getMessage());
         }
         return null;
     }

@@ -1,12 +1,12 @@
 package com.hishacorp.elytraracing.placeholders;
 
 import com.hishacorp.elytraracing.Elytraracing;
+import com.hishacorp.elytraracing.persistance.data.RaceStat;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
-import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 public class StatExpansion extends PlaceholderExpansion {
 
@@ -38,39 +38,29 @@ public class StatExpansion extends PlaceholderExpansion {
 
     @Override
     public String onRequest(OfflinePlayer player, @NotNull String params) {
-        // %elytraracing_WORLDNAME_time_1%
-        // %elytraracing_WORLDNAME_player_1%
         String[] parts = params.split("_");
         if (parts.length != 3) {
             return null;
         }
 
-        String worldName = parts[0];
+        String world = parts[0];
         String type = parts[1];
-        int position;
+        int position = Integer.parseInt(parts[2]);
 
-        try {
-            position = Integer.parseInt(parts[2]);
-        } catch (NumberFormatException e) {
-            return null;
-        }
-
-        if (position <= 0) {
-            return null;
-        }
-
-        var stat = plugin.getDatabaseManager().getTopTimeByWorld(worldName, position);
+        RaceStat stat = plugin.getDatabaseManager().getTopTimeByWorld(world, position);
 
         if (stat == null) {
-            return "";
+            return "N/A";
         }
 
         if (type.equalsIgnoreCase("time")) {
-            return String.valueOf(stat.bestTime());
-        }
-
-        if (type.equalsIgnoreCase("player")) {
-            return Bukkit.getOfflinePlayer(UUID.fromString(stat.playerUUID())).getName();
+            long time = stat.getBestTime();
+            long minutes = TimeUnit.MILLISECONDS.toMinutes(time);
+            long seconds = TimeUnit.MILLISECONDS.toSeconds(time) % 60;
+            long millis = time % 1000;
+            return String.format("%02d:%02d.%03d", minutes, seconds, millis);
+        } else if (type.equalsIgnoreCase("player")) {
+            return plugin.getServer().getOfflinePlayer(stat.getPlayerUUID()).getName();
         }
 
         return null;

@@ -3,13 +3,13 @@ package com.hishacorp.elytraracing.scoreboard.model;
 import com.r4g3baby.simplescore.api.scoreboard.ScoreboardLine;
 import com.r4g3baby.simplescore.api.scoreboard.VarReplacer;
 import com.r4g3baby.simplescore.api.scoreboard.condition.Condition;
-import com.r4g3baby.simplescore.api.scoreboard.data.Viewer;
 import com.r4g3baby.simplescore.api.scoreboard.effect.TextEffect;
+import org.bukkit.entity.Player;
 
 import java.util.Collections;
 import java.util.List;
 
-public class StaticScoreboardLine implements ScoreboardLine<Viewer> {
+public class StaticScoreboardLine implements ScoreboardLine<Player> {
     private final String text;
 
     public StaticScoreboardLine(String text) {
@@ -36,12 +36,12 @@ public class StaticScoreboardLine implements ScoreboardLine<Viewer> {
     }
 
     @Override
-    public String currentText(Viewer viewer, VarReplacer<Viewer> varReplacer) {
+    public String currentText(Player player, VarReplacer<Player> varReplacer) {
         return text;
     }
 
     @Override
-    public List<Condition<Viewer>> getConditions() {
+    public List<Condition<Player>> getConditions() {
         return Collections.emptyList();
     }
 }

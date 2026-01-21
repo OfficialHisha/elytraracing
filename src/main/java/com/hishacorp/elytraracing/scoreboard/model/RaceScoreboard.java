@@ -5,17 +5,17 @@ import com.r4g3baby.simplescore.api.scoreboard.ScoreboardLine;
 import com.r4g3baby.simplescore.api.scoreboard.ScoreboardScore;
 import com.r4g3baby.simplescore.api.scoreboard.VarReplacer;
 import com.r4g3baby.simplescore.api.scoreboard.condition.Condition;
-import com.r4g3baby.simplescore.api.scoreboard.data.Viewer;
+import org.bukkit.entity.Player;
 
 import java.util.Collections;
 import java.util.List;
 
-public class RaceScoreboard implements Scoreboard<Viewer> {
+public class RaceScoreboard implements Scoreboard<Player> {
     private final String name;
-    private final List<ScoreboardLine<Viewer>> titles;
-    private final List<ScoreboardScore<Viewer>> scores;
+    private final List<ScoreboardLine<Player>> titles;
+    private final List<ScoreboardScore<Player>> scores;
 
-    public RaceScoreboard(String name, List<ScoreboardLine<Viewer>> titles, List<ScoreboardScore<Viewer>> scores) {
+    public RaceScoreboard(String name, List<ScoreboardLine<Player>> titles, List<ScoreboardScore<Player>> scores) {
         this.name = name;
         this.titles = titles;
         this.scores = scores;
@@ -27,12 +27,12 @@ public class RaceScoreboard implements Scoreboard<Viewer> {
     }
 
     @Override
-    public List<ScoreboardLine<Viewer>> getTitles() {
+    public List<ScoreboardLine<Player>> getTitles() {
         return titles;
     }
 
     @Override
-    public List<ScoreboardScore<Viewer>> getScores() {
+    public List<ScoreboardScore<Player>> getScores() {
         return scores;
     }
 
@@ -41,17 +41,17 @@ public class RaceScoreboard implements Scoreboard<Viewer> {
     }
 
     @Override
-    public ScoreboardLine<Viewer> getTitle(Viewer viewer, VarReplacer<Viewer> varReplacer) {
+    public ScoreboardLine<Player> getTitle(Player player, VarReplacer<Player> varReplacer) {
         return titles.get(0);
     }
 
     @Override
-    public List<ScoreboardScore<Viewer>> getScores(Viewer viewer, VarReplacer<Viewer> varReplacer) {
+    public List<ScoreboardScore<Player>> getScores(Player player, VarReplacer<Player> varReplacer) {
         return scores;
     }
 
     @Override
-    public List<Condition<Viewer>> getConditions() {
+    public List<Condition<Player>> getConditions() {
         return Collections.emptyList();
     }
 }

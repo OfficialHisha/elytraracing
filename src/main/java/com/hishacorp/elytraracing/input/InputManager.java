@@ -50,7 +50,7 @@ public class InputManager {
 
     private InputEvent createInputEvent(AwaitInputEventType eventType, Player player, String input) {
         return switch (eventType) {
-            case CREATE -> new CreateRaceInputEvent(player, input);
+            case CREATE -> new CreateRaceInputEvent(player, input, player.getWorld().getName());
             case DELETE -> new DeleteRaceInputEvent(player, input);
         };
     }

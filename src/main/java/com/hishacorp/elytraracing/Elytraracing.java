@@ -6,7 +6,6 @@ import com.hishacorp.elytraracing.input.InputManager;
 import com.hishacorp.elytraracing.persistance.DatabaseManager;
 import com.hishacorp.elytraracing.placeholders.StatExpansion;
 import com.hishacorp.elytraracing.scoreboard.ScoreboardManager;
-import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.sql.SQLException;
@@ -17,7 +16,6 @@ public class Elytraracing extends JavaPlugin {
     private DatabaseManager databaseManager;
     private InputManager inputManager;
     private RaceManager raceManager;
-    private StatExpansion statExpansion;
     private ScoreboardManager scoreboardManager;
 
     @Override
@@ -28,9 +26,8 @@ public class Elytraracing extends JavaPlugin {
         raceManager = new RaceManager(this);
         scoreboardManager = new ScoreboardManager(this);
 
-        if (Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null) {
-            statExpansion = new StatExpansion(this);
-            statExpansion.register();
+        if (getServer().getPluginManager().getPlugin("PlaceholderAPI") != null) {
+            new StatExpansion(this).register();
         }
 
         try {
@@ -72,9 +69,5 @@ public class Elytraracing extends JavaPlugin {
 
     public ScoreboardManager getScoreboardManager() {
         return scoreboardManager;
-    }
-
-    public void setScoreboardManager(ScoreboardManager scoreboardManager) {
-        this.scoreboardManager = scoreboardManager;
     }
 }

@@ -5,6 +5,8 @@ import com.hishacorp.elytraracing.scoreboard.model.RaceScoreboard;
 import com.hishacorp.elytraracing.scoreboard.model.StaticScoreboardLine;
 import com.hishacorp.elytraracing.scoreboard.model.StaticScoreboardScore;
 import com.r4g3baby.simplescore.api.Manager;
+import com.r4g3baby.simplescore.api.scoreboard.ScoreboardLine;
+import com.r4g3baby.simplescore.api.scoreboard.ScoreboardScore;
 import com.r4g3baby.simplescore.api.scoreboard.data.Provider;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -20,6 +22,7 @@ public class SimpleScoreProvider implements ScoreboardProvider {
     private final Elytraracing plugin;
     private Manager api;
     private Provider provider;
+    private RaceScoreboard scoreboard;
 
     public SimpleScoreProvider(Elytraracing plugin) {
         this.plugin = plugin;
@@ -28,6 +31,33 @@ public class SimpleScoreProvider implements ScoreboardProvider {
             if (rsp != null) {
                 this.api = rsp.getProvider();
                 this.provider = new Provider(plugin.getName(), "elytraracing");
+
+                List<String> lines = Arrays.asList(
+                        "§f",
+                        "§f§lRace Time",
+                        "§e00:00.000",
+                        "§f",
+                        "§f§lPlayers",
+                        "§e1/1",
+                        "§f",
+                        "§f§lLineup",
+                        "§e1. §aPlayer1 §7- §f00:00.000",
+                        "§e2. §aPlayer2 §7- §f00:00.000",
+                        "§e3. §aPlayer3 §7- §f00:00.000",
+                        "§e4. §aPlayer4 §7- §f00:00.000",
+                        "§e5. §aPlayer5 §7- §f00:00.000"
+                );
+                List<ScoreboardLine<Player>> titles = Collections.singletonList(new StaticScoreboardLine("§e§lElytra Racing"));
+                List<ScoreboardScore<Player>> scores = lines.stream()
+                        .map(StaticScoreboardScore::new)
+                        .collect(Collectors.toList());
+
+                this.scoreboard = new RaceScoreboard(
+                        "elytraracing",
+                        titles,
+                        scores
+                );
+                api.addScoreboard(scoreboard);
             }
         }
     }
@@ -35,27 +65,6 @@ public class SimpleScoreProvider implements ScoreboardProvider {
     @Override
     public void showScoreboard(Player player) {
         if (api == null) return;
-        List<String> lines = Arrays.asList(
-                "§f",
-                "§f§lRace Time",
-                "§e00:00.000",
-                "§f",
-                "§f§lPlayers",
-                "§e1/1",
-                "§f",
-                "§f§lLineup",
-                "§e1. §aPlayer1 §7- §f00:00.000",
-                "§e2. §aPlayer2 §7- §f00:00.000",
-                "§e3. §aPlayer3 §7- §f00:00.000",
-                "§e4. §aPlayer4 §7- §f00:00.000",
-                "§e5. §aPlayer5 §7- §f00:00.000"
-        );
-        RaceScoreboard scoreboard = new RaceScoreboard(
-                "elytraracing",
-                Collections.singletonList(new StaticScoreboardLine("§e§lElytra Racing")),
-                lines.stream().map(StaticScoreboardScore::new).collect(Collectors.toList())
-        );
-        api.addScoreboard(scoreboard);
         api.getViewer(player.getUniqueId()).setScoreboard(scoreboard, provider);
     }
 

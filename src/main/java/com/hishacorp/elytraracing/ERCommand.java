@@ -65,7 +65,9 @@ public class ERCommand implements CommandExecutor {
                     return true;
                 }
 
-                plugin.getRaceManager().createRace(new CreateRaceInputEvent(player, args[1]));
+                plugin.getRaceManager().createRace(
+                    new CreateRaceInputEvent(player, args[1], player.getWorld().getName())
+                );
             }
 
             case "delete" -> {
@@ -122,25 +124,21 @@ public class ERCommand implements CommandExecutor {
             }
 
             case "join" -> {
-                if (!(sender instanceof Player player)) {
-                    sender.sendMessage("§cOnly players can use this command.");
-                    return true;
-                }
                 if (args.length < 2) {
                     sender.sendMessage("§cUsage: /er join <race>");
                     return true;
                 }
-                plugin.getScoreboardManager().showScoreboard(player);
-                sender.sendMessage("Joining race " + args[1]);
+                if (sender instanceof Player player) {
+                    plugin.getScoreboardManager().showScoreboard(player);
+                    sender.sendMessage("Joining race " + args[1]);
+                }
             }
 
             case "leave" -> {
-                if (!(sender instanceof Player player)) {
-                    sender.sendMessage("§cOnly players can use this command.");
-                    return true;
+                if (sender instanceof Player player) {
+                    plugin.getScoreboardManager().removeScoreboard(player);
+                    sender.sendMessage("Leaving race...");
                 }
-                plugin.getScoreboardManager().removeScoreboard(player);
-                sender.sendMessage("Leaving race...");
             }
 
             default -> sender.sendMessage("§cUnknown subcommand.");

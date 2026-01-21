@@ -1,69 +1,120 @@
 package com.hishacorp.elytraracing.util;
 
-import com.hishacorp.elytraracing.Elytraracing;
 import com.hishacorp.elytraracing.model.Ring;
 import org.bukkit.Location;
-import org.bukkit.Particle;
-import org.bukkit.World;
-import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.Material;
+import org.bukkit.entity.Player;
+import org.bukkit.block.data.BlockData;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
-public class RingRenderer extends BukkitRunnable {
+public class RingRenderer {
 
-    private final Elytraracing plugin;
-    private final Map<Ring, Boolean> ringsToDraw = new HashMap<>();
+    // A map of players to the rings they are currently viewing.
+    private final Map<UUID, Set<Ring>> playerVisibleRings = new ConcurrentHashMap<>();
+    // A map of players to the ring they are currently configuring.
+    private final Map<UUID, Ring> playerConfiguringRing = new ConcurrentHashMap<>();
+    // A map of players to the locations of the blocks that have been changed for them.
+    private final Map<UUID, Map<Location, BlockData>> playerOriginalBlocks = new ConcurrentHashMap<>();
 
-    public RingRenderer(Elytraracing plugin) {
-        this.plugin = plugin;
+    public void addRingForPlayer(Player player, Ring ring) {
+        playerVisibleRings.computeIfAbsent(player.getUniqueId(), k -> new HashSet<>()).add(ring);
+        updatePlayerView(player);
     }
 
-    public void addRing(Ring ring, boolean isBeingConfigured) {
-        ringsToDraw.put(ring, isBeingConfigured);
+    public void removeRingForPlayer(Player player, Ring ring) {
+        Set<Ring> rings = playerVisibleRings.get(player.getUniqueId());
+        if (rings != null) {
+            rings.remove(ring);
+        }
+        updatePlayerView(player);
     }
 
-    public void removeRing(Ring ring) {
-        ringsToDraw.remove(ring);
+    public void setConfiguringRingForPlayer(Player player, Ring ring) {
+        if (ring == null) {
+            playerConfiguringRing.remove(player.getUniqueId());
+        } else {
+            playerConfiguringRing.put(player.getUniqueId(), ring);
+        }
+        updatePlayerView(player);
     }
 
-    @Override
-    public void run() {
-        for (Map.Entry<Ring, Boolean> entry : ringsToDraw.entrySet()) {
-            drawRing(entry.getKey(), entry.getValue());
+    public void clearRingsForPlayer(Player player) {
+        playerVisibleRings.remove(player.getUniqueId());
+        playerConfiguringRing.remove(player.getUniqueId());
+        revertBlocksForPlayer(player);
+    }
+
+    public Ring getPlayerConfiguringRing(UUID uniqueId) {
+        return playerConfiguringRing.get(uniqueId);
+    }
+
+    public void updatePlayerView(Player player) {
+        // Revert any existing blocks first
+        revertBlocksForPlayer(player);
+
+        // Draw all the rings
+        Set<Ring> rings = playerVisibleRings.get(player.getUniqueId());
+        if (rings != null) {
+            for (Ring ring : rings) {
+                drawRing(player, ring, false);
+            }
+        }
+
+        // Redraw the configuring ring with a different material
+        Ring configuringRing = playerConfiguringRing.get(player.getUniqueId());
+        if (configuringRing != null) {
+            drawRing(player, configuringRing, true);
         }
     }
 
-    private void drawRing(Ring ring, boolean isBeingConfigured) {
-        Particle particle = isBeingConfigured ? Particle.FLAME : Particle.HAPPY_VILLAGER;
+    private void revertBlocksForPlayer(Player player) {
+        Map<Location, BlockData> originalBlocks = playerOriginalBlocks.get(player.getUniqueId());
+        if (originalBlocks != null) {
+            for (Map.Entry<Location, BlockData> entry : originalBlocks.entrySet()) {
+                player.sendBlockChange(entry.getKey(), entry.getValue());
+            }
+            originalBlocks.clear();
+        }
+    }
+
+    private void drawRing(Player player, Ring ring, boolean isBeingConfigured) {
+        Material material = isBeingConfigured ? Material.LIME_STAINED_GLASS : ring.getMaterial();
+        BlockData blockData = material.createBlockData();
+        Map<Location, BlockData> originalBlocks = playerOriginalBlocks.computeIfAbsent(player.getUniqueId(), k -> new HashMap<>());
+
         Location center = ring.getLocation();
-        World world = center.getWorld();
         double radius = ring.getRadius();
 
-        for (int i = 0; i < 360; i += 10) {
+        for (int i = 0; i < 360; i += 15) {
             double angle = Math.toRadians(i);
-            double x = 0;
-            double y = 0;
-            double z = 0;
+            double xOffset = 0;
+            double yOffset = 0;
+            double zOffset = 0;
 
             switch (ring.getOrientation()) {
                 case HORIZONTAL:
-                    x = center.getX() + radius * Math.cos(angle);
-                    y = center.getY();
-                    z = center.getZ() + radius * Math.sin(angle);
+                    xOffset = radius * Math.cos(angle);
+                    zOffset = radius * Math.sin(angle);
                     break;
                 case VERTICAL_X:
-                    x = center.getX();
-                    y = center.getY() + radius * Math.cos(angle);
-                    z = center.getZ() + radius * Math.sin(angle);
+                    yOffset = radius * Math.cos(angle);
+                    zOffset = radius * Math.sin(angle);
                     break;
                 case VERTICAL_Z:
-                    x = center.getX() + radius * Math.cos(angle);
-                    y = center.getY() + radius * Math.sin(angle);
-                    z = center.getZ();
+                    xOffset = radius * Math.cos(angle);
+                    yOffset = radius * Math.sin(angle);
                     break;
             }
-            world.spawnParticle(particle, x, y, z, 1);
+
+            Location blockLocation = center.clone().add(xOffset, yOffset, zOffset).toBlockLocation();
+
+            // Store the original block if we haven't already, then send the change
+            if (!originalBlocks.containsKey(blockLocation)) {
+                originalBlocks.put(blockLocation, blockLocation.getBlock().getBlockData());
+            }
+            player.sendBlockChange(blockLocation, blockData);
         }
     }
 }

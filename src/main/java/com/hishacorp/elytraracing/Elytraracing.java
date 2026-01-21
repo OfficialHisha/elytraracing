@@ -27,7 +27,7 @@ public class Elytraracing extends JavaPlugin {
         raceManager = new RaceManager(this);
         ringManager = new RingManager(this);
         toolManager = new ToolManager(this);
-        ringRenderer = new RingRenderer(this);
+        ringRenderer = new RingRenderer();
 
         try {
             databaseManager.connect();
@@ -41,8 +41,6 @@ public class Elytraracing extends JavaPlugin {
         getCommand("er").setExecutor(new ERCommand(this));
         getServer().getPluginManager().registerEvents(new ChatInputListener(this), this);
         getServer().getPluginManager().registerEvents(toolManager, this);
-
-        ringRenderer.runTaskTimer(this, 0, 10);
 
         getLogger().info("ElytraRacing enabled!");
     }

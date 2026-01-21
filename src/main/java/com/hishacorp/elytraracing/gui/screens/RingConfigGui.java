@@ -86,12 +86,11 @@ public class RingConfigGui implements Gui {
             ring.setIndex(originalRing.getIndex());
         }
         if (isNew && !saved) {
-            plugin.getRingRenderer().removeRing(ring);
+            plugin.getRingRenderer().removeRingForPlayer(player, ring);
         } else {
-            plugin.getRingRenderer().addRing(ring, false);
+            plugin.getRingRenderer().addRingForPlayer(player, ring);
         }
         onCloseCallback.run();
-        player.closeInventory();
     }
 
     @Override
@@ -136,7 +135,7 @@ public class RingConfigGui implements Gui {
                 if (!isNew) {
                     plugin.getRingManager().deleteRing(ring);
                 }
-                plugin.getRingRenderer().removeRing(ring);
+                plugin.getRingRenderer().removeRingForPlayer(player, ring);
                 saved = true;
                 player.closeInventory();
                 break;
@@ -147,7 +146,7 @@ public class RingConfigGui implements Gui {
                 } else {
                     plugin.getRingManager().updateRing(ring);
                 }
-                plugin.getRingRenderer().addRing(ring, false);
+                plugin.getRingRenderer().addRingForPlayer(player, ring);
                 saved = true;
                 player.closeInventory();
                 break;

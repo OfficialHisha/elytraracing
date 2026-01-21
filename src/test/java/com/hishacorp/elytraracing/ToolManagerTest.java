@@ -61,7 +61,7 @@ public class ToolManagerTest {
 
         // Trigger the interaction and check for the correct permission message from the ToolManager
         plugin.getToolManager().onPlayerInteract(new PlayerInteractEvent(player, org.bukkit.event.block.Action.RIGHT_CLICK_AIR, tool, null, null));
-        player.assertSaid("§cYou do not have permission to use this command");
+        player.assertSaid("§cYou do not have permission to use the tool.");
     }
 
     @Test
@@ -94,7 +94,7 @@ public class ToolManagerTest {
         plugin.getToolManager().onPlayerInteract(new PlayerInteractEvent(player, Action.RIGHT_CLICK_BLOCK, tool, player.getTargetBlock(100), org.bukkit.block.BlockFace.UP));
 
         // Get the ring that is being configured
-        Ring ring = plugin.getToolManager().getConfiguringRing(player);
+        Ring ring = plugin.getRingRenderer().getPlayerConfiguringRing(player.getUniqueId());
         assertNotNull(ring);
         assertEquals(targetLocation, ring.getLocation());
     }
@@ -116,7 +116,7 @@ public class ToolManagerTest {
 
         plugin.getToolManager().onPlayerInteract(new PlayerInteractEvent(player, Action.RIGHT_CLICK_BLOCK, tool, player.getTargetBlock(100), org.bukkit.block.BlockFace.UP));
 
-        Ring ring = plugin.getToolManager().getConfiguringRing(player);
+        Ring ring = plugin.getRingRenderer().getPlayerConfiguringRing(player.getUniqueId());
         assertNotNull(ring);
         assertEquals(1, ring.getIndex());
     }
@@ -133,12 +133,18 @@ public class ToolManagerTest {
         assertNotNull(tool);
         while (player.nextMessage() != null);
 
+        // Select the ring first
         plugin.getToolManager().onPlayerInteract(new PlayerInteractEvent(player, Action.LEFT_CLICK_AIR, tool, null, null));
+        assertNotNull(plugin.getRingRenderer().getPlayerConfiguringRing(player.getUniqueId()));
+
+        // Now open the GUI
+        plugin.getToolManager().onPlayerInteract(new PlayerInteractEvent(player, Action.RIGHT_CLICK_AIR, tool, null, null));
         RingConfigGui gui = (RingConfigGui) plugin.getGuiManager().getOpenGui(player);
         assertNotNull(gui);
-        gui.onClose(player);
 
-        assertNull(plugin.getToolManager().getConfiguringRing(player));
+        player.closeInventory(); // This will trigger the onClose logic via the GuiManager
+
+        assertNull(plugin.getRingRenderer().getPlayerConfiguringRing(player.getUniqueId()));
         assertNull(plugin.getGuiManager().getOpenGui(player));
     }
 
@@ -153,6 +159,8 @@ public class ToolManagerTest {
         player.getTargetBlock(100);
         plugin.getToolManager().onPlayerInteract(new PlayerInteractEvent(player, Action.RIGHT_CLICK_BLOCK, tool, player.getTargetBlock(100), org.bukkit.block.BlockFace.UP));
 
+        // Open the GUI
+        plugin.getToolManager().onPlayerInteract(new PlayerInteractEvent(player, Action.RIGHT_CLICK_AIR, tool, null, null));
         RingConfigGui gui = (RingConfigGui) plugin.getGuiManager().getOpenGui(player);
         assertNotNull(gui);
         assertTrue(gui.isNew());
@@ -177,7 +185,7 @@ public class ToolManagerTest {
         Block targetBlock = player.getTargetBlock(100);
         plugin.getToolManager().onPlayerInteract(new PlayerInteractEvent(player, Action.LEFT_CLICK_BLOCK, tool, targetBlock, org.bukkit.block.BlockFace.UP, EquipmentSlot.HAND));
         player.assertSaid("§aRing relocated.");
-        assertEquals(targetBlock.getLocation(), plugin.getToolManager().getConfiguringRing(player).getLocation());
+        assertEquals(targetBlock.getLocation(), plugin.getRingRenderer().getPlayerConfiguringRing(player.getUniqueId()).getLocation());
 
         // Open the GUI
         plugin.getToolManager().onPlayerInteract(new PlayerInteractEvent(player, Action.RIGHT_CLICK_AIR, tool, null, null, EquipmentSlot.HAND));

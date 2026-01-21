@@ -48,8 +48,9 @@ public class SimpleScoreProvider implements ScoreboardProvider {
                         "§e5. §aPlayer5 §7- §f00:00.000"
                 );
                 List<ScoreboardLine<Player>> titles = Collections.singletonList(new StaticScoreboardLine("§e§lElytra Racing"));
+                final int[] i = {lines.size()};
                 List<ScoreboardScore<Player>> scores = lines.stream()
-                        .map(StaticScoreboardScore::new)
+                        .map(line -> new StaticScoreboardScore(line, i[0]--))
                         .collect(Collectors.toList());
 
                 this.scoreboard = new RaceScoreboard(

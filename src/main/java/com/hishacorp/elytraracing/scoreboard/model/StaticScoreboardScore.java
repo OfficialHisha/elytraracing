@@ -12,10 +12,12 @@ import java.util.List;
 public class StaticScoreboardScore implements ScoreboardScore<Player> {
     private final String value;
     private final List<ScoreboardLine<Player>> lines;
+    private final int score;
 
-    public StaticScoreboardScore(String value) {
+    public StaticScoreboardScore(String value, int score) {
         this.value = value;
         this.lines = Collections.singletonList(new StaticScoreboardLine(value));
+        this.score = score;
     }
 
     @Override
@@ -35,12 +37,12 @@ public class StaticScoreboardScore implements ScoreboardScore<Player> {
 
     @Override
     public boolean getHideNumber() {
-        return false;
+        return true;
     }
 
     @Override
     public Integer getValueAsInteger(Player player, VarReplacer<Player> varReplacer) {
-        return 0;
+        return score;
     }
 
     @Override

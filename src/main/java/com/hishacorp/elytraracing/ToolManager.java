@@ -2,6 +2,7 @@ package com.hishacorp.elytraracing;
 
 import com.hishacorp.elytraracing.gui.screens.RingConfigGui;
 import com.hishacorp.elytraracing.model.Ring;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
@@ -38,17 +39,18 @@ public class ToolManager implements Listener {
     }
 
     public void giveTool(Player player, String raceName) {
-        editingRace.put(player.getUniqueId(), raceName);
+        String lowerCaseRaceName = raceName.toLowerCase();
+        editingRace.put(player.getUniqueId(), lowerCaseRaceName);
         ItemStack tool = getRingTool();
         ItemMeta meta = tool.getItemMeta();
         if (meta != null) {
-            meta.setLore(Arrays.asList("§eRace: " + raceName, "§eRight-click to create or configure a ring.", "§eLeft-click to move a ring."));
+            meta.setLore(Arrays.asList("§eRace: " + lowerCaseRaceName, "§eRight-click to create or configure a ring.", "§eLeft-click to move a ring."));
             tool.setItemMeta(meta);
         }
         player.getInventory().addItem(tool);
 
         try {
-            int raceId = plugin.getDatabaseManager().getRaceId(raceName);
+            int raceId = plugin.getDatabaseManager().getRaceId(lowerCaseRaceName);
             if (raceId != -1) {
                 plugin.getRingManager().loadRings(raceId);
                 for (Ring ring : plugin.getRingManager().getRings(raceId)) {
@@ -84,9 +86,7 @@ public class ToolManager implements Listener {
 
         if (event.getAction().isRightClick()) {
             if (currentlyConfiguring != null) {
-                plugin.getGuiManager().openGui(player, new RingConfigGui(plugin, currentlyConfiguring, currentlyConfiguring.getId() == 0, () -> {
-                    plugin.getRingRenderer().setConfiguringRingForPlayer(player, null);
-                }));
+                plugin.getGuiManager().openGui(player, new RingConfigGui(plugin, currentlyConfiguring, currentlyConfiguring.getId() == 0));
             } else {
                 try {
                     int raceId = plugin.getDatabaseManager().getRaceId(raceName);
@@ -94,13 +94,28 @@ public class ToolManager implements Listener {
                         player.sendMessage("§cRace not found.");
                         return;
                     }
-                    Block targetBlock = player.getTargetBlock(null, 100);
-                    if (targetBlock == null || targetBlock.getType() == Material.AIR) {
-                        player.sendMessage("§cYou must be looking at a block to place a ring.");
-                        return;
+
+                    // Create the ring 5 blocks in front of the player
+                    Location ringLocation = player.getEyeLocation().add(player.getLocation().getDirection().multiply(5));
+
+                    // Determine initial orientation based on player's direction
+                    float pitch = player.getLocation().getPitch();
+                    float yaw = player.getLocation().getYaw();
+                    Ring.Orientation orientation;
+
+                    if (pitch < -45 || pitch > 45) {
+                        orientation = Ring.Orientation.HORIZONTAL;
+                    } else {
+                        yaw = (yaw % 360 + 360) % 360; // Normalize yaw
+                        if (yaw >= 45 && yaw < 135 || yaw >= 225 && yaw < 315) {
+                            orientation = Ring.Orientation.VERTICAL_X;
+                        } else {
+                            orientation = Ring.Orientation.VERTICAL_Z;
+                        }
                     }
+
                     int nextIndex = plugin.getRingManager().getRings(raceId).size();
-                    Ring newRing = new Ring(0, raceId, targetBlock.getLocation(), 5, Ring.Orientation.HORIZONTAL, Material.GOLD_BLOCK, nextIndex);
+                    Ring newRing = new Ring(0, raceId, ringLocation, 5, orientation, Material.GOLD_BLOCK, nextIndex);
                     plugin.getRingRenderer().setConfiguringRingForPlayer(player, newRing);
                     player.sendMessage("§aStarted configuring a new ring.");
                 } catch (Exception e) {
@@ -108,29 +123,26 @@ public class ToolManager implements Listener {
                 }
             }
         } else if (event.getAction().isLeftClick()) {
+            Block targetBlock = player.getTargetBlock(null, 100);
+
             if (currentlyConfiguring != null) {
-                Block targetBlock = player.getTargetBlock(null, 100);
-                 if (targetBlock == null || targetBlock.getType() == Material.AIR) {
-                    player.sendMessage("§cYou must be looking at a block to move the ring.");
-                    return;
+                Location newLocation;
+                if (targetBlock != null && targetBlock.getType() != Material.AIR) {
+                    newLocation = targetBlock.getLocation();
+                } else {
+                    newLocation = player.getEyeLocation().add(player.getLocation().getDirection().multiply(5));
                 }
-                currentlyConfiguring.setLocation(targetBlock.getLocation());
+                currentlyConfiguring.setLocation(newLocation);
                 plugin.getRingRenderer().updatePlayerView(player); // Force a redraw
                 player.sendMessage("§aRing relocated.");
             } else {
-                try {
-                    int raceId = plugin.getDatabaseManager().getRaceId(raceName);
-                    if (raceId != -1) {
-                        for (Ring ring : plugin.getRingManager().getRings(raceId)) {
-                            if (ring.getLocation().distance(player.getEyeLocation()) < 2) {
-                                plugin.getRingRenderer().setConfiguringRingForPlayer(player, ring);
-                                player.sendMessage("§aStarted configuring ring " + ring.getIndex());
-                                return;
-                            }
-                        }
-                    }
-                } catch (Exception e) {
-                    player.sendMessage("§cAn error occurred while selecting a ring.");
+                if (targetBlock == null) {
+                    return;
+                }
+                Ring clickedRing = plugin.getRingRenderer().getRingAtLocation(player, targetBlock.getLocation());
+                if (clickedRing != null) {
+                    plugin.getRingRenderer().setConfiguringRingForPlayer(player, clickedRing);
+                    player.sendMessage("§aStarted configuring ring " + clickedRing.getIndex());
                 }
             }
         }
@@ -138,7 +150,16 @@ public class ToolManager implements Listener {
 
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent event) {
-        plugin.getRingRenderer().clearRingsForPlayer(event.getPlayer());
-        editingRace.remove(event.getPlayer().getUniqueId());
+        Player player = event.getPlayer();
+        plugin.getRingRenderer().clearRingsForPlayer(player);
+        editingRace.remove(player.getUniqueId());
+
+        // Remove the tool from the player's inventory
+        ItemStack tool = getRingTool();
+        for (ItemStack item : player.getInventory().getContents()) {
+            if (item != null && item.hasItemMeta() && item.getItemMeta().getDisplayName().equals(tool.getItemMeta().getDisplayName())) {
+                player.getInventory().remove(item);
+            }
+        }
     }
 }

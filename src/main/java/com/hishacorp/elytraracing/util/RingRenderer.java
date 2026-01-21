@@ -17,6 +17,8 @@ public class RingRenderer {
     private final Map<UUID, Ring> playerConfiguringRing = new ConcurrentHashMap<>();
     // A map of players to the locations of the blocks that have been changed for them.
     private final Map<UUID, Map<Location, BlockData>> playerOriginalBlocks = new ConcurrentHashMap<>();
+    // A map of players to a map of block locations to the ring they belong to.
+    private final Map<UUID, Map<Location, Ring>> playerRingBlocks = new ConcurrentHashMap<>();
 
     public void addRingForPlayer(Player player, Ring ring) {
         playerVisibleRings.computeIfAbsent(player.getUniqueId(), k -> new HashSet<>()).add(ring);
@@ -43,6 +45,7 @@ public class RingRenderer {
     public void clearRingsForPlayer(Player player) {
         playerVisibleRings.remove(player.getUniqueId());
         playerConfiguringRing.remove(player.getUniqueId());
+        playerRingBlocks.remove(player.getUniqueId());
         revertBlocksForPlayer(player);
     }
 
@@ -50,9 +53,20 @@ public class RingRenderer {
         return playerConfiguringRing.get(uniqueId);
     }
 
+    public Ring getRingAtLocation(Player player, Location location) {
+        Map<Location, Ring> ringBlocks = playerRingBlocks.get(player.getUniqueId());
+        if (ringBlocks != null) {
+            return ringBlocks.get(location.toBlockLocation());
+        }
+        return null;
+    }
+
     public void updatePlayerView(Player player) {
         // Revert any existing blocks first
         revertBlocksForPlayer(player);
+
+        // Clear the mapping of blocks to rings for this player
+        playerRingBlocks.computeIfAbsent(player.getUniqueId(), k -> new HashMap<>()).clear();
 
         // Draw all the rings
         Set<Ring> rings = playerVisibleRings.get(player.getUniqueId());
@@ -83,6 +97,7 @@ public class RingRenderer {
         Material material = isBeingConfigured ? Material.LIME_STAINED_GLASS : ring.getMaterial();
         BlockData blockData = material.createBlockData();
         Map<Location, BlockData> originalBlocks = playerOriginalBlocks.computeIfAbsent(player.getUniqueId(), k -> new HashMap<>());
+        Map<Location, Ring> ringBlocks = playerRingBlocks.get(player.getUniqueId());
 
         Location center = ring.getLocation();
         double radius = ring.getRadius();
@@ -115,6 +130,11 @@ public class RingRenderer {
                 originalBlocks.put(blockLocation, blockLocation.getBlock().getBlockData());
             }
             player.sendBlockChange(blockLocation, blockData);
+
+            // Add to the ring blocks map
+            if (ringBlocks != null) {
+                ringBlocks.put(blockLocation, ring);
+            }
         }
     }
 }

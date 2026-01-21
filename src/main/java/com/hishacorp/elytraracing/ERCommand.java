@@ -29,6 +29,28 @@ public class ERCommand implements CommandExecutor {
         String sub = args[0].toLowerCase();
 
         switch (sub) {
+            case "start" -> {
+                if (!sender.hasPermission(START.getPermission())) {
+                    sender.sendMessage("§cYou do not have permission to use this command");
+                    return true;
+                }
+                if (args.length < 2) {
+                    sender.sendMessage("§cUsage: /er start <race>");
+                    return true;
+                }
+                plugin.getRaceManager().startRace(args[1]);
+            }
+            case "end" -> {
+                if (!sender.hasPermission(END.getPermission())) {
+                    sender.sendMessage("§cYou do not have permission to use this command");
+                    return true;
+                }
+                if (args.length < 2) {
+                    sender.sendMessage("§cUsage: /er end <race>");
+                    return true;
+                }
+                plugin.getRaceManager().endRace(sender, args[1]);
+            }
             case "setup" -> {
                 if (!sender.hasPermission(SETUP.getPermission())) {
                     sender.sendMessage("§cYou do not have permission to use this command");
@@ -130,14 +152,14 @@ public class ERCommand implements CommandExecutor {
                 }
                 if (sender instanceof Player player) {
                     plugin.getScoreboardManager().showScoreboard(player);
-                    sender.sendMessage("Joining race " + args[1]);
+                    plugin.getRaceManager().joinRace(player, args[1]);
                 }
             }
 
             case "leave" -> {
                 if (sender instanceof Player player) {
                     plugin.getScoreboardManager().removeScoreboard(player);
-                    sender.sendMessage("Leaving race...");
+                    plugin.getRaceManager().leaveRace(player);
                 }
             }
 
@@ -147,4 +169,3 @@ public class ERCommand implements CommandExecutor {
         return true;
     }
 }
-

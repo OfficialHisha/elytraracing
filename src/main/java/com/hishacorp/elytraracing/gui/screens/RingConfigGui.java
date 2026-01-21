@@ -20,15 +20,20 @@ public class RingConfigGui implements Gui {
     private final Ring ring;
     private final Inventory inventory;
     private final boolean isNew;
-    private final List<Material> allowedMaterials = Arrays.asList(Material.GOLD_BLOCK, Material.DIAMOND_BLOCK, Material.EMERALD_BLOCK, Material.REDSTONE_BLOCK);
-    private final Ring originalRingState;
+    private final List<Material> allowedMaterials = Arrays.asList(
+            Material.WHITE_STAINED_GLASS, Material.ORANGE_STAINED_GLASS, Material.MAGENTA_STAINED_GLASS,
+            Material.LIGHT_BLUE_STAINED_GLASS, Material.YELLOW_STAINED_GLASS, Material.LIME_STAINED_GLASS,
+            Material.PINK_STAINED_GLASS, Material.GRAY_STAINED_GLASS, Material.LIGHT_GRAY_STAINED_GLASS,
+            Material.CYAN_STAINED_GLASS, Material.PURPLE_STAINED_GLASS, Material.BLUE_STAINED_GLASS,
+            Material.BROWN_STAINED_GLASS, Material.GREEN_STAINED_GLASS, Material.RED_STAINED_GLASS,
+            Material.BLACK_STAINED_GLASS
+    );
 
     public RingConfigGui(Elytraracing plugin, Ring ring, boolean isNew) {
         this.plugin = plugin;
         this.ring = ring;
         this.inventory = Bukkit.createInventory(null, 27, "Configure Ring");
         this.isNew = isNew;
-        this.originalRingState = new Ring(ring.getId(), ring.getRaceId(), ring.getLocation(), ring.getRadius(), ring.getOrientation(), ring.getMaterial(), ring.getIndex());
 
         updateItems();
     }
@@ -42,11 +47,10 @@ public class RingConfigGui implements Gui {
 
         inventory.setItem(10, createItem(Material.ENDER_PEARL, "§aRadius: §e" + ring.getRadius(), "§7Click to change"));
         inventory.setItem(12, createItem(Material.COMPASS, "§aOrientation: §e" + ring.getOrientation().name(), "§7Click to change"));
-        inventory.setItem(14, createItem(ring.getMaterial(), "§aMaterial: §e" + ring.getMaterial().name(), "§7Click to change"));
+        inventory.setItem(14, createItem(ring.getMaterial(), "§aMaterial: §e" + ring.getMaterial().name().replace("_", " "), "§7Click to change"));
         inventory.setItem(16, createItem(Material.WRITABLE_BOOK, "§aIndex: §e" + ring.getIndex(), "§7Click to change"));
 
         inventory.setItem(0, createItem(Material.RED_STAINED_GLASS_PANE, "§cDelete", "§7Delete this ring"));
-        inventory.setItem(8, createItem(Material.ORANGE_STAINED_GLASS_PANE, "§eCancel", "§7Revert changes"));
         inventory.setItem(26, createItem(Material.GREEN_STAINED_GLASS_PANE, "§aSave", "§7Save the ring configuration"));
     }
 
@@ -112,16 +116,6 @@ public class RingConfigGui implements Gui {
                 }
                 plugin.getRingRenderer().removeRingForPlayer(player, ring);
                 plugin.getRingRenderer().setConfiguringRingForPlayer(player, null);
-                player.closeInventory();
-                break;
-            case 8: // Cancel
-                ring.setLocation(originalRingState.getLocation());
-                ring.setRadius(originalRingState.getRadius());
-                ring.setOrientation(originalRingState.getOrientation());
-                ring.setMaterial(originalRingState.getMaterial());
-                ring.setIndex(originalRingState.getIndex());
-                plugin.getRingRenderer().setConfiguringRingForPlayer(player, null);
-                plugin.getRingRenderer().updatePlayerView(player);
                 player.closeInventory();
                 break;
             case 26: // Save

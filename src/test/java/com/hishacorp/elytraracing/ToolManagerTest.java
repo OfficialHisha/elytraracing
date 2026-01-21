@@ -87,23 +87,6 @@ public class ToolManagerTest {
     }
 
     @Test
-    public void testCancelButton() throws Exception {
-        plugin.getDatabaseManager().createRace("test_race");
-        player.performCommand("er tool test_race");
-
-        plugin.getToolManager().onPlayerInteract(new PlayerInteractEvent(player, Action.RIGHT_CLICK_AIR, player.getInventory().getItemInMainHand(), null, null));
-        Ring ring = plugin.getRingRenderer().getPlayerConfiguringRing(player.getUniqueId());
-        ring.setRadius(10);
-
-        plugin.getToolManager().onPlayerInteract(new PlayerInteractEvent(player, Action.RIGHT_CLICK_AIR, player.getInventory().getItemInMainHand(), null, null));
-        RingConfigGui gui = (RingConfigGui) plugin.getGuiManager().getOpenGui(player);
-
-        gui.onClick(new InventoryClickEvent(player.getOpenInventory(), InventoryType.SlotType.CONTAINER, 8, null, null));
-
-        assertNull(plugin.getRingRenderer().getPlayerConfiguringRing(player.getUniqueId()));
-    }
-
-    @Test
     public void testSaveButton() throws Exception {
         plugin.getDatabaseManager().createRace("test_race");
         player.performCommand("er tool test_race");

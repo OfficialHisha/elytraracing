@@ -85,7 +85,17 @@ public class ToolManager implements Listener {
         Ring currentlyConfiguring = plugin.getRingRenderer().getPlayerConfiguringRing(player.getUniqueId());
 
         if (event.getAction().isRightClick()) {
-            if (currentlyConfiguring != null) {
+            event.setCancelled(true);
+            Block targetBlock = player.getTargetBlock(100);
+            Ring clickedRing = null;
+            if (targetBlock != null) {
+                clickedRing = plugin.getRingRenderer().getRingAtLocation(player, targetBlock.getLocation());
+            }
+
+            if (clickedRing != null) {
+                plugin.getRingRenderer().setConfiguringRingForPlayer(player, clickedRing);
+                plugin.getGuiManager().openGui(player, new RingConfigGui(plugin, clickedRing, clickedRing.getId() == 0));
+            } else if (currentlyConfiguring != null) {
                 plugin.getGuiManager().openGui(player, new RingConfigGui(plugin, currentlyConfiguring, currentlyConfiguring.getId() == 0));
             } else {
                 try {
@@ -114,8 +124,16 @@ public class ToolManager implements Listener {
                         }
                     }
 
-                    int nextIndex = plugin.getRingManager().getRings(raceId).size();
-                    Ring newRing = new Ring(0, raceId, ringLocation, 5, orientation, Material.GOLD_BLOCK, nextIndex);
+                    int nextIndex = 0;
+                    if (plugin.getRingManager().getRings(raceId) != null) {
+                        for (Ring ring : plugin.getRingManager().getRings(raceId)) {
+                            if (ring.getIndex() >= nextIndex) {
+                                nextIndex = ring.getIndex() + 1;
+                            }
+                        }
+                    }
+
+                    Ring newRing = new Ring(0, raceId, ringLocation, 5, orientation, Material.WHITE_STAINED_GLASS, nextIndex);
                     plugin.getRingRenderer().setConfiguringRingForPlayer(player, newRing);
                     player.sendMessage("§aStarted configuring a new ring.");
                 } catch (Exception e) {
@@ -123,7 +141,7 @@ public class ToolManager implements Listener {
                 }
             }
         } else if (event.getAction().isLeftClick()) {
-            Block targetBlock = player.getTargetBlock(null, 100);
+            Block targetBlock = player.getTargetBlock(100);
 
             if (currentlyConfiguring != null) {
                 Location newLocation;

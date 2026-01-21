@@ -58,8 +58,8 @@ public class RaceManagerTest {
     @Test
     public void testPlayerCannotJoinMultipleRaces() {
         // Given
-        raceManager.createRace(new com.hishacorp.elytraracing.input.events.CreateRaceInputEvent(player, "test-race-1"));
-        raceManager.createRace(new com.hishacorp.elytraracing.input.events.CreateRaceInputEvent(player, "test-race-2"));
+        raceManager.createRace(new com.hishacorp.elytraracing.input.events.CreateRaceInputEvent(player, "test-race-1", "world"));
+        raceManager.createRace(new com.hishacorp.elytraracing.input.events.CreateRaceInputEvent(player, "test-race-2", "world"));
 
         // When
         raceManager.joinRace(player, "test-race-1");
@@ -73,7 +73,7 @@ public class RaceManagerTest {
     @Test
     public void testDeleteRaceRemovesFromMemory() {
         // Given
-        raceManager.createRace(new com.hishacorp.elytraracing.input.events.CreateRaceInputEvent(player, "test-race"));
+        raceManager.createRace(new com.hishacorp.elytraracing.input.events.CreateRaceInputEvent(player, "test-race", "world"));
 
         // When
         raceManager.deleteRace(new com.hishacorp.elytraracing.input.events.DeleteRaceInputEvent(player, "test-race"));
@@ -85,7 +85,7 @@ public class RaceManagerTest {
     @Test
     public void testCannotDeleteRaceWithPlayers() {
         // Given
-        raceManager.createRace(new com.hishacorp.elytraracing.input.events.CreateRaceInputEvent(player, "test-race"));
+        raceManager.createRace(new com.hishacorp.elytraracing.input.events.CreateRaceInputEvent(player, "test-race", "world"));
         raceManager.joinRace(player, "test-race");
 
         // When
@@ -98,7 +98,7 @@ public class RaceManagerTest {
     @Test
     public void testCannotDeleteRaceInProgress() {
         // Given
-        raceManager.createRace(new com.hishacorp.elytraracing.input.events.CreateRaceInputEvent(player, "test-race"));
+        raceManager.createRace(new com.hishacorp.elytraracing.input.events.CreateRaceInputEvent(player, "test-race", "world"));
         raceManager.getRace("test-race").get().start();
 
         // When

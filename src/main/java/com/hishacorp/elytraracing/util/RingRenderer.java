@@ -63,7 +63,7 @@ public class RingRenderer extends BukkitRunnable {
                     z = center.getZ();
                     break;
             }
-            world.spawnParticle(particle, x, y, z, 0);
+            world.spawnParticle(particle, x, y, z, 1);
         }
     }
 }

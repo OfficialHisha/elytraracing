@@ -83,6 +83,11 @@ public class ToolManager implements Listener {
             if (configuring.containsKey(player.getUniqueId())) {
                 Ring ring = configuring.get(player.getUniqueId());
                 plugin.getGuiManager().openGui(player, new RingConfigGui(plugin, ring, ring.getId() == 0, () -> {
+                    if (ring.getId() == 0) { // New ring, unsaved
+                        plugin.getRingRenderer().removeRing(ring);
+                    } else { // Existing ring, reverted
+                        plugin.getRingRenderer().addRing(ring, false);
+                    }
                     configuring.remove(player.getUniqueId());
                 }));
             } else {
@@ -136,6 +141,7 @@ public class ToolManager implements Listener {
                                 plugin.getRingRenderer().addRing(ring, true);
                                 player.sendMessage("§aStarted configuring ring " + ring.getIndex());
                                 plugin.getGuiManager().openGui(player, new RingConfigGui(plugin, ring, false, () -> {
+                                    plugin.getRingRenderer().addRing(ring, false); // Revert to non-configuring state
                                     configuring.remove(player.getUniqueId());
                                 }));
                                 return;
@@ -151,8 +157,17 @@ public class ToolManager implements Listener {
 
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent event) {
-        configuring.remove(event.getPlayer().getUniqueId());
-        editingRace.remove(event.getPlayer().getUniqueId());
+        Player player = event.getPlayer();
+        if (configuring.containsKey(player.getUniqueId())) {
+            Ring ring = configuring.get(player.getUniqueId());
+            if (ring.getId() == 0) { // New ring
+                plugin.getRingRenderer().removeRing(ring);
+            } else { // Existing ring
+                plugin.getRingRenderer().addRing(ring, false);
+            }
+            configuring.remove(player.getUniqueId());
+        }
+        editingRace.remove(player.getUniqueId());
     }
 
     public Ring getConfiguringRing(Player player) {

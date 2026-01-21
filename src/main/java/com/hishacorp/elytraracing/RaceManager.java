@@ -113,7 +113,7 @@ public class RaceManager {
         }
 
         try {
-            plugin.getDatabaseManager().createRace(createRaceInputEvent.raceName);
+            plugin.getDatabaseManager().createRace(createRaceInputEvent.raceName, createRaceInputEvent.world);
             races.add(new Race(plugin, createRaceInputEvent.raceName));
             createRaceInputEvent.player.sendMessage("§aRace '" + createRaceInputEvent.raceName + "' created!");
         } catch (Exception ex) {

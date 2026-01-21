@@ -82,9 +82,14 @@ public class ERCommand implements CommandExecutor {
                     return true;
                 }
 
-                if (sender instanceof Player player) {
-                    plugin.getRaceManager().createRace(new CreateRaceInputEvent(player, args[1]));
+                if (!(sender instanceof Player player)) {
+                    sender.sendMessage("§cOnly players can use this command.");
+                    return true;
                 }
+
+                plugin.getRaceManager().createRace(
+                    new CreateRaceInputEvent(player, args[1], player.getWorld().getName())
+                );
             }
 
             case "delete" -> {
@@ -146,13 +151,17 @@ public class ERCommand implements CommandExecutor {
                     return true;
                 }
                 if (sender instanceof Player player) {
+                    plugin.getScoreboardManager().showScoreboard(player);
                     plugin.getRaceManager().joinRace(player, args[1]);
+                    sender.sendMessage("Joined race " + args[1]);
                 }
             }
 
             case "leave" -> {
                 if (sender instanceof Player player) {
+                    plugin.getScoreboardManager().removeScoreboard(player);
                     plugin.getRaceManager().leaveRace(player);
+                    sender.sendMessage("Left race " + args[1]);
                 }
             }
 

@@ -20,6 +20,8 @@ permissions:
       elytraracing.admin.time: true
       elytraracing.admin.setspawn: true
       elytraracing.admin.stats: true
+      elytraracing.admin.start: true
+      elytraracing.admin.end: true
 commands:
   er:
     description: "Command for interacting with the Elytra Racing plugin"

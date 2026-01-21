@@ -6,8 +6,11 @@ import org.bukkit.plugin.java.JavaPlugin;
 import java.io.File;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 public class DatabaseManager {
@@ -98,6 +101,19 @@ public class DatabaseManager {
             ps.setString(1, raceName);
             return ps.executeUpdate();
         }
+    }
+
+    public List<String> getAllRaceNames() {
+        List<String> raceNames = new ArrayList<>();
+        try (var ps = connection.prepareStatement("SELECT name FROM races")) {
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                raceNames.add(rs.getString("name"));
+            }
+        } catch (SQLException e) {
+            plugin.getLogger().severe("Failed to get all race names: " + e.getMessage());
+        }
+        return raceNames;
     }
 
     public RaceStat getTopTimeByRace(String raceName, int position) {

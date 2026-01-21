@@ -35,7 +35,7 @@ public class SimpleScoreProvider implements ScoreboardProvider {
                 List<String> lines = Arrays.asList(
                         "§f",
                         "§f§lRace Time",
-                        "§e00:00.000",
+                        "§e00:00",
                         "§f",
                         "§f§lPlayers",
                         "§e1/1",

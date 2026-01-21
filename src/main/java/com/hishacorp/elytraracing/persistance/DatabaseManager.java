@@ -52,6 +52,8 @@ public class DatabaseManager {
                     player_uuid TEXT NOT NULL,
                     best_time INTEGER,
                     finishes INTEGER DEFAULT 0,
+                    wins INTEGER DEFAULT 0,
+                    rounds_played INTEGER DEFAULT 0,
                     FOREIGN KEY (race_id) REFERENCES races(id)
                 );
             """);
@@ -98,23 +100,25 @@ public class DatabaseManager {
         }
     }
 
-    public RaceStat getTopTimeByWorld(String world, int position) {
+    public RaceStat getTopTimeByRace(String raceName, int position) {
         try (var ps = connection.prepareStatement(
-                "SELECT player_uuid, best_time FROM race_stats rs " +
+                "SELECT player_uuid, best_time, wins, rounds_played FROM race_stats rs " +
                         "JOIN races r ON rs.race_id = r.id " +
-                        "WHERE r.world = ? AND rs.best_time IS NOT NULL " +
+                        "WHERE r.name = ? AND rs.best_time IS NOT NULL " +
                         "ORDER BY rs.best_time ASC LIMIT 1 OFFSET ?")) {
-            ps.setString(1, world);
+            ps.setString(1, raceName);
             ps.setInt(2, position - 1);
             var rs = ps.executeQuery();
             if (rs.next()) {
                 return new RaceStat(
                         UUID.fromString(rs.getString("player_uuid")),
-                        rs.getLong("best_time")
+                        rs.getLong("best_time"),
+                        rs.getInt("wins"),
+                        rs.getInt("rounds_played")
                 );
             }
         } catch (SQLException e) {
-            plugin.getLogger().severe("Failed to get top time by world: " + e.getMessage());
+            plugin.getLogger().severe("Failed to get top time by race: " + e.getMessage());
         }
         return null;
     }

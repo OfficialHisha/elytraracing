@@ -17,7 +17,7 @@ public class VanillaScoreboardProvider implements ScoreboardProvider {
         String[] lines = {
                 "§f",
                 "§f§lRace Time",
-                "§e00:00.000",
+                "§e00:00",
                 "§f",
                 "§f§lPlayers",
                 "§e1/1",

@@ -7,7 +7,6 @@ authors: [ Hisha ]
 description: An elytra racing mode for Minecraft
 softdepend:
   - PlaceholderAPI
-  - DecentHolograms
   - SimpleScore
 permissions:
   elytraracing.admin:

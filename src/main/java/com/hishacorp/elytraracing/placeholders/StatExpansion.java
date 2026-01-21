@@ -43,24 +43,29 @@ public class StatExpansion extends PlaceholderExpansion {
             return null;
         }
 
-        String world = parts[0];
+        String raceName = parts[0];
         String type = parts[1];
         int position = Integer.parseInt(parts[2]);
 
-        RaceStat stat = plugin.getDatabaseManager().getTopTimeByWorld(world, position);
+        RaceStat stat = plugin.getDatabaseManager().getTopTimeByRace(raceName, position);
 
         if (stat == null) {
             return "N/A";
         }
 
-        if (type.equalsIgnoreCase("time")) {
-            long time = stat.getBestTime();
-            long minutes = TimeUnit.MILLISECONDS.toMinutes(time);
-            long seconds = TimeUnit.MILLISECONDS.toSeconds(time) % 60;
-            long millis = time % 1000;
-            return String.format("%02d:%02d.%03d", minutes, seconds, millis);
-        } else if (type.equalsIgnoreCase("player")) {
-            return plugin.getServer().getOfflinePlayer(stat.getPlayerUUID()).getName();
+        switch (type.toLowerCase()) {
+            case "time":
+                long time = stat.getBestTime();
+                long minutes = TimeUnit.MILLISECONDS.toMinutes(time);
+                long seconds = TimeUnit.MILLISECONDS.toSeconds(time) % 60;
+                long millis = time % 1000;
+                return String.format("%02d:%02d.%03d", minutes, seconds, millis);
+            case "player":
+                return plugin.getServer().getOfflinePlayer(stat.getPlayerUUID()).getName();
+            case "wins":
+                return String.valueOf(stat.getWins());
+            case "rounds_played":
+                return String.valueOf(stat.getRoundsPlayed());
         }
 
         return null;

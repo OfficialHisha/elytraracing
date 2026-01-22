@@ -55,16 +55,20 @@ public class ToolManagerTest {
     public void testRingSelectionByBlock() throws Exception {
         plugin.getDatabaseManager().createRace("test_race");
         int raceId = plugin.getDatabaseManager().getRaceId("test_race");
-        Ring testRing = new Ring(0, raceId, player.getEyeLocation().add(5, 0, 0), 5, Ring.Orientation.HORIZONTAL, Material.GOLD_BLOCK, 0);
+        Ring testRing = new Ring(1, raceId, player.getEyeLocation().add(5, 0, 0), 5, Ring.Orientation.HORIZONTAL, Material.GOLD_BLOCK, 0);
         plugin.getRingManager().addRing(testRing);
         player.performCommand("er tool test_race");
 
         // Manually render the ring for the test
         plugin.getRingRenderer().addRingForPlayer(player, testRing);
 
-        Block targetBlock = player.getWorld().getBlockAt(testRing.getLocation().clone().add(5, 0, 0));
+        // Point player towards the ring
+        Location targetLocation = testRing.getLocation().clone().add(5,0,0);
+        Location playerLocation = player.getLocation();
+        player.teleport(playerLocation.setDirection(targetLocation.toVector().subtract(playerLocation.toVector())));
 
-        plugin.getToolManager().onPlayerInteract(new PlayerInteractEvent(player, Action.LEFT_CLICK_BLOCK, player.getInventory().getItemInMainHand(), targetBlock, null, EquipmentSlot.HAND));
+
+        plugin.getToolManager().onPlayerInteract(new PlayerInteractEvent(player, Action.LEFT_CLICK_AIR, player.getInventory().getItemInMainHand(), null, null, EquipmentSlot.HAND));
 
         assertEquals(testRing, plugin.getRingRenderer().getPlayerConfiguringRing(player.getUniqueId()));
     }

@@ -2,6 +2,7 @@ package com.hishacorp.elytraracing;
 
 import com.hishacorp.elytraracing.gui.screens.RingConfigGui;
 import com.hishacorp.elytraracing.model.Ring;
+import org.bukkit.FluidCollisionMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -86,11 +87,7 @@ public class ToolManager implements Listener {
 
         if (event.getAction().isRightClick()) {
             event.setCancelled(true);
-            Block targetBlock = player.getTargetBlock(100);
-            Ring clickedRing = null;
-            if (targetBlock != null) {
-                clickedRing = plugin.getRingRenderer().getRingAtLocation(player, targetBlock.getLocation());
-            }
+            Ring clickedRing = getTargetedRing(player);
 
             if (clickedRing != null) {
                 plugin.getRingRenderer().setConfiguringRingForPlayer(player, clickedRing);
@@ -141,12 +138,12 @@ public class ToolManager implements Listener {
                 }
             }
         } else if (event.getAction().isLeftClick()) {
-            Block targetBlock = player.getTargetBlock(100);
+            Ring clickedRing = getTargetedRing(player);
 
             if (currentlyConfiguring != null) {
                 Location newLocation;
-                if (targetBlock != null && targetBlock.getType() != Material.AIR) {
-                    newLocation = targetBlock.getLocation();
+                if (clickedRing != null) {
+                    newLocation = clickedRing.getLocation();
                 } else {
                     newLocation = player.getEyeLocation().add(player.getLocation().getDirection().multiply(5));
                 }
@@ -154,16 +151,30 @@ public class ToolManager implements Listener {
                 plugin.getRingRenderer().updatePlayerView(player); // Force a redraw
                 player.sendMessage("§aRing relocated.");
             } else {
-                if (targetBlock == null) {
-                    return;
-                }
-                Ring clickedRing = plugin.getRingRenderer().getRingAtLocation(player, targetBlock.getLocation());
                 if (clickedRing != null) {
                     plugin.getRingRenderer().setConfiguringRingForPlayer(player, clickedRing);
                     player.sendMessage("§aStarted configuring ring " + clickedRing.getIndex());
                 }
             }
         }
+    }
+
+    private Ring getTargetedRing(Player player) {
+        Location eyeLocation = player.getEyeLocation();
+        Map<Location, Ring> ringBlocks = plugin.getRingRenderer().getPlayerRingBlocks(player.getUniqueId());
+        if (ringBlocks == null) {
+            return null;
+        }
+
+        for (double i = 0; i < 100; i += 0.5) {
+            Location point = eyeLocation.clone().add(eyeLocation.getDirection().clone().multiply(i));
+            for (Map.Entry<Location, Ring> entry : ringBlocks.entrySet()) {
+                if (entry.getKey().distance(point) < 1) {
+                    return entry.getValue();
+                }
+            }
+        }
+        return null;
     }
 
     @EventHandler

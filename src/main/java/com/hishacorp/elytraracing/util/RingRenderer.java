@@ -61,6 +61,10 @@ public class RingRenderer {
         return null;
     }
 
+    public Map<Location, Ring> getPlayerRingBlocks(UUID uniqueId) {
+        return playerRingBlocks.get(uniqueId);
+    }
+
     public void updatePlayerView(Player player) {
         // Revert any existing blocks first
         revertBlocksForPlayer(player);

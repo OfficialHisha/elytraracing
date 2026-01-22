@@ -14,15 +14,13 @@ import java.util.function.Consumer;
 
 public class MaterialSelectionGui implements Gui {
 
-    private static final String title = "Select a Material";
-
     private final Inventory inventory;
     private final Consumer<Material> onSelect;
     private final List<Material> materials;
 
     public MaterialSelectionGui(List<Material> materials, Consumer<Material> onSelect) {
         this.materials = materials;
-        this.inventory = Bukkit.createInventory(null, 27, title);
+        this.inventory = Bukkit.createInventory(null, 27, "Select a Material");
         this.onSelect = onSelect;
 
         populateItems();
@@ -41,17 +39,18 @@ public class MaterialSelectionGui implements Gui {
     }
 
     @Override
-    public String getTitle() {
-        return title;
-    }
-
-    @Override
     public Inventory getInventory() {
         return inventory;
     }
 
     @Override
+    public void onClose(Player player) {
+        // Do nothing
+    }
+
+    @Override
     public void onClick(InventoryClickEvent event) {
+        event.setCancelled(true);
         ItemStack clickedItem = event.getCurrentItem();
         if (clickedItem != null) {
             Material selectedMaterial = clickedItem.getType();

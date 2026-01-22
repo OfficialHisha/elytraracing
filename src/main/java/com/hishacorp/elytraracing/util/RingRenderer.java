@@ -98,7 +98,7 @@ public class RingRenderer {
     }
 
     private void drawRing(Player player, Ring ring, boolean isBeingConfigured) {
-        Material material = isBeingConfigured ? Material.LIME_STAINED_GLASS : ring.getMaterial();
+        Material material = ring.getMaterial();
         BlockData blockData = material.createBlockData();
         Map<Location, BlockData> originalBlocks = playerOriginalBlocks.computeIfAbsent(player.getUniqueId(), k -> new HashMap<>());
         Map<Location, Ring> ringBlocks = playerRingBlocks.get(player.getUniqueId());
@@ -138,6 +138,10 @@ public class RingRenderer {
             // Add to the ring blocks map
             if (ringBlocks != null) {
                 ringBlocks.put(blockLocation, ring);
+            }
+
+            if (isBeingConfigured) {
+                player.spawnParticle(org.bukkit.Particle.END_ROD, blockLocation.clone().add(0.5, 0.5, 0.5), 1, 0, 0, 0, 0);
             }
         }
     }

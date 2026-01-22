@@ -16,26 +16,23 @@ import java.util.List;
 
 public class RingConfigGui implements Gui {
 
-    private static final String title = "Configure Ring";
-
     private final Elytraracing plugin;
     private final Ring ring;
     private final Inventory inventory;
     private final boolean isNew;
     private final List<Material> allowedMaterials = Arrays.asList(
+            Material.IRON_BLOCK, Material.GOLD_BLOCK, Material.DIAMOND_BLOCK, Material.EMERALD_BLOCK,
+            Material.REDSTONE_BLOCK, Material.LAPIS_BLOCK, Material.COAL_BLOCK,
             Material.WHITE_STAINED_GLASS, Material.ORANGE_STAINED_GLASS, Material.MAGENTA_STAINED_GLASS,
             Material.LIGHT_BLUE_STAINED_GLASS, Material.YELLOW_STAINED_GLASS, Material.LIME_STAINED_GLASS,
-            Material.PINK_STAINED_GLASS, Material.GRAY_STAINED_GLASS, Material.LIGHT_GRAY_STAINED_GLASS,
-            Material.CYAN_STAINED_GLASS, Material.PURPLE_STAINED_GLASS, Material.BLUE_STAINED_GLASS,
-            Material.BROWN_STAINED_GLASS, Material.GREEN_STAINED_GLASS, Material.RED_STAINED_GLASS,
-            Material.BLACK_STAINED_GLASS
+            Material.PINK_STAINED_GLASS, Material.CYAN_STAINED_GLASS, Material.PURPLE_STAINED_GLASS
     );
     private final int originalIndex;
 
     public RingConfigGui(Elytraracing plugin, Ring ring, boolean isNew) {
         this.plugin = plugin;
         this.ring = ring;
-        this.inventory = Bukkit.createInventory(null, 27, title);
+        this.inventory = Bukkit.createInventory(null, 27, "Configure Ring");
         this.isNew = isNew;
         this.originalIndex = ring.getIndex();
 
@@ -67,11 +64,6 @@ public class RingConfigGui implements Gui {
             item.setItemMeta(meta);
         }
         return item;
-    }
-
-    @Override
-    public String getTitle() {
-        return title;
     }
 
     @Override

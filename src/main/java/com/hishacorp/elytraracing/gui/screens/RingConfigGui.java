@@ -28,12 +28,14 @@ public class RingConfigGui implements Gui {
             Material.BROWN_STAINED_GLASS, Material.GREEN_STAINED_GLASS, Material.RED_STAINED_GLASS,
             Material.BLACK_STAINED_GLASS
     );
+    private final int originalIndex;
 
     public RingConfigGui(Elytraracing plugin, Ring ring, boolean isNew) {
         this.plugin = plugin;
         this.ring = ring;
         this.inventory = Bukkit.createInventory(null, 27, "Configure Ring");
         this.isNew = isNew;
+        this.originalIndex = ring.getIndex();
 
         updateItems();
     }
@@ -123,7 +125,11 @@ public class RingConfigGui implements Gui {
                     plugin.getRingManager().addRing(ring);
                     plugin.getRingRenderer().addRingForPlayer(player, ring);
                 } else {
-                    plugin.getRingManager().updateRing(ring);
+                    if (ring.getIndex() != originalIndex) {
+                        plugin.getRingManager().updateRingWithIndexShift(ring);
+                    } else {
+                        plugin.getRingManager().updateRing(ring);
+                    }
                 }
                 plugin.getRingRenderer().setConfiguringRingForPlayer(player, null);
                 player.closeInventory();

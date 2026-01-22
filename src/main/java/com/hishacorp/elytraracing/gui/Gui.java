@@ -6,6 +6,8 @@ import org.bukkit.inventory.Inventory;
 
 public interface Gui {
 
+    String getTitle();
+
     Inventory getInventory();
 
     default void onOpen(Player player) {}

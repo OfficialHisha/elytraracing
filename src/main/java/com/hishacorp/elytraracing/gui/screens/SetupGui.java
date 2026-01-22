@@ -14,12 +14,15 @@ import org.bukkit.inventory.meta.ItemMeta;
 import static org.bukkit.Material.*;
 
 public class SetupGui implements Gui {
+
+    private static final String title = "Elytra Racing Setup";
+
     private final Elytraracing plugin;
     private final Inventory inventory;
 
     public SetupGui(Elytraracing plugin) {
         this.plugin = plugin;
-        this.inventory = Bukkit.createInventory(null, 27, "Elytra Racing Setup");
+        this.inventory = Bukkit.createInventory(null, 27, title);
 
         inventory.setItem(11, button(ELYTRA, "§aCreate Race"));
         inventory.setItem(13, button(BARRIER, "§cDelete Race"));
@@ -32,6 +35,11 @@ public class SetupGui implements Gui {
         meta.setDisplayName(name);
         item.setItemMeta(meta);
         return item;
+    }
+
+    @Override
+    public String getTitle() {
+        return title;
     }
 
     @Override

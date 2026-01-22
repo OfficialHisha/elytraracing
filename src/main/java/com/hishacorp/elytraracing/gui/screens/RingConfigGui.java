@@ -16,6 +16,8 @@ import java.util.List;
 
 public class RingConfigGui implements Gui {
 
+    private static final String title = "Configure Ring";
+
     private final Elytraracing plugin;
     private final Ring ring;
     private final Inventory inventory;
@@ -33,7 +35,7 @@ public class RingConfigGui implements Gui {
     public RingConfigGui(Elytraracing plugin, Ring ring, boolean isNew) {
         this.plugin = plugin;
         this.ring = ring;
-        this.inventory = Bukkit.createInventory(null, 27, "Configure Ring");
+        this.inventory = Bukkit.createInventory(null, 27, title);
         this.isNew = isNew;
         this.originalIndex = ring.getIndex();
 
@@ -65,6 +67,11 @@ public class RingConfigGui implements Gui {
             item.setItemMeta(meta);
         }
         return item;
+    }
+
+    @Override
+    public String getTitle() {
+        return title;
     }
 
     @Override

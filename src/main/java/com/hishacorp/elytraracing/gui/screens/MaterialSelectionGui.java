@@ -52,7 +52,6 @@ public class MaterialSelectionGui implements Gui {
 
     @Override
     public void onClick(InventoryClickEvent event) {
-        event.setCancelled(true);
         ItemStack clickedItem = event.getCurrentItem();
         if (clickedItem != null) {
             Material selectedMaterial = clickedItem.getType();

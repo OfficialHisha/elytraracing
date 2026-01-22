@@ -95,9 +95,11 @@ public class RingConfigGui implements Gui {
                 needsUpdate = true;
                 break;
             case 14: // Material
-                int nextMaterialIndex = (allowedMaterials.indexOf(ring.getMaterial()) + 1) % allowedMaterials.size();
-                ring.setMaterial(allowedMaterials.get(nextMaterialIndex));
-                needsUpdate = true;
+                plugin.getGuiManager().openGui(player, new MaterialSelectionGui(allowedMaterials, material -> {
+                    ring.setMaterial(material);
+                    plugin.getRingRenderer().updatePlayerView(player);
+                    plugin.getGuiManager().openGui(player, this);
+                }));
                 break;
             case 16: // Index
                 player.closeInventory();

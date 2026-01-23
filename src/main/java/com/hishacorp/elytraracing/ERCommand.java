@@ -3,8 +3,11 @@ package com.hishacorp.elytraracing;
 import com.hishacorp.elytraracing.gui.screens.SetupGui;
 import com.hishacorp.elytraracing.input.events.CreateRaceInputEvent;
 import com.hishacorp.elytraracing.input.events.DeleteRaceInputEvent;
+import com.hishacorp.elytraracing.model.Ring;
 import com.hishacorp.elytraracing.util.WorldUtil;
 import org.bukkit.command.Command;
+import java.sql.SQLException;
+import java.util.List;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -19,10 +22,9 @@ public class ERCommand implements CommandExecutor {
         this.plugin = plugin;
     }
 
-    @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (args.length == 0) {
-            sender.sendMessage("§eUsage: /er <setup|tool|create|delete|time|setspawn|resetstats|join|leave>");
+            sender.sendMessage("§eUsage: /er <setup|tool|create|delete|time|setspawn|resetstats|join|leave|rings>");
             return true;
         }
 
@@ -69,7 +71,20 @@ public class ERCommand implements CommandExecutor {
                     sender.sendMessage("§cYou do not have permission to use this command");
                     return true;
                 }
-                sender.sendMessage("Giving ring tool...");
+
+                if (!(sender instanceof Player player)) {
+                    sender.sendMessage("Only players can use this command.");
+                    return true;
+                }
+
+                if (args.length < 2) {
+                    sender.sendMessage("§cUsage: /er tool <race>");
+                    return true;
+                }
+
+                String raceName = args[1].toLowerCase();
+                plugin.getToolManager().giveTool(player, raceName);
+                player.sendMessage("§aYou have been given the ring tool for race " + raceName + ".");
             }
 
             case "create" -> {
@@ -87,9 +102,7 @@ public class ERCommand implements CommandExecutor {
                     return true;
                 }
 
-                plugin.getRaceManager().createRace(
-                    new CreateRaceInputEvent(player, args[1], player.getWorld().getName())
-                );
+                plugin.getRaceManager().createRace(new CreateRaceInputEvent(player, args[1].toLowerCase(), player.getWorld().getName()));
             }
 
             case "delete" -> {
@@ -102,7 +115,7 @@ public class ERCommand implements CommandExecutor {
                     return true;
                 }
                 if (sender instanceof Player player) {
-                    plugin.getRaceManager().deleteRace(new DeleteRaceInputEvent(player, args[1]));
+                    plugin.getRaceManager().deleteRace(new DeleteRaceInputEvent(player, args[1].toLowerCase()));
                 }
             }
 
@@ -162,6 +175,36 @@ public class ERCommand implements CommandExecutor {
                     plugin.getScoreboardManager().removeScoreboard(player);
                     plugin.getRaceManager().leaveRace(player);
                     sender.sendMessage("Left race " + args[1]);
+                }
+            }
+
+            case "rings" -> {
+                if (!sender.hasPermission(RINGS.getPermission())) {
+                    sender.sendMessage("§cYou do not have permission to use this command");
+                    return true;
+                }
+                if (args.length < 2) {
+                    sender.sendMessage("§cUsage: /er rings <race>");
+                    return true;
+                }
+                try {
+                    int raceId = plugin.getDatabaseManager().getRaceId(args[1]);
+                    if (raceId == -1) {
+                        sender.sendMessage("§cRace not found.");
+                        return true;
+                    }
+                    List<Ring> rings = plugin.getDatabaseManager().getRings(raceId);
+                    if (rings.isEmpty()) {
+                        sender.sendMessage("§eNo rings found for this race.");
+                        return true;
+                    }
+                    sender.sendMessage("§aRings for race " + args[1] + ":");
+                    for (Ring ring : rings) {
+                        sender.sendMessage("§e- Ring " + ring.getIndex() + " at " + ring.getLocation().toString());
+                    }
+                } catch (SQLException e) {
+                    sender.sendMessage("§cAn error occurred while fetching the rings.");
+                    plugin.getLogger().severe("Failed to fetch rings: " + e.getMessage());
                 }
             }
 

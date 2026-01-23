@@ -8,6 +8,7 @@ import com.hishacorp.elytraracing.listeners.PlayerQuitListener;
 import com.hishacorp.elytraracing.persistance.DatabaseManager;
 import com.hishacorp.elytraracing.placeholders.StatExpansion;
 import com.hishacorp.elytraracing.scoreboard.ScoreboardManager;
+import com.hishacorp.elytraracing.util.RingRenderer;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.sql.SQLException;
@@ -19,6 +20,9 @@ public class Elytraracing extends JavaPlugin {
     private InputManager inputManager;
     private RaceManager raceManager;
     private ScoreboardManager scoreboardManager;
+    private RingManager ringManager;
+    private ToolManager toolManager;
+    private RingRenderer ringRenderer;
 
     @Override
     public void onEnable() {
@@ -28,6 +32,9 @@ public class Elytraracing extends JavaPlugin {
         databaseManager = new DatabaseManager(this);
         inputManager = new InputManager(this, guiManager);
         raceManager = new RaceManager(this);
+        ringManager = new RingManager(this);
+        toolManager = new ToolManager(this);
+        ringRenderer = new RingRenderer();
         scoreboardManager = new ScoreboardManager(this);
 
         if (getServer().getPluginManager().getPlugin("PlaceholderAPI") != null) {
@@ -49,6 +56,8 @@ public class Elytraracing extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new ChatInputListener(this), this);
         getServer().getPluginManager().registerEvents(new PlayerQuitListener(this), this);
         getServer().getPluginManager().registerEvents(new FireworkUseListener(this), this);
+        getServer().getPluginManager().registerEvents(toolManager, this);
+
         getLogger().info("ElytraRacing enabled!");
     }
 
@@ -77,5 +86,17 @@ public class Elytraracing extends JavaPlugin {
 
     public ScoreboardManager getScoreboardManager() {
         return scoreboardManager;
+    }
+
+    public RingManager getRingManager() {
+        return ringManager;
+    }
+
+    public ToolManager getToolManager() {
+        return toolManager;
+    }
+
+    public RingRenderer getRingRenderer() {
+        return ringRenderer;
     }
 }

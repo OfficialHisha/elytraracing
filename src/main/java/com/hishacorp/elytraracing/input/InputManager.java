@@ -5,6 +5,7 @@ import com.hishacorp.elytraracing.gui.Gui;
 import com.hishacorp.elytraracing.gui.GuiManager;
 import com.hishacorp.elytraracing.input.events.CreateRaceInputEvent;
 import com.hishacorp.elytraracing.input.events.DeleteRaceInputEvent;
+import com.hishacorp.elytraracing.input.events.GenericInputEvent;
 import com.hishacorp.elytraracing.input.events.InputEvent;
 import org.bukkit.entity.Player;
 
@@ -52,6 +53,15 @@ public class InputManager {
         return switch (eventType) {
             case CREATE -> new CreateRaceInputEvent(player, input, player.getWorld().getName());
             case DELETE -> new DeleteRaceInputEvent(player, input);
+            case GENERIC -> new GenericInputEvent(player, input);
         };
+    }
+
+    public void awaitChatInput(Player player, Consumer<String> consumer) {
+        awaitRaceName(AwaitInputEventType.GENERIC, player.getUniqueId(), null, false, (event) -> {
+            if (event instanceof GenericInputEvent genericInputEvent) {
+                consumer.accept(genericInputEvent.getValue());
+            }
+        });
     }
 }

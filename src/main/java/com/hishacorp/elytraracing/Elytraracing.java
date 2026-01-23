@@ -3,7 +3,11 @@ package com.hishacorp.elytraracing;
 import com.hishacorp.elytraracing.gui.GuiManager;
 import com.hishacorp.elytraracing.input.ChatInputListener;
 import com.hishacorp.elytraracing.input.InputManager;
+import com.hishacorp.elytraracing.listeners.FireworkUseListener;
+import com.hishacorp.elytraracing.listeners.PlayerQuitListener;
 import com.hishacorp.elytraracing.persistance.DatabaseManager;
+import com.hishacorp.elytraracing.placeholders.StatExpansion;
+import com.hishacorp.elytraracing.scoreboard.ScoreboardManager;
 import com.hishacorp.elytraracing.util.RingRenderer;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -15,12 +19,15 @@ public class Elytraracing extends JavaPlugin {
     private DatabaseManager databaseManager;
     private InputManager inputManager;
     private RaceManager raceManager;
+    private ScoreboardManager scoreboardManager;
     private RingManager ringManager;
     private ToolManager toolManager;
     private RingRenderer ringRenderer;
 
     @Override
     public void onEnable() {
+        saveDefaultConfig();
+
         guiManager = new GuiManager(this);
         databaseManager = new DatabaseManager(this);
         inputManager = new InputManager(this, guiManager);
@@ -28,6 +35,11 @@ public class Elytraracing extends JavaPlugin {
         ringManager = new RingManager(this);
         toolManager = new ToolManager(this);
         ringRenderer = new RingRenderer();
+        scoreboardManager = new ScoreboardManager(this);
+
+        if (getServer().getPluginManager().getPlugin("PlaceholderAPI") != null) {
+            new StatExpansion(this).register();
+        }
 
         try {
             databaseManager.connect();
@@ -38,8 +50,12 @@ public class Elytraracing extends JavaPlugin {
             return;
         }
 
+        raceManager.loadRaces();
+
         getCommand("er").setExecutor(new ERCommand(this));
         getServer().getPluginManager().registerEvents(new ChatInputListener(this), this);
+        getServer().getPluginManager().registerEvents(new PlayerQuitListener(this), this);
+        getServer().getPluginManager().registerEvents(new FireworkUseListener(this), this);
         getServer().getPluginManager().registerEvents(toolManager, this);
 
         getLogger().info("ElytraRacing enabled!");
@@ -66,6 +82,10 @@ public class Elytraracing extends JavaPlugin {
 
     public RaceManager getRaceManager() {
         return raceManager;
+    }
+
+    public ScoreboardManager getScoreboardManager() {
+        return scoreboardManager;
     }
 
     public RingManager getRingManager() {

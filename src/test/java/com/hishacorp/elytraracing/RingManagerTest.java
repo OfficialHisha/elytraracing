@@ -40,7 +40,7 @@ public class RingManagerTest {
         rings.add(new Ring(2, 1, player.getLocation(), 5, Ring.Orientation.HORIZONTAL, Material.GOLD_BLOCK, 1));
         rings.add(new Ring(3, 1, player.getLocation(), 5, Ring.Orientation.HORIZONTAL, Material.GOLD_BLOCK, 2));
 
-        plugin.getDatabaseManager().createRace("test_race");
+        plugin.getDatabaseManager().createRace("test_race", "test_world");
         int raceId = plugin.getDatabaseManager().getRaceId("test_race");
 
         for (Ring ring : rings) {

@@ -32,19 +32,19 @@ public class RaceManagerTest {
 
     @Test
     public void testCreateRace() {
-        raceManager.createRace(new com.hishacorp.elytraracing.input.events.CreateRaceInputEvent(player, "test_race"));
+        raceManager.createRace(new com.hishacorp.elytraracing.input.events.CreateRaceInputEvent(player, "test_race", "world"));
         assertTrue(plugin.getDatabaseManager().raceExists("test_race"));
     }
 
     @Test
     public void testCreateRaceWithEmptyName() {
-        raceManager.createRace(new com.hishacorp.elytraracing.input.events.CreateRaceInputEvent(player, ""));
+        raceManager.createRace(new com.hishacorp.elytraracing.input.events.CreateRaceInputEvent(player, "", "world"));
         assertFalse(plugin.getDatabaseManager().raceExists(""));
     }
 
     @Test
     public void testDeleteRace() {
-        raceManager.createRace(new com.hishacorp.elytraracing.input.events.CreateRaceInputEvent(player, "test_race"));
+        raceManager.createRace(new com.hishacorp.elytraracing.input.events.CreateRaceInputEvent(player, "test_race", "world"));
         raceManager.deleteRace(new com.hishacorp.elytraracing.input.events.DeleteRaceInputEvent(player, "test_race"));
         assertFalse(plugin.getDatabaseManager().raceExists("test_race"));
     }
@@ -53,5 +53,58 @@ public class RaceManagerTest {
     public void testDeleteNonExistentRace() {
         raceManager.deleteRace(new com.hishacorp.elytraracing.input.events.DeleteRaceInputEvent(player, "non_existent_race"));
         assertFalse(plugin.getDatabaseManager().raceExists("non_existent_race"));
+    }
+
+    @Test
+    public void testPlayerCannotJoinMultipleRaces() {
+        // Given
+        raceManager.createRace(new com.hishacorp.elytraracing.input.events.CreateRaceInputEvent(player, "test-race-1", "world"));
+        raceManager.createRace(new com.hishacorp.elytraracing.input.events.CreateRaceInputEvent(player, "test-race-2", "world"));
+
+        // When
+        raceManager.joinRace(player, "test-race-1");
+        raceManager.joinRace(player, "test-race-2");
+
+        // Then
+        assertTrue(raceManager.getRace("test-race-1").get().getPlayers().contains(player.getUniqueId()));
+        assertFalse(raceManager.getRace("test-race-2").get().getPlayers().contains(player.getUniqueId()));
+    }
+
+    @Test
+    public void testDeleteRaceRemovesFromMemory() {
+        // Given
+        raceManager.createRace(new com.hishacorp.elytraracing.input.events.CreateRaceInputEvent(player, "test-race", "world"));
+
+        // When
+        raceManager.deleteRace(new com.hishacorp.elytraracing.input.events.DeleteRaceInputEvent(player, "test-race"));
+
+        // Then
+        assertTrue(raceManager.getRace("test-race").isEmpty());
+    }
+
+    @Test
+    public void testCannotDeleteRaceWithPlayers() {
+        // Given
+        raceManager.createRace(new com.hishacorp.elytraracing.input.events.CreateRaceInputEvent(player, "test-race", "world"));
+        raceManager.joinRace(player, "test-race");
+
+        // When
+        raceManager.deleteRace(new com.hishacorp.elytraracing.input.events.DeleteRaceInputEvent(player, "test-race"));
+
+        // Then
+        assertTrue(raceManager.getRace("test-race").isPresent());
+    }
+
+    @Test
+    public void testCannotDeleteRaceInProgress() {
+        // Given
+        raceManager.createRace(new com.hishacorp.elytraracing.input.events.CreateRaceInputEvent(player, "test-race", "world"));
+        raceManager.getRace("test-race").get().start();
+
+        // When
+        raceManager.deleteRace(new com.hishacorp.elytraracing.input.events.DeleteRaceInputEvent(player, "test-race"));
+
+        // Then
+        assertTrue(raceManager.getRace("test-race").isPresent());
     }
 }

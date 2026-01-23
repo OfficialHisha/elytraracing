@@ -22,9 +22,9 @@ public class GuiManager implements Listener {
     }
 
     public void openGui(Player player, Gui gui) {
-        openGuis.put(player.getUniqueId(), gui);
         player.openInventory(gui.getInventory());
         gui.onOpen(player);
+        openGuis.put(player.getUniqueId(), gui);
     }
 
     public Gui getOpenGui(Player player) {

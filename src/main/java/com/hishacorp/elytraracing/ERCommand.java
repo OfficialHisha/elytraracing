@@ -31,6 +31,28 @@ public class ERCommand implements CommandExecutor {
         String sub = args[0].toLowerCase();
 
         switch (sub) {
+            case "start" -> {
+                if (!sender.hasPermission(START.getPermission())) {
+                    sender.sendMessage("§cYou do not have permission to use this command");
+                    return true;
+                }
+                if (args.length < 2) {
+                    sender.sendMessage("§cUsage: /er start <race>");
+                    return true;
+                }
+                plugin.getRaceManager().startRace(args[1]);
+            }
+            case "end" -> {
+                if (!sender.hasPermission(END.getPermission())) {
+                    sender.sendMessage("§cYou do not have permission to use this command");
+                    return true;
+                }
+                if (args.length < 2) {
+                    sender.sendMessage("§cUsage: /er end <race>");
+                    return true;
+                }
+                plugin.getRaceManager().endRace(sender, args[1]);
+            }
             case "setup" -> {
                 if (!sender.hasPermission(SETUP.getPermission())) {
                     sender.sendMessage("§cYou do not have permission to use this command");
@@ -75,9 +97,12 @@ public class ERCommand implements CommandExecutor {
                     return true;
                 }
 
-                if (sender instanceof Player player) {
-                    plugin.getRaceManager().createRace(new CreateRaceInputEvent(player, args[1].toLowerCase()));
+                if (!(sender instanceof Player player)) {
+                    sender.sendMessage("§cOnly players can use this command.");
+                    return true;
                 }
+
+                plugin.getRaceManager().createRace(new CreateRaceInputEvent(player, args[1].toLowerCase(), player.getWorld().getName()));
             }
 
             case "delete" -> {
@@ -138,10 +163,20 @@ public class ERCommand implements CommandExecutor {
                     sender.sendMessage("§cUsage: /er join <race>");
                     return true;
                 }
-                sender.sendMessage("Joining race " + args[1]);
+                if (sender instanceof Player player) {
+                    plugin.getScoreboardManager().showScoreboard(player);
+                    plugin.getRaceManager().joinRace(player, args[1]);
+                    sender.sendMessage("Joined race " + args[1]);
+                }
             }
 
-            case "leave" -> sender.sendMessage("Leaving race...");
+            case "leave" -> {
+                if (sender instanceof Player player) {
+                    plugin.getScoreboardManager().removeScoreboard(player);
+                    plugin.getRaceManager().leaveRace(player);
+                    sender.sendMessage("Left race " + args[1]);
+                }
+            }
 
             case "rings" -> {
                 if (!sender.hasPermission(RINGS.getPermission())) {

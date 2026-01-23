@@ -34,9 +34,9 @@ public class DatabaseManagerTest {
 
     @Test
     public void testCreateAndGetRing() throws SQLException {
-        databaseManager.createRace("test_race");
-        int raceId = databaseManager.getRaceId("test_race");
         World world = MockBukkit.getMock().addSimpleWorld("test_world");
+        databaseManager.createRace("test_race", world.getName());
+        int raceId = databaseManager.getRaceId("test_race");
         Ring ring = new Ring(0, raceId, new Location(world, 1, 2, 3), 5, Ring.Orientation.HORIZONTAL, Material.GOLD_BLOCK, 1);
 
         databaseManager.createRing(ring);
@@ -52,9 +52,9 @@ public class DatabaseManagerTest {
 
     @Test
     public void testUpdateRing() throws SQLException {
-        databaseManager.createRace("test_race");
-        int raceId = databaseManager.getRaceId("test_race");
         World world = MockBukkit.getMock().addSimpleWorld("test_world");
+        databaseManager.createRace("test_race", world.getName());
+        int raceId = databaseManager.getRaceId("test_race");
         Ring ring = new Ring(0, raceId, new Location(world, 1, 2, 3), 5, Ring.Orientation.HORIZONTAL, Material.GOLD_BLOCK, 1);
         databaseManager.createRing(ring);
         List<Ring> rings = databaseManager.getRings(raceId);
@@ -69,9 +69,9 @@ public class DatabaseManagerTest {
 
     @Test
     public void testDeleteRing() throws SQLException {
-        databaseManager.createRace("test_race");
-        int raceId = databaseManager.getRaceId("test_race");
         World world = MockBukkit.getMock().addSimpleWorld("test_world");
+        databaseManager.createRace("test_race", world.getName());
+        int raceId = databaseManager.getRaceId("test_race");
         Ring ring = new Ring(0, raceId, new Location(world, 1, 2, 3), 5, Ring.Orientation.HORIZONTAL, Material.GOLD_BLOCK, 1);
         databaseManager.createRing(ring);
         List<Ring> rings = databaseManager.getRings(raceId);

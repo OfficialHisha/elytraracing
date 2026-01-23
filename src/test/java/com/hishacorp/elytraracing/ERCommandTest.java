@@ -42,7 +42,7 @@ public class ERCommandTest {
 
     @Test
     public void testRingsCommand() throws Exception {
-        plugin.getDatabaseManager().createRace("test_race");
+        plugin.getDatabaseManager().createRace("test_race", "test_world");
         int raceId = plugin.getDatabaseManager().getRaceId("test_race");
         plugin.getDatabaseManager().createRing(new com.hishacorp.elytraracing.model.Ring(0, raceId, player.getLocation(), 5, com.hishacorp.elytraracing.model.Ring.Orientation.HORIZONTAL, org.bukkit.Material.GOLD_BLOCK, 1));
 

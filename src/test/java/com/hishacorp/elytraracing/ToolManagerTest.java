@@ -4,13 +4,11 @@ import com.hishacorp.elytraracing.gui.screens.RingConfigGui;
 import com.hishacorp.elytraracing.model.Ring;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.block.Block;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.EquipmentSlot;
-import org.bukkit.inventory.ItemStack;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -53,7 +51,7 @@ public class ToolManagerTest {
 
     @Test
     public void testRingSelectionByBlock() throws Exception {
-        plugin.getDatabaseManager().createRace("test_race");
+        plugin.getDatabaseManager().createRace("test_race", "test_world");
         int raceId = plugin.getDatabaseManager().getRaceId("test_race");
         Ring testRing = new Ring(1, raceId, player.getEyeLocation().add(5, 0, 0), 5, Ring.Orientation.HORIZONTAL, Material.GOLD_BLOCK, 0);
         plugin.getRingManager().addRing(testRing);
@@ -75,7 +73,7 @@ public class ToolManagerTest {
 
     @Test
     public void testGuiStatePersistsOnClose() throws Exception {
-        plugin.getDatabaseManager().createRace("test_race");
+        plugin.getDatabaseManager().createRace("test_race", "test_world");
         player.performCommand("er tool test_race");
 
         plugin.getToolManager().onPlayerInteract(new PlayerInteractEvent(player, Action.RIGHT_CLICK_AIR, player.getInventory().getItemInMainHand(), null, null));
@@ -92,7 +90,7 @@ public class ToolManagerTest {
 
     @Test
     public void testSaveButton() throws Exception {
-        plugin.getDatabaseManager().createRace("test_race");
+        plugin.getDatabaseManager().createRace("test_race", "test_world");
         player.performCommand("er tool test_race");
 
         plugin.getToolManager().onPlayerInteract(new PlayerInteractEvent(player, Action.RIGHT_CLICK_AIR, player.getInventory().getItemInMainHand(), null, null));

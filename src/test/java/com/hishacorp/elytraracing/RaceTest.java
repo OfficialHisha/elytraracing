@@ -34,7 +34,7 @@ public class RaceTest {
     @Test
     public void testStartAndEnd() {
         // Given
-        Race race = new Race(plugin, "test-race", new java.util.ArrayList<>());
+        Race race = new Race(plugin, "test-race");
         PlayerMock player = server.addPlayer();
         ItemStack[] originalInventory = player.getInventory().getContents();
         race.addPlayer(player);

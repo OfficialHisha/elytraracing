@@ -6,6 +6,7 @@ import com.hishacorp.elytraracing.input.InputManager;
 import com.hishacorp.elytraracing.listeners.FireworkUseListener;
 import com.hishacorp.elytraracing.listeners.PlayerMoveListener;
 import com.hishacorp.elytraracing.listeners.PlayerQuitListener;
+import com.hishacorp.elytraracing.listeners.ToolListener;
 import com.hishacorp.elytraracing.persistance.DatabaseManager;
 import com.hishacorp.elytraracing.placeholders.StatExpansion;
 import com.hishacorp.elytraracing.scoreboard.ScoreboardManager;
@@ -58,6 +59,7 @@ public class Elytraracing extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new PlayerQuitListener(this), this);
         getServer().getPluginManager().registerEvents(new FireworkUseListener(this), this);
         getServer().getPluginManager().registerEvents(new PlayerMoveListener(this), this);
+        getServer().getPluginManager().registerEvents(new ToolListener(this), this);
         getServer().getPluginManager().registerEvents(toolManager, this);
 
         getLogger().info("ElytraRacing enabled!");

@@ -31,7 +31,9 @@ public class RaceManager {
             try {
                 int raceId = plugin.getDatabaseManager().getRaceId(raceName);
                 plugin.getRingManager().loadRings(raceId);
-                races.add(new Race(plugin, raceName, plugin.getRingManager().getRings(raceId)));
+                Race race = new Race(plugin, raceName);
+                race.setRings(plugin.getRingManager().getRings(raceId));
+                races.add(race);
             } catch (java.sql.SQLException e) {
                 plugin.getLogger().severe("Failed to load race " + raceName + ": " + e.getMessage());
             }
@@ -62,6 +64,14 @@ public class RaceManager {
 
         getRace(raceName).ifPresentOrElse(race -> {
             if (!race.isInProgress()) {
+                try {
+                    int raceId = plugin.getDatabaseManager().getRaceId(race.getName());
+                    plugin.getRingManager().loadRings(raceId);
+                    race.setRings(plugin.getRingManager().getRings(raceId));
+                } catch (java.sql.SQLException e) {
+                    player.sendMessage("§cCould not load race data.");
+                    return;
+                }
                 race.addPlayer(player);
                 Racer racer = race.getRacers().get(player.getUniqueId());
                 if (racer != null) {
@@ -129,7 +139,7 @@ public class RaceManager {
 
         try {
             plugin.getDatabaseManager().createRace(createRaceInputEvent.raceName, createRaceInputEvent.world);
-            races.add(new Race(plugin, createRaceInputEvent.raceName, new ArrayList<>()));
+            races.add(new Race(plugin, createRaceInputEvent.raceName));
             createRaceInputEvent.player.sendMessage("§aRace '" + createRaceInputEvent.raceName + "' created!");
         } catch (Exception ex) {
             createRaceInputEvent.player.sendMessage("§cA race with that name already exists.");

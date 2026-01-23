@@ -24,17 +24,21 @@ public class Race {
 
     private final Elytraracing plugin;
     private final String name;
-    private final List<Ring> rings;
+    private final List<Ring> rings = new ArrayList<>();
     private final Map<UUID, Racer> racers = new HashMap<>();
     private final Map<UUID, BukkitTask> cooldownTasks = new HashMap<>();
     private boolean inProgress = false;
     private long startTime;
     private BukkitTask dnfTask;
 
-    public Race(Elytraracing plugin, String name, List<Ring> rings) {
+    public Race(Elytraracing plugin, String name) {
         this.plugin = plugin;
         this.name = name;
-        this.rings = rings;
+    }
+
+    public void setRings(List<Ring> rings) {
+        this.rings.clear();
+        this.rings.addAll(rings);
     }
 
     public void start() {

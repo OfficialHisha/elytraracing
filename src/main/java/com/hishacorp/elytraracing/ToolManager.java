@@ -68,7 +68,7 @@ public class ToolManager implements Listener {
         Player player = event.getPlayer();
         ItemStack item = event.getItem();
 
-        if (item == null || !item.hasItemMeta() || !item.getItemMeta().hasDisplayName() || !item.getItemMeta().getDisplayName().contains("Ring Tool")) {
+        if (!isTool(item)) {
             return;
         }
 
@@ -177,11 +177,17 @@ public class ToolManager implements Listener {
         return null;
     }
 
-    @EventHandler
-    public void onPlayerQuit(PlayerQuitEvent event) {
-        Player player = event.getPlayer();
-        plugin.getRingRenderer().clearRingsForPlayer(player);
+    public boolean isTool(ItemStack item) {
+        return item != null && item.hasItemMeta() && item.getItemMeta().hasDisplayName() && item.getItemMeta().getDisplayName().contains("Ring Tool");
+    }
+
+    public boolean isPlayerUsingTool(Player player) {
+        return editingRace.containsKey(player.getUniqueId());
+    }
+
+    public void stopEditing(Player player) {
         editingRace.remove(player.getUniqueId());
+        plugin.getRingRenderer().clearRingsForPlayer(player);
 
         // Remove the tool from the player's inventory
         ItemStack tool = getRingTool();

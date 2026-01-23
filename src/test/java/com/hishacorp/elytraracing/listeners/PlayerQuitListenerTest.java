@@ -35,7 +35,7 @@ public class PlayerQuitListenerTest {
     @Test
     public void testPlayerQuitRemovesPlayerFromRace() {
         // Given
-        raceManager.getRaces().add(new Race(plugin, "test-race", new java.util.ArrayList<>()));
+        raceManager.getRaces().add(new Race(plugin, "test-race"));
         raceManager.joinRace(player, "test-race");
 
         // When

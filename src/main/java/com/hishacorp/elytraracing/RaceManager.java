@@ -3,6 +3,8 @@ package com.hishacorp.elytraracing;
 import com.hishacorp.elytraracing.input.events.CreateRaceInputEvent;
 import com.hishacorp.elytraracing.input.events.DeleteRaceInputEvent;
 import com.hishacorp.elytraracing.input.events.InputEvent;
+import com.hishacorp.elytraracing.model.Racer;
+import com.hishacorp.elytraracing.util.RingRenderer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 
@@ -17,14 +19,22 @@ public class RaceManager {
 
     private final Elytraracing plugin;
     private final List<Race> races = new ArrayList<>();
+    private final RingRenderer ringRenderer;
 
     public RaceManager(Elytraracing plugin) {
         this.plugin = plugin;
+        this.ringRenderer = new RingRenderer();
     }
 
     public void loadRaces() {
         plugin.getDatabaseManager().getAllRaceNames().forEach(raceName -> {
-            races.add(new Race(plugin, raceName));
+            try {
+                int raceId = plugin.getDatabaseManager().getRaceId(raceName);
+                plugin.getRingManager().loadRings(raceId);
+                races.add(new Race(plugin, raceName, plugin.getRingManager().getRings(raceId)));
+            } catch (java.sql.SQLException e) {
+                plugin.getLogger().severe("Failed to load race " + raceName + ": " + e.getMessage());
+            }
         });
     }
 
@@ -53,6 +63,10 @@ public class RaceManager {
         getRace(raceName).ifPresentOrElse(race -> {
             if (!race.isInProgress()) {
                 race.addPlayer(player);
+                Racer racer = race.getRacers().get(player.getUniqueId());
+                if (racer != null) {
+                    ringRenderer.showRings(player, race.getRings(), racer.getCurrentRingIndex());
+                }
                 player.sendMessage("§aYou have joined the race: " + raceName);
             } else {
                 player.sendMessage("§cThis race is already in progress.");
@@ -65,6 +79,7 @@ public class RaceManager {
                 .filter(race -> race.getPlayers().contains(player.getUniqueId()))
                 .findFirst()
                 .ifPresent(race -> {
+                    ringRenderer.hideRings(player, race.getRings());
                     race.removePlayer(player);
                     player.sendMessage("§aYou have left the race: " + race.getName());
                 });
@@ -114,11 +129,15 @@ public class RaceManager {
 
         try {
             plugin.getDatabaseManager().createRace(createRaceInputEvent.raceName, createRaceInputEvent.world);
-            races.add(new Race(plugin, createRaceInputEvent.raceName));
+            races.add(new Race(plugin, createRaceInputEvent.raceName, new ArrayList<>()));
             createRaceInputEvent.player.sendMessage("§aRace '" + createRaceInputEvent.raceName + "' created!");
         } catch (Exception ex) {
             createRaceInputEvent.player.sendMessage("§cA race with that name already exists.");
         }
+    }
+
+    public RingRenderer getRingRenderer() {
+        return ringRenderer;
     }
 
     public void deleteRace(InputEvent inputEvent) {

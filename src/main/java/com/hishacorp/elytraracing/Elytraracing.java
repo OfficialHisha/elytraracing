@@ -4,6 +4,7 @@ import com.hishacorp.elytraracing.gui.GuiManager;
 import com.hishacorp.elytraracing.input.ChatInputListener;
 import com.hishacorp.elytraracing.input.InputManager;
 import com.hishacorp.elytraracing.listeners.FireworkUseListener;
+import com.hishacorp.elytraracing.listeners.PlayerMoveListener;
 import com.hishacorp.elytraracing.listeners.PlayerQuitListener;
 import com.hishacorp.elytraracing.persistance.DatabaseManager;
 import com.hishacorp.elytraracing.placeholders.StatExpansion;
@@ -56,6 +57,7 @@ public class Elytraracing extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new ChatInputListener(this), this);
         getServer().getPluginManager().registerEvents(new PlayerQuitListener(this), this);
         getServer().getPluginManager().registerEvents(new FireworkUseListener(this), this);
+        getServer().getPluginManager().registerEvents(new PlayerMoveListener(this), this);
         getServer().getPluginManager().registerEvents(toolManager, this);
 
         getLogger().info("ElytraRacing enabled!");

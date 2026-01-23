@@ -34,7 +34,7 @@ public class RaceTest {
     @Test
     public void testStartAndEnd() {
         // Given
-        Race race = new Race(plugin, "test-race");
+        Race race = new Race(plugin, "test-race", new java.util.ArrayList<>());
         PlayerMock player = server.addPlayer();
         ItemStack[] originalInventory = player.getInventory().getContents();
         race.addPlayer(player);
@@ -55,6 +55,7 @@ public class RaceTest {
         assertTrue(player.getInventory().contains(Material.FIREWORK_ROCKET));
 
         // When
+        race.getRacers().get(player.getUniqueId()).setCompleted(true);
         race.end();
 
         // Then

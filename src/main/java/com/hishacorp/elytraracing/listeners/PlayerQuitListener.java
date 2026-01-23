@@ -20,6 +20,8 @@ public class PlayerQuitListener implements Listener {
         Player player = event.getPlayer();
         RaceManager raceManager = plugin.getRaceManager();
 
-        raceManager.getRace(player).ifPresent(race -> race.removePlayer(player));
+        if (raceManager.isPlayerInRace(player)) {
+            raceManager.leaveRace(player);
+        }
     }
 }

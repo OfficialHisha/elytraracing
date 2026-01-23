@@ -66,8 +66,8 @@ public class RaceManagerTest {
         raceManager.joinRace(player, "test-race-2");
 
         // Then
-        assertTrue(raceManager.getRace("test-race-1").get().getPlayers().contains(player.getUniqueId()));
-        assertFalse(raceManager.getRace("test-race-2").get().getPlayers().contains(player.getUniqueId()));
+        assertTrue(raceManager.getRace("test-race-1").get().getRacers().containsKey(player.getUniqueId()));
+        assertFalse(raceManager.getRace("test-race-2").get().getRacers().containsKey(player.getUniqueId()));
     }
 
     @Test

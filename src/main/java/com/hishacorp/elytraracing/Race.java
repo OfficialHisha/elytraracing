@@ -26,7 +26,6 @@ public class Race {
     private final String name;
     private final List<Ring> rings;
     private final Map<UUID, Racer> racers = new HashMap<>();
-    private final List<UUID> players = new ArrayList<>();
     private final Map<UUID, BukkitTask> cooldownTasks = new HashMap<>();
     private boolean inProgress = false;
     private long startTime;
@@ -42,7 +41,7 @@ public class Race {
         this.inProgress = true;
         this.startTime = System.currentTimeMillis();
 
-        for (UUID playerUUID : players) {
+        for (UUID playerUUID : racers.keySet()) {
             Player player = Bukkit.getPlayer(playerUUID);
             if (player == null) {
                 continue;
@@ -90,7 +89,7 @@ public class Race {
         long cooldown = plugin.getConfig().getLong("firework-replenishment-cooldown", 5) * 20;
 
         BukkitTask task = Bukkit.getScheduler().runTaskLater(plugin, () -> {
-            if (player.isOnline() && getPlayers().contains(player.getUniqueId())) {
+            if (player.isOnline() && getRacers().containsKey(player.getUniqueId())) {
                 if (player.getInventory().firstEmpty() != -1) {
                     player.getInventory().addItem(new ItemStack(Material.FIREWORK_ROCKET));
                 }
@@ -111,7 +110,7 @@ public class Race {
         cooldownTasks.values().forEach(BukkitTask::cancel);
         cooldownTasks.clear();
 
-        for (UUID playerUUID : players) {
+        for (UUID playerUUID : racers.keySet()) {
             Player player = Bukkit.getPlayer(playerUUID);
             if (player != null) {
                 Racer racer = racers.get(playerUUID);
@@ -123,7 +122,6 @@ public class Race {
             }
         }
 
-        players.clear();
         racers.clear();
     }
 
@@ -146,7 +144,7 @@ public class Race {
             long dnfTimer = plugin.getConfig().getLong("dnf-timer", 30);
             long dnfTime = dnfTimer * 20;
             dnfTask = Bukkit.getScheduler().runTaskLater(plugin, this::end, dnfTime);
-            for (UUID playerUUID : players) {
+            for (UUID playerUUID : racers.keySet()) {
                 Player p = Bukkit.getPlayer(playerUUID);
                 if (p != null) {
                     p.sendMessage("§eThe first player has finished! The race will end in " + dnfTimer + " seconds.");
@@ -159,16 +157,11 @@ public class Race {
         return name;
     }
 
-    public List<UUID> getPlayers() {
-        return players;
-    }
-
     public boolean isInProgress() {
         return inProgress;
     }
 
     public void addPlayer(Player player) {
-        players.add(player.getUniqueId());
         racers.put(player.getUniqueId(), new Racer(player));
     }
 
@@ -178,7 +171,6 @@ public class Race {
             cooldownTasks.remove(player.getUniqueId());
         }
 
-        players.remove(player.getUniqueId());
         racers.remove(player.getUniqueId());
     }
 

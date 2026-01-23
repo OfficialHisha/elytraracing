@@ -43,7 +43,7 @@ public class RaceManager {
     }
 
     public Optional<Race> getRace(Player player) {
-        return races.stream().filter(race -> race.getPlayers().contains(player.getUniqueId())).findFirst();
+        return races.stream().filter(race -> race.getRacers().containsKey(player.getUniqueId())).findFirst();
     }
 
     public List<Race> getRaces() {
@@ -51,7 +51,7 @@ public class RaceManager {
     }
 
     public boolean isPlayerInRace(Player player) {
-        return races.stream().anyMatch(race -> race.getPlayers().contains(player.getUniqueId()));
+        return races.stream().anyMatch(race -> race.getRacers().containsKey(player.getUniqueId()));
     }
 
     public void joinRace(Player player, String raceName) {
@@ -65,7 +65,7 @@ public class RaceManager {
                 race.addPlayer(player);
                 Racer racer = race.getRacers().get(player.getUniqueId());
                 if (racer != null) {
-                    ringRenderer.showRings(player, race.getRings(), racer.getCurrentRingIndex());
+                    ringRenderer.showRaceRings(player, race.getRings(), racer.getCurrentRingIndex());
                 }
                 player.sendMessage("§aYou have joined the race: " + raceName);
             } else {
@@ -76,10 +76,10 @@ public class RaceManager {
 
     public void leaveRace(Player player) {
         races.stream()
-                .filter(race -> race.getPlayers().contains(player.getUniqueId()))
+                .filter(race -> race.getRacers().containsKey(player.getUniqueId()))
                 .findFirst()
                 .ifPresent(race -> {
-                    ringRenderer.hideRings(player, race.getRings());
+                    ringRenderer.hideRaceRings(player, race.getRings());
                     race.removePlayer(player);
                     player.sendMessage("§aYou have left the race: " + race.getName());
                 });
@@ -161,7 +161,7 @@ public class RaceManager {
         Optional<Race> raceOptional = getRace(raceName);
         if (raceOptional.isPresent()) {
             Race race = raceOptional.get();
-            if (race.isInProgress() || !race.getPlayers().isEmpty()) {
+            if (race.isInProgress() || !race.getRacers().isEmpty()) {
                 player.sendMessage("§cCannot delete a race that is in progress or has players.");
                 return;
             }

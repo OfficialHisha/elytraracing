@@ -3,7 +3,6 @@ package com.hishacorp.elytraracing;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
 import com.hishacorp.elytraracing.model.Racer;
 import com.hishacorp.elytraracing.model.Ring;
 import org.bukkit.Bukkit;
@@ -51,7 +50,7 @@ public class Race {
                 continue;
             }
 
-            racers.computeIfAbsent(playerUUID, k -> new Racer(player)).setStartTime(startTime);
+            racers.get(playerUUID).setStartTime(startTime);
             player.sendMessage("§aThe race has started!");
             PlayerInventory inventory = player.getInventory();
             inventory.setChestplate(new ItemStack(Material.ELYTRA));

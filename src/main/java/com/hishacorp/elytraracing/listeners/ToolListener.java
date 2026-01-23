@@ -33,7 +33,7 @@ public class ToolListener implements Listener {
         } else {
             ItemStack oldStack = player.getInventory().getItem(event.getPreviousSlot());
             if (toolManager.isTool(oldStack)) {
-                ringRenderer.clearRingsForPlayer(player);
+                ringRenderer.revertPlayerView(player);
             }
         }
     }
@@ -44,7 +44,7 @@ public class ToolListener implements Listener {
         ItemStack itemStack = event.getItemDrop().getItemStack();
 
         if (toolManager.isTool(itemStack)) {
-            ringRenderer.clearRingsForPlayer(player);
+            ringRenderer.revertPlayerView(player);
         }
     }
 
@@ -55,7 +55,7 @@ public class ToolListener implements Listener {
             if (toolManager.isPlayerUsingTool(player)) {
                 ItemStack currentItem = player.getInventory().getItemInMainHand();
                 if (!toolManager.isTool(currentItem)) {
-                    ringRenderer.clearRingsForPlayer(player);
+                    ringRenderer.revertPlayerView(player);
                 }
             }
         }

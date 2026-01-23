@@ -123,6 +123,10 @@ public class RingRenderer {
         }
     }
 
+    public void revertPlayerView(Player player) {
+        revertBlocksForPlayer(player);
+    }
+
     private void drawRing(Player player, Ring ring, boolean isBeingConfigured) {
         Material material = ring.getMaterial();
         Integer nextRingIndex = playerNextRing.get(player.getUniqueId());

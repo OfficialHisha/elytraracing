@@ -54,6 +54,8 @@ public class ERCommandTest {
 
     @Test
     public void testToolCommand() {
+        player.performCommand("er create test_race");
+        player.assertSaid("§aRace 'test_race' created!");
         player.performCommand("er tool test_race");
         player.assertSaid("§aYou have been given the ring tool for race test_race.");
     }
@@ -62,6 +64,12 @@ public class ERCommandTest {
     public void testToolCommandNoRace() {
         player.performCommand("er tool");
         player.assertSaid("§cUsage: /er tool <race>");
+    }
+
+    @Test
+    public void testToolCommandNonExistentRace() {
+        player.performCommand("er tool non_existent_race");
+        player.assertSaid("§cRace not found: non_existent_race");
     }
 
     @Test
@@ -85,5 +93,47 @@ public class ERCommandTest {
         // Test race deletion
         player.performCommand("er delete MYRACE");
         player.assertSaid("§aRace 'myrace' deleted!");
+    }
+
+    @Test
+    public void testJoinRace() {
+        player.performCommand("er create test_race");
+        player.assertSaid("§aRace 'test_race' created!");
+        player.performCommand("er join test_race");
+        player.assertSaid("§aYou have joined the race: test_race");
+    }
+
+    @Test
+    public void testJoinNonExistentRace() {
+        player.performCommand("er join non_existent_race");
+        player.assertSaid("§cRace not found: non_existent_race");
+    }
+
+    @Test
+    public void testLeaveRaceNotInRace() {
+        player.performCommand("er leave");
+        player.assertSaid("§cYou are not in a race.");
+    }
+
+    @Test
+    public void testEndRaceNotInProgress() {
+        player.performCommand("er create test_race");
+        player.assertSaid("§aRace 'test_race' created!");
+        player.performCommand("er end test_race");
+        player.assertSaid("§cRace 'test_race' is not in progress.");
+    }
+
+    @Test
+    public void testStartRaceNoPlayers() {
+        player.performCommand("er create test_race");
+        player.assertSaid("§aRace 'test_race' created!");
+        player.performCommand("er start test_race");
+        player.assertSaid("§cCannot start a race with no players.");
+    }
+
+    @Test
+    public void testStartRaceNonExistent() {
+        player.performCommand("er start non_existent_race");
+        player.assertSaid("§cRace not found: non_existent_race");
     }
 }

@@ -108,4 +108,32 @@ public class ERCommandTest {
         player.performCommand("er join non_existent_race");
         player.assertSaid("§cRace not found: non_existent_race");
     }
+
+    @Test
+    public void testLeaveRaceNotInRace() {
+        player.performCommand("er leave");
+        player.assertSaid("§cYou are not in a race.");
+    }
+
+    @Test
+    public void testEndRaceNotInProgress() {
+        player.performCommand("er create test_race");
+        player.assertSaid("§aRace 'test_race' created!");
+        player.performCommand("er end test_race");
+        player.assertSaid("§cRace 'test_race' is not in progress.");
+    }
+
+    @Test
+    public void testStartRaceNoPlayers() {
+        player.performCommand("er create test_race");
+        player.assertSaid("§aRace 'test_race' created!");
+        player.performCommand("er start test_race");
+        player.assertSaid("§cCannot start a race with no players.");
+    }
+
+    @Test
+    public void testStartRaceNonExistent() {
+        player.performCommand("er start non_existent_race");
+        player.assertSaid("§cRace not found: non_existent_race");
+    }
 }

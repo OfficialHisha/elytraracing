@@ -40,7 +40,7 @@ public class ERCommand implements CommandExecutor {
                     sender.sendMessage("§cUsage: /er start <race>");
                     return true;
                 }
-                plugin.getRaceManager().startRace(args[1]);
+                plugin.getRaceManager().startRace(sender, args[1]);
             }
             case "end" -> {
                 if (!sender.hasPermission(END.getPermission())) {
@@ -125,18 +125,6 @@ public class ERCommand implements CommandExecutor {
                 }
             }
 
-            case "time" -> {
-                if (!sender.hasPermission(TIME.getPermission())) {
-                    sender.sendMessage("§cYou do not have permission to use this command");
-                    return true;
-                }
-                if (args.length < 2) {
-                    sender.sendMessage("§cUsage: /er time <seconds>");
-                    return true;
-                }
-                sender.sendMessage("§aSetting finish time to " + args[1]);
-            }
-
             case "setspawn" -> {
                 if (!sender.hasPermission(SETSPAWN.getPermission())) {
                     sender.sendMessage("§cYou do not have permission to use this command");
@@ -178,7 +166,6 @@ public class ERCommand implements CommandExecutor {
                 if (sender instanceof Player player) {
                     plugin.getScoreboardManager().removeScoreboard(player);
                     plugin.getRaceManager().leaveRace(player);
-                    sender.sendMessage("Left race " + args[1]);
                 }
             }
 

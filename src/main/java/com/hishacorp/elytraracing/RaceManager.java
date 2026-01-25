@@ -5,6 +5,7 @@ import com.hishacorp.elytraracing.input.events.DeleteRaceInputEvent;
 import com.hishacorp.elytraracing.input.events.InputEvent;
 import com.hishacorp.elytraracing.model.Racer;
 import com.hishacorp.elytraracing.util.RingRenderer;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 
@@ -86,6 +87,10 @@ public class RaceManager {
     }
 
     public void leaveRace(Player player) {
+        if (!isPlayerInRace(player)) {
+            player.sendMessage("§cYou are not in a race.");
+            return;
+        }
         races.stream()
                 .filter(race -> race.getRacers().containsKey(player.getUniqueId()))
                 .findFirst()
@@ -96,13 +101,24 @@ public class RaceManager {
                 });
     }
 
-    public void startRace(String raceName) {
-        getRace(raceName).ifPresent(Race::start);
+    public void startRace(CommandSender sender, String raceName) {
+        getRace(raceName).ifPresentOrElse(race -> {
+            if (race.getRacers().isEmpty()) {
+                sender.sendMessage("§cCannot start a race with no players.");
+                return;
+            }
+            race.start();
+        }, () -> sender.sendMessage("§cRace not found: " + raceName));
     }
 
     public void endRace(org.bukkit.command.CommandSender sender, String raceName) {
         if (getRace(raceName).isPresent()) {
-            getRace(raceName).get().end();
+            Race race = getRace(raceName).get();
+            if (!race.isInProgress()) {
+                sender.sendMessage("§cRace '" + raceName + "' is not in progress.");
+                return;
+            }
+            race.end();
             sender.sendMessage("§aRace '" + raceName + "' ended.");
         } else {
             sender.sendMessage("§cRace '" + raceName + "' not found.");

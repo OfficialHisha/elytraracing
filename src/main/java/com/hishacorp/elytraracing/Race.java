@@ -16,6 +16,7 @@ import org.bukkit.scheduler.BukkitTask;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 
@@ -137,7 +138,7 @@ public class Race {
         racer.setCompleted(true);
         racer.setFinishTime(System.currentTimeMillis());
 
-        player.sendMessage(String.format("§aYou finished the race in %.2f seconds!", (racer.getFinishTime() - racer.getStartTime()) / 1000.0));
+        player.sendMessage(String.format(Locale.US, "§aYou finished the race in %.2f seconds!", (racer.getFinishTime() - racer.getStartTime()) / 1000.0));
 
         boolean allFinished = racers.values().stream().allMatch(Racer::isCompleted);
 

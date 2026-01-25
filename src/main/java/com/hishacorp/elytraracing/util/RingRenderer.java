@@ -24,6 +24,7 @@ public class RingRenderer {
 
     public void addRingForPlayer(Player player, Ring ring) {
         playerVisibleRings.computeIfAbsent(player.getUniqueId(), k -> new HashSet<>()).add(ring);
+        playerRingBlocks.computeIfAbsent(player.getUniqueId(), k -> new HashMap<>()).put(ring.getLocation(), ring);
         updatePlayerView(player);
     }
 
@@ -47,7 +48,7 @@ public class RingRenderer {
     public void clearRingsForPlayer(Player player) {
         playerVisibleRings.remove(player.getUniqueId());
         playerConfiguringRing.remove(player.getUniqueId());
-        playerRingBlocks.remove(player.getUniqueId());
+        playerRingBlocks.computeIfAbsent(player.getUniqueId(), k -> new HashMap<>()).clear();
         playerNextRing.remove(player.getUniqueId());
         revertBlocksForPlayer(player);
     }
@@ -140,7 +141,7 @@ public class RingRenderer {
 
         BlockData blockData = material.createBlockData();
         Map<Location, BlockData> originalBlocks = playerOriginalBlocks.computeIfAbsent(player.getUniqueId(), k -> new HashMap<>());
-        Map<Location, Ring> ringBlocks = playerRingBlocks.get(player.getUniqueId());
+        Map<Location, Ring> ringBlocks = playerRingBlocks.computeIfAbsent(player.getUniqueId(), k -> new HashMap<>());
 
         Location center = ring.getLocation();
         double radius = ring.getRadius();
@@ -175,9 +176,7 @@ public class RingRenderer {
             player.sendBlockChange(blockLocation, blockData);
 
             // Add to the ring blocks map
-            if (ringBlocks != null) {
-                ringBlocks.put(blockLocation, ring);
-            }
+            ringBlocks.put(blockLocation, ring);
 
             if (isBeingConfigured) {
                 player.spawnParticle(org.bukkit.Particle.END_ROD, blockLocation.clone().add(0.5, 0.5, 0.5), 1, 0, 0, 0, 0);

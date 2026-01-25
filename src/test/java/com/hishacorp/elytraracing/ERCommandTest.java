@@ -54,6 +54,8 @@ public class ERCommandTest {
 
     @Test
     public void testToolCommand() {
+        player.performCommand("er create test_race");
+        player.assertSaid("§aRace 'test_race' created!");
         player.performCommand("er tool test_race");
         player.assertSaid("§aYou have been given the ring tool for race test_race.");
     }
@@ -62,6 +64,12 @@ public class ERCommandTest {
     public void testToolCommandNoRace() {
         player.performCommand("er tool");
         player.assertSaid("§cUsage: /er tool <race>");
+    }
+
+    @Test
+    public void testToolCommandNonExistentRace() {
+        player.performCommand("er tool non_existent_race");
+        player.assertSaid("§cRace not found: non_existent_race");
     }
 
     @Test

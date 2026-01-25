@@ -83,6 +83,12 @@ public class ERCommand implements CommandExecutor {
                 }
 
                 String raceName = args[1].toLowerCase();
+
+                if (plugin.getRaceManager().getRace(raceName).isEmpty()) {
+                    player.sendMessage("§cRace not found: " + raceName);
+                    return true;
+                }
+
                 plugin.getToolManager().giveTool(player, raceName);
                 player.sendMessage("§aYou have been given the ring tool for race " + raceName + ".");
             }

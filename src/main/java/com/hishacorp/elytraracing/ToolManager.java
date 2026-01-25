@@ -201,4 +201,38 @@ public class ToolManager implements Listener {
         editingRace.remove(player.getUniqueId());
         plugin.getRingRenderer().clearRingsForPlayer(player);
     }
+
+    public String getRaceNameFromTool(ItemStack tool) {
+        if (!isTool(tool)) {
+            return null;
+        }
+        ItemMeta meta = tool.getItemMeta();
+        if (meta == null || !meta.hasLore()) {
+            return null;
+        }
+        List<String> lore = meta.getLore();
+        if (lore == null || lore.isEmpty()) {
+            return null;
+        }
+        // The race name is expected to be on the first line of the lore, prefixed with "§eRace: "
+        String raceLine = lore.get(0);
+        if (raceLine.startsWith("§eRace: ")) {
+            return raceLine.substring("§eRace: ".length());
+        }
+        return null;
+    }
+
+    public void reinitializeEditing(Player player, String raceName) {
+        String lowerCaseRaceName = raceName.toLowerCase();
+        editingRace.put(player.getUniqueId(), lowerCaseRaceName);
+        try {
+            int raceId = plugin.getDatabaseManager().getRaceId(lowerCaseRaceName);
+            if (raceId != -1) {
+                plugin.getRingManager().loadRings(raceId);
+                plugin.getRingRenderer().setVisibleRings(player, new java.util.HashSet<>(plugin.getRingManager().getRings(raceId)));
+            }
+        } catch (Exception e) {
+            player.sendMessage("§cAn error occurred while re-initializing the rings for this race.");
+        }
+    }
 }

@@ -113,4 +113,47 @@ public class ToolManagerTest {
 
         assertFalse(player.getInventory().isEmpty());
     }
+
+    @Test
+    public void testReconnectFunctionality() throws Exception {
+        // 1. Setup: create a race with one ring
+        player.performCommand("er create reconnect_test");
+        int raceId = plugin.getDatabaseManager().getRaceId("reconnect_test");
+        Ring testRing = new Ring(1, raceId, player.getEyeLocation().add(5, 0, 0), 5, Ring.Orientation.HORIZONTAL, Material.GOLD_BLOCK, 0);
+        plugin.getRingManager().addRing(testRing);
+
+        // 2. Give player the tool and verify initial state
+        player.performCommand("er tool reconnect_test");
+        assertTrue(plugin.getToolManager().isPlayerUsingTool(player), "Player should be in editing session after receiving tool.");
+        assertFalse(plugin.getRingRenderer().getPlayerRingBlocks(player.getUniqueId()).isEmpty(), "Rings should be visible after receiving tool.");
+
+        // 3. Simulate session loss (like a disconnect/reconnect)
+        // We manually stop the editing session to simulate the player's state being cleared from the map.
+        plugin.getToolManager().stopEditing(player);
+        assertFalse(plugin.getToolManager().isPlayerUsingTool(player), "Player should not be in editing session after it's stopped.");
+        assertTrue(plugin.getRingRenderer().getPlayerRingBlocks(player.getUniqueId()).isEmpty(), "Rings should be hidden after stopping editing.");
+
+        // 4. Find the tool in the inventory
+        int toolSlot = -1;
+        for (int i = 0; i < 9; i++) {
+            if (plugin.getToolManager().isTool(player.getInventory().getItem(i))) {
+                toolSlot = i;
+                break;
+            }
+        }
+        assertNotEquals(-1, toolSlot, "Player should have the tool in their inventory.");
+
+        // 5. Simulate the player re-selecting the tool by manually firing the event.
+        // This is more reliable in a test environment than just calling setHeldItemSlot.
+        int previousSlot = player.getInventory().getHeldItemSlot();
+        // Set the slot on the inventory so getItemInMainHand is correct inside any subsequent logic.
+        player.getInventory().setHeldItemSlot(toolSlot);
+        // Manually fire the event that the ToolListener is waiting for.
+        server.getPluginManager().callEvent(new org.bukkit.event.player.PlayerItemHeldEvent(player, previousSlot, toolSlot));
+
+
+        // 6. Verify the session is restored and rings are visible again
+        assertTrue(plugin.getToolManager().isPlayerUsingTool(player), "Player's editing session should be re-initialized upon holding the tool.");
+        assertFalse(plugin.getRingRenderer().getPlayerRingBlocks(player.getUniqueId()).isEmpty(), "Rings should be visible again after re-selecting the tool.");
+    }
 }

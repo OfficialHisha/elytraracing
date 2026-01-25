@@ -170,9 +170,7 @@ public class ERCommand implements CommandExecutor {
                     return true;
                 }
                 if (sender instanceof Player player) {
-                    plugin.getScoreboardManager().showScoreboard(player);
                     plugin.getRaceManager().joinRace(player, args[1]);
-                    sender.sendMessage("Joined race " + args[1]);
                 }
             }
 

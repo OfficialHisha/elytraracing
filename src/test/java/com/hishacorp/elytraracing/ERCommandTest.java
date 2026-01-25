@@ -94,4 +94,18 @@ public class ERCommandTest {
         player.performCommand("er delete MYRACE");
         player.assertSaid("§aRace 'myrace' deleted!");
     }
+
+    @Test
+    public void testJoinRace() {
+        player.performCommand("er create test_race");
+        player.assertSaid("§aRace 'test_race' created!");
+        player.performCommand("er join test_race");
+        player.assertSaid("§aYou have joined the race: test_race");
+    }
+
+    @Test
+    public void testJoinNonExistentRace() {
+        player.performCommand("er join non_existent_race");
+        player.assertSaid("§cRace not found: non_existent_race");
+    }
 }

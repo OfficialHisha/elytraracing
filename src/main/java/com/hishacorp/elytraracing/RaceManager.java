@@ -73,6 +73,7 @@ public class RaceManager {
                     return;
                 }
                 race.addPlayer(player);
+                plugin.getScoreboardManager().showScoreboard(player);
                 Racer racer = race.getRacers().get(player.getUniqueId());
                 if (racer != null) {
                     ringRenderer.showRaceRings(player, race.getRings(), racer.getCurrentRingIndex());

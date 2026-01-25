@@ -1,8 +1,5 @@
 package com.hishacorp.elytraracing;
 
-import org.bukkit.Bukkit;
-import org.bukkit.Material;
-import org.bukkit.entity.Player;
 import com.hishacorp.elytraracing.model.Racer;
 import com.hishacorp.elytraracing.model.Ring;
 import org.bukkit.Bukkit;

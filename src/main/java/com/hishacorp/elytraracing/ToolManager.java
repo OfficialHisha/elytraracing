@@ -54,8 +54,9 @@ public class ToolManager implements Listener {
             int raceId = plugin.getDatabaseManager().getRaceId(lowerCaseRaceName);
             if (raceId != -1) {
                 plugin.getRingManager().loadRings(raceId);
-                for (Ring ring : plugin.getRingManager().getRings(raceId)) {
-                    plugin.getRingRenderer().addRingForPlayer(player, ring);
+                plugin.getRingRenderer().setVisibleRings(player, new java.util.HashSet<>(plugin.getRingManager().getRings(raceId)));
+                if (isTool(player.getInventory().getItemInMainHand())) {
+                    plugin.getRingRenderer().updatePlayerView(player);
                 }
             }
         } catch (Exception e) {

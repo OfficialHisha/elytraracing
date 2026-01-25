@@ -127,6 +127,10 @@ public class RingRenderer {
         revertBlocksForPlayer(player);
     }
 
+    public void setVisibleRings(Player player, Set<Ring> rings) {
+        playerVisibleRings.put(player.getUniqueId(), rings);
+    }
+
     private void drawRing(Player player, Ring ring, boolean isBeingConfigured) {
         Material material = ring.getMaterial();
         Integer nextRingIndex = playerNextRing.get(player.getUniqueId());

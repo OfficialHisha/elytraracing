@@ -55,10 +55,40 @@ public class RaceTest {
         assertTrue(player.getInventory().contains(Material.FIREWORK_ROCKET));
 
         // When
+        race.getRacers().get(player.getUniqueId()).setCompleted(true);
         race.end();
 
         // Then
         assertFalse(race.isInProgress());
+        assertTrue(race.getRacers().containsKey(player.getUniqueId())); // Player should still be in the race
         player.assertSaid("§aThe race has ended!");
+        player.assertSaid("§eYou can view the final scoreboard. Use /er leave to exit.");
+    }
+
+    @Test
+    public void testDNFLogic() {
+        // Given
+        Race race = new Race(plugin, "test-race");
+        PlayerMock player1 = server.addPlayer();
+        PlayerMock player2 = server.addPlayer();
+        race.addPlayer(player1);
+        race.addPlayer(player2);
+
+        // When
+        race.start();
+        race.playerFinished(player1);
+        server.getScheduler().performTicks(plugin.getConfig().getLong("dnf-timer", 30) * 20);
+
+        // Then
+        assertFalse(race.isInProgress());
+        player1.assertSaid("§aThe race has started!");
+        player1.assertSaid("§aYou finished the race in 0.00 seconds!");
+        player1.assertSaid("§eThe first player has finished! The race will end in 30 seconds.");
+        player1.assertSaid("§aThe race has ended!");
+        player1.assertSaid("§eYou can view the final scoreboard. Use /er leave to exit.");
+        player2.assertSaid("§aThe race has started!");
+        player2.assertSaid("§eThe first player has finished! The race will end in 30 seconds.");
+        player2.assertSaid("§cYou did not finish the race in time.");
+        player2.assertSaid("§eYou can view the final scoreboard. Use /er leave to exit.");
     }
 }

@@ -31,12 +31,18 @@ public class ERCommandTest {
     public void testCreateRaceCommand() {
         player.performCommand("er create test_race");
         assertTrue(plugin.getDatabaseManager().raceExists("test_race"));
+        player.assertSaid("§aRace 'test_race' created!");
+        player.assertSaid("§aYou have been given the ring tool for race test_race.");
+        assertTrue(plugin.getToolManager().isTool(player.getInventory().getItemInMainHand()));
     }
 
     @Test
     public void testDeleteRaceCommand() {
         player.performCommand("er create test_race");
+        player.nextMessage(); // Consume create message
+        player.nextMessage(); // Consume tool message
         player.performCommand("er delete test_race");
+        player.assertSaid("§aRace 'test_race' deleted!");
         assertFalse(plugin.getDatabaseManager().raceExists("test_race"));
     }
 
@@ -55,7 +61,8 @@ public class ERCommandTest {
     @Test
     public void testToolCommand() {
         player.performCommand("er create test_race");
-        player.assertSaid("§aRace 'test_race' created!");
+        player.nextMessage(); // Consume create message
+        player.nextMessage(); // Consume tool message
         player.performCommand("er tool test_race");
         player.assertSaid("§aYou have been given the ring tool for race test_race.");
     }
@@ -77,6 +84,9 @@ public class ERCommandTest {
         // Test race creation
         player.performCommand("er create MyRace");
         player.assertSaid("§aRace 'myrace' created!");
+        player.assertSaid("§aYou have been given the ring tool for race myrace.");
+        assertTrue(plugin.getToolManager().isTool(player.getInventory().getItemInMainHand()));
+        player.getInventory().clear();
 
         // Test tool command
         player.performCommand("er tool myrace");
@@ -98,7 +108,8 @@ public class ERCommandTest {
     @Test
     public void testJoinRace() {
         player.performCommand("er create test_race");
-        player.assertSaid("§aRace 'test_race' created!");
+        player.nextMessage(); // Consume create message
+        player.nextMessage(); // Consume tool message
         player.performCommand("er join test_race");
         player.assertSaid("§aYou have joined the race: test_race");
     }
@@ -118,7 +129,8 @@ public class ERCommandTest {
     @Test
     public void testEndRaceNotInProgress() {
         player.performCommand("er create test_race");
-        player.assertSaid("§aRace 'test_race' created!");
+        player.nextMessage(); // Consume create message
+        player.nextMessage(); // Consume tool message
         player.performCommand("er end test_race");
         player.assertSaid("§cRace 'test_race' is not in progress.");
     }
@@ -126,7 +138,8 @@ public class ERCommandTest {
     @Test
     public void testStartRaceNoPlayers() {
         player.performCommand("er create test_race");
-        player.assertSaid("§aRace 'test_race' created!");
+        player.nextMessage(); // Consume create message
+        player.nextMessage(); // Consume tool message
         player.performCommand("er start test_race");
         player.assertSaid("§cCannot start a race with no players.");
     }

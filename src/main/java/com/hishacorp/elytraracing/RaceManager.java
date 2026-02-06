@@ -65,6 +65,10 @@ public class RaceManager {
 
         getRace(raceName).ifPresentOrElse(race -> {
             if (!race.isInProgress()) {
+                if (race.getStartTime() > 0) {
+                    player.sendMessage("§cThis race has already finished. A new race must be started.");
+                    return;
+                }
                 try {
                     int raceId = plugin.getDatabaseManager().getRaceId(race.getName());
                     plugin.getRingManager().loadRings(raceId);
@@ -158,6 +162,8 @@ public class RaceManager {
             plugin.getDatabaseManager().createRace(createRaceInputEvent.raceName, createRaceInputEvent.world);
             races.add(new Race(plugin, createRaceInputEvent.raceName));
             createRaceInputEvent.player.sendMessage("§aRace '" + createRaceInputEvent.raceName + "' created!");
+            plugin.getToolManager().giveTool(createRaceInputEvent.player, createRaceInputEvent.raceName);
+            createRaceInputEvent.player.sendMessage("§aYou have been given the ring tool for race " + createRaceInputEvent.raceName + ".");
         } catch (Exception ex) {
             createRaceInputEvent.player.sendMessage("§cA race with that name already exists.");
         }

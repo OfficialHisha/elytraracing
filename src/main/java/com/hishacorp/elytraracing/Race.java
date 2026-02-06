@@ -106,6 +106,7 @@ public class Race {
 
         if (dnfTask != null) {
             dnfTask.cancel();
+            dnfTask = null;
         }
 
         cooldownTasks.values().forEach(BukkitTask::cancel);
@@ -117,13 +118,12 @@ public class Race {
                 Racer racer = racers.get(playerUUID);
                 if (racer != null && !racer.isCompleted()) {
                     player.sendMessage("§cYou did not finish the race in time.");
-                } else {
+                } else if (racer != null){
                     player.sendMessage("§aThe race has ended!");
                 }
+                player.sendMessage("§eYou can view the final scoreboard. Use /er leave to exit.");
             }
         }
-
-        racers.clear();
     }
 
     public void playerFinished(Player player) {
@@ -160,6 +160,10 @@ public class Race {
 
     public boolean isInProgress() {
         return inProgress;
+    }
+
+    public long getStartTime() {
+        return startTime;
     }
 
     public void addPlayer(Player player) {

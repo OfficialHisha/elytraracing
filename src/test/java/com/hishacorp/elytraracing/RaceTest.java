@@ -60,7 +60,9 @@ public class RaceTest {
 
         // Then
         assertFalse(race.isInProgress());
+        assertTrue(race.getRacers().containsKey(player.getUniqueId())); // Player should still be in the race
         player.assertSaid("§aThe race has ended!");
+        player.assertSaid("§eYou can view the final scoreboard. Use /er leave to exit.");
     }
 
     @Test
@@ -83,8 +85,10 @@ public class RaceTest {
         player1.assertSaid("§aYou finished the race in 0.00 seconds!");
         player1.assertSaid("§eThe first player has finished! The race will end in 30 seconds.");
         player1.assertSaid("§aThe race has ended!");
+        player1.assertSaid("§eYou can view the final scoreboard. Use /er leave to exit.");
         player2.assertSaid("§aThe race has started!");
         player2.assertSaid("§eThe first player has finished! The race will end in 30 seconds.");
         player2.assertSaid("§cYou did not finish the race in time.");
+        player2.assertSaid("§eYou can view the final scoreboard. Use /er leave to exit.");
     }
 }

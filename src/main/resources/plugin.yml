@@ -22,6 +22,7 @@ permissions:
       elytraracing.admin.stats: true
       elytraracing.admin.start: true
       elytraracing.admin.end: true
+      elytraracing.admin.rings: true
 commands:
   er:
     description: "Command for interacting with the Elytra Racing plugin"

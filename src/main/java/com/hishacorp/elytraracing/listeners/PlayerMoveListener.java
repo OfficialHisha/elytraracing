@@ -22,10 +22,8 @@ public class PlayerMoveListener implements Listener {
     @EventHandler
     public void onPlayerMove(PlayerMoveEvent event) {
         Player player = event.getPlayer();
-        Optional<Race> raceOptional = plugin.getRaceManager().getRace(player);
 
-        if (raceOptional.isPresent()) {
-            Race race = raceOptional.get();
+        plugin.getRaceManager().getRace(player).ifPresent(race -> {
             if (race.isInProgress()) {
                 Racer racer = race.getRacers().get(player.getUniqueId());
                 if (racer != null && !racer.isCompleted()) {
@@ -38,6 +36,6 @@ public class PlayerMoveListener implements Listener {
                     }
                 }
             }
-        }
+        });
     }
 }

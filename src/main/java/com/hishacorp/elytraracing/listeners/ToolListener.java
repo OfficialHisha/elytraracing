@@ -2,6 +2,7 @@ package com.hishacorp.elytraracing.listeners;
 
 import com.hishacorp.elytraracing.Elytraracing;
 import com.hishacorp.elytraracing.ToolManager;
+import com.hishacorp.elytraracing.model.Racer;
 import com.hishacorp.elytraracing.util.RingRenderer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -50,6 +51,11 @@ public class ToolListener implements Listener {
     @EventHandler
     public void onPlayerDropItem(PlayerDropItemEvent event) {
         Player player = event.getPlayer();
+
+        plugin.getRaceManager().getRace(player).ifPresent(race -> {
+            event.setCancelled(true);
+        });
+
         ItemStack itemStack = event.getItemDrop().getItemStack();
 
         if (toolManager.isTool(itemStack)) {
@@ -61,6 +67,11 @@ public class ToolListener implements Listener {
     public void onInventoryClick(InventoryClickEvent event) {
         if (event.getWhoClicked() instanceof Player) {
             Player player = (Player) event.getWhoClicked();
+
+            plugin.getRaceManager().getRace(player).ifPresent(race -> {
+                event.setCancelled(true);
+            });
+
             if (toolManager.isPlayerUsingTool(player)) {
                 ItemStack currentItem = player.getInventory().getItemInMainHand();
                 if (!toolManager.isTool(currentItem)) {

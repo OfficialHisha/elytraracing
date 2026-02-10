@@ -3,8 +3,10 @@ package com.hishacorp.elytraracing;
 import com.hishacorp.elytraracing.input.events.CreateRaceInputEvent;
 import com.hishacorp.elytraracing.input.events.DeleteRaceInputEvent;
 import com.hishacorp.elytraracing.input.events.InputEvent;
+import com.hishacorp.elytraracing.model.Border;
 import com.hishacorp.elytraracing.model.Racer;
 import com.hishacorp.elytraracing.util.RingRenderer;
+import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -30,11 +32,20 @@ public class RaceManager {
     public void loadRaces() {
         plugin.getDatabaseManager().getAllRaceNames().forEach(raceName -> {
             try {
-                int raceId = plugin.getDatabaseManager().getRaceId(raceName);
-                plugin.getRingManager().loadRings(raceId);
-                Race race = new Race(plugin, raceName);
-                race.setRings(plugin.getRingManager().getRings(raceId));
-                races.add(race);
+                var raceData = plugin.getDatabaseManager().getRaceData(raceName);
+                if (raceData != null) {
+                    plugin.getRingManager().loadRings(raceData.id);
+                    Race race = new Race(plugin, raceName);
+                    race.setRings(plugin.getRingManager().getRings(raceData.id));
+
+                    var world = Bukkit.getWorld(raceData.world);
+                    List<Border> borders = plugin.getDatabaseManager().getBorders(raceData.id, world).stream()
+                            .map(bd -> new Border(bd.id, bd.pos1, bd.pos2))
+                            .toList();
+                    race.setBorders(borders);
+
+                    races.add(race);
+                }
             } catch (java.sql.SQLException e) {
                 plugin.getLogger().severe("Failed to load race " + raceName + ": " + e.getMessage());
             }
@@ -70,9 +81,17 @@ public class RaceManager {
                     return;
                 }
                 try {
-                    int raceId = plugin.getDatabaseManager().getRaceId(race.getName());
-                    plugin.getRingManager().loadRings(raceId);
-                    race.setRings(plugin.getRingManager().getRings(raceId));
+                    var raceData = plugin.getDatabaseManager().getRaceData(race.getName());
+                    if (raceData != null) {
+                        plugin.getRingManager().loadRings(raceData.id);
+                        race.setRings(plugin.getRingManager().getRings(raceData.id));
+
+                        var world = Bukkit.getWorld(raceData.world);
+                        List<Border> borders = plugin.getDatabaseManager().getBorders(raceData.id, world).stream()
+                                .map(bd -> new Border(bd.id, bd.pos1, bd.pos2))
+                                .toList();
+                        race.setBorders(borders);
+                    }
                 } catch (java.sql.SQLException e) {
                     player.sendMessage("§cCould not load race data.");
                     return;

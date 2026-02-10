@@ -1,5 +1,6 @@
 package com.hishacorp.elytraracing;
 
+import com.hishacorp.elytraracing.model.Border;
 import com.hishacorp.elytraracing.model.Racer;
 import com.hishacorp.elytraracing.model.Ring;
 import org.bukkit.Bukkit;
@@ -21,6 +22,7 @@ public class Race {
 
     private final Elytraracing plugin;
     private final String name;
+    private final List<Border> borders = new ArrayList<>();
     private final List<Ring> rings = new ArrayList<>();
     private final Map<UUID, Racer> racers = new HashMap<>();
     private final Map<UUID, BukkitTask> cooldownTasks = new HashMap<>();
@@ -156,6 +158,29 @@ public class Race {
 
     public String getName() {
         return name;
+    }
+
+    public List<Border> getBorders() {
+        return borders;
+    }
+
+    public void setBorders(List<Border> borders) {
+        this.borders.clear();
+        this.borders.addAll(borders);
+    }
+
+    public boolean isInsideBorder(Location location) {
+        if (borders.isEmpty()) {
+            return true;
+        }
+
+        for (Border border : borders) {
+            if (border.isInside(location)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public boolean isInProgress() {

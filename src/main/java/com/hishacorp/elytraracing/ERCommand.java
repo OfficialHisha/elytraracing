@@ -199,6 +199,95 @@ public class ERCommand implements CommandExecutor {
                 }
             }
 
+            case "border" -> {
+                if (!sender.hasPermission(TOOL.getPermission())) {
+                    sender.sendMessage("§cYou do not have permission to use this command");
+                    return true;
+                }
+                if (!(sender instanceof Player player)) {
+                    sender.sendMessage("§cOnly players can use this command.");
+                    return true;
+                }
+
+                String raceName = plugin.getToolManager().getEditingRace(player.getUniqueId());
+                if (raceName == null) {
+                    player.sendMessage("§cYou are not editing a race. Use /er tool <race> first.");
+                    return true;
+                }
+
+                if (args.length < 2) {
+                    player.sendMessage("§eUsage: /er border <add|list|remove|clear>");
+                    return true;
+                }
+
+                String borderSub = args[1].toLowerCase();
+                plugin.getRaceManager().getRace(raceName).ifPresentOrElse(race -> {
+                    try {
+                        int raceId = plugin.getDatabaseManager().getRaceId(raceName);
+                        switch (borderSub) {
+                            case "add" -> {
+                                org.bukkit.Location[] selection = plugin.getToolManager().getSelection(player.getUniqueId());
+                                if (selection == null || selection[0] == null || selection[1] == null) {
+                                    player.sendMessage("§cYou must set both Pos 1 and Pos 2 using the tool first (Shift + Click).");
+                                    return;
+                                }
+                                plugin.getDatabaseManager().addBorder(raceId, selection[0], selection[1]);
+                                player.sendMessage("§aBorder added to race " + raceName);
+                                // Reload borders for the race
+                                List<com.hishacorp.elytraracing.model.Border> borders = plugin.getDatabaseManager().getBorders(raceId, player.getWorld()).stream()
+                                        .map(bd -> new com.hishacorp.elytraracing.model.Border(bd.id, bd.pos1, bd.pos2))
+                                        .toList();
+                                race.setBorders(borders);
+                                plugin.getRingRenderer().setVisibleBorders(player, borders);
+                            }
+                            case "list" -> {
+                                List<com.hishacorp.elytraracing.model.Border> borders = race.getBorders();
+                                if (borders.isEmpty()) {
+                                    player.sendMessage("§eNo borders defined for this race.");
+                                    return;
+                                }
+                                player.sendMessage("§aBorders for " + raceName + ":");
+                                for (int i = 0; i < borders.size(); i++) {
+                                    com.hishacorp.elytraracing.model.Border b = borders.get(i);
+                                    player.sendMessage("§e" + (i + 1) + ". Pos1: " + b.getPos1().getBlockX() + "," + b.getPos1().getBlockY() + "," + b.getPos1().getBlockZ() +
+                                            " | Pos2: " + b.getPos2().getBlockX() + "," + b.getPos2().getBlockY() + "," + b.getPos2().getBlockZ());
+                                }
+                            }
+                            case "remove" -> {
+                                if (args.length < 3) {
+                                    player.sendMessage("§cUsage: /er border remove <index>");
+                                    return;
+                                }
+                                int index = Integer.parseInt(args[2]) - 1;
+                                List<com.hishacorp.elytraracing.model.Border> borders = race.getBorders();
+                                if (index < 0 || index >= borders.size()) {
+                                    player.sendMessage("§cInvalid border index.");
+                                    return;
+                                }
+                                plugin.getDatabaseManager().deleteBorder(borders.get(index).getId());
+                                player.sendMessage("§aBorder removed.");
+                                // Reload borders
+                                List<com.hishacorp.elytraracing.model.Border> newBorders = plugin.getDatabaseManager().getBorders(raceId, player.getWorld()).stream()
+                                        .map(bd -> new com.hishacorp.elytraracing.model.Border(bd.id, bd.pos1, bd.pos2))
+                                        .toList();
+                                race.setBorders(newBorders);
+                                plugin.getRingRenderer().setVisibleBorders(player, newBorders);
+                            }
+                            case "clear" -> {
+                                plugin.getDatabaseManager().clearBorders(raceId);
+                                race.getBorders().clear();
+                                plugin.getRingRenderer().setVisibleBorders(player, new java.util.ArrayList<>());
+                                player.sendMessage("§aAll borders cleared for race " + raceName);
+                            }
+                            default -> player.sendMessage("§cUnknown border subcommand.");
+                        }
+                    } catch (Exception e) {
+                        player.sendMessage("§cAn error occurred: " + e.getMessage());
+                        plugin.getLogger().severe("Border command error: " + e.getMessage());
+                    }
+                }, () -> player.sendMessage("§cRace not found."));
+            }
+
             default -> sender.sendMessage("§cUnknown subcommand.");
         }
 

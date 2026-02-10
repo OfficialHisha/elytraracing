@@ -25,6 +25,7 @@ public class ToolManager implements Listener {
 
     private final Elytraracing plugin;
     private final Map<UUID, String> editingRace = new HashMap<>();
+    private final Map<UUID, Location[]> selections = new HashMap<>();
 
     public ToolManager(Elytraracing plugin) {
         this.plugin = plugin;
@@ -34,8 +35,7 @@ public class ToolManager implements Listener {
         ItemStack tool = new ItemStack(Material.BLAZE_ROD);
         ItemMeta meta = tool.getItemMeta();
         if (meta != null) {
-            meta.setDisplayName("§6Ring Tool");
-            meta.setLore(Arrays.asList("§eRight-click to create or configure a ring.", "§eLeft-click to move a ring."));
+            meta.setDisplayName("§6Elytra Racing Tool");
             tool.setItemMeta(meta);
         }
         return tool;
@@ -47,16 +47,19 @@ public class ToolManager implements Listener {
         ItemStack tool = getRingTool();
         ItemMeta meta = tool.getItemMeta();
         if (meta != null) {
-            meta.setLore(Arrays.asList("§eRace: " + lowerCaseRaceName, "§eRight-click to create or configure a ring.", "§eLeft-click to move a ring."));
+            meta.setLore(Arrays.asList("§eRace: " + lowerCaseRaceName));
             tool.setItemMeta(meta);
         }
         player.getInventory().addItem(tool);
 
         try {
-            int raceId = plugin.getDatabaseManager().getRaceId(lowerCaseRaceName);
-            if (raceId != -1) {
-                plugin.getRingManager().loadRings(raceId);
-                plugin.getRingRenderer().setVisibleRings(player, new java.util.HashSet<>(plugin.getRingManager().getRings(raceId)));
+            var raceData = plugin.getDatabaseManager().getRaceData(lowerCaseRaceName);
+            if (raceData != null) {
+                plugin.getRingManager().loadRings(raceData.id);
+                plugin.getRingRenderer().setVisibleRings(player, new java.util.HashSet<>(plugin.getRingManager().getRings(raceData.id)));
+                plugin.getRaceManager().getRace(lowerCaseRaceName).ifPresent(race -> {
+                    plugin.getRingRenderer().setVisibleBorders(player, race.getBorders());
+                });
                 if (isTool(player.getInventory().getItemInMainHand())) {
                     plugin.getRingRenderer().updatePlayerView(player);
                 }
@@ -87,6 +90,23 @@ public class ToolManager implements Listener {
         }
 
         Ring currentlyConfiguring = plugin.getRingRenderer().getPlayerConfiguringRing(player.getUniqueId());
+
+        if (player.isSneaking()) {
+            event.setCancelled(true);
+            Block targetBlock = player.getTargetBlockExact(100);
+            Location location = targetBlock != null ? targetBlock.getLocation() : player.getLocation();
+
+            Location[] selection = selections.computeIfAbsent(player.getUniqueId(), k -> new Location[2]);
+            if (event.getAction().isLeftClick()) {
+                selection[0] = location;
+                player.sendMessage("§aSelection Pos 1 set to " + location.getBlockX() + ", " + location.getBlockY() + ", " + location.getBlockZ());
+            } else if (event.getAction().isRightClick()) {
+                selection[1] = location;
+                player.sendMessage("§aSelection Pos 2 set to " + location.getBlockX() + ", " + location.getBlockY() + ", " + location.getBlockZ());
+            }
+            plugin.getRingRenderer().setSelection(player, selection[0], selection[1]);
+            return;
+        }
 
         if (event.getAction().isRightClick()) {
             event.setCancelled(true);
@@ -190,7 +210,11 @@ public class ToolManager implements Listener {
     }
 
     public boolean isTool(ItemStack item) {
-        return item != null && item.hasItemMeta() && item.getItemMeta().hasDisplayName() && item.getItemMeta().getDisplayName().contains("Ring Tool");
+        if (item == null || !item.hasItemMeta() || !item.getItemMeta().hasDisplayName()) {
+            return false;
+        }
+        String displayName = item.getItemMeta().getDisplayName();
+        return displayName.contains("Elytra Racing Tool") || displayName.contains("Ring Tool");
     }
 
     public boolean isPlayerUsingTool(Player player) {
@@ -199,6 +223,7 @@ public class ToolManager implements Listener {
 
     public void stopEditing(Player player) {
         editingRace.remove(player.getUniqueId());
+        selections.remove(player.getUniqueId());
         plugin.getRingRenderer().clearRingsForPlayer(player);
     }
 
@@ -226,13 +251,24 @@ public class ToolManager implements Listener {
         String lowerCaseRaceName = raceName.toLowerCase();
         editingRace.put(player.getUniqueId(), lowerCaseRaceName);
         try {
-            int raceId = plugin.getDatabaseManager().getRaceId(lowerCaseRaceName);
-            if (raceId != -1) {
-                plugin.getRingManager().loadRings(raceId);
-                plugin.getRingRenderer().setVisibleRings(player, new java.util.HashSet<>(plugin.getRingManager().getRings(raceId)));
+            var raceData = plugin.getDatabaseManager().getRaceData(lowerCaseRaceName);
+            if (raceData != null) {
+                plugin.getRingManager().loadRings(raceData.id);
+                plugin.getRingRenderer().setVisibleRings(player, new java.util.HashSet<>(plugin.getRingManager().getRings(raceData.id)));
+                plugin.getRaceManager().getRace(lowerCaseRaceName).ifPresent(race -> {
+                    plugin.getRingRenderer().setVisibleBorders(player, race.getBorders());
+                });
             }
         } catch (Exception e) {
             player.sendMessage("§cAn error occurred while re-initializing the rings for this race.");
         }
+    }
+
+    public Location[] getSelection(UUID playerUuid) {
+        return selections.get(playerUuid);
+    }
+
+    public String getEditingRace(UUID playerUuid) {
+        return editingRace.get(playerUuid);
     }
 }

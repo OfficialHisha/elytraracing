@@ -37,6 +37,41 @@ public class DatabaseManager {
         plugin.getLogger().info("Connected to SQLite database.");
 
         createTables();
+        migrateBorders();
+    }
+
+    private void migrateBorders() throws SQLException {
+        try (Statement stmt = connection.createStatement()) {
+            ResultSet rs = stmt.executeQuery("SELECT id, pos1_x, pos2_x FROM races WHERE pos1_x IS NOT NULL AND pos2_x IS NOT NULL");
+            List<Integer> migratedIds = new ArrayList<>();
+            while (rs.next()) {
+                int raceId = rs.getInt("id");
+                // Check if already migrated (to avoid duplicates)
+                try (var ps = connection.prepareStatement("SELECT 1 FROM borders WHERE race_id = ? LIMIT 1")) {
+                    ps.setInt(1, raceId);
+                    if (!ps.executeQuery().next()) {
+                        // Not migrated yet, do it now
+                        try (var psMigrate = connection.prepareStatement("SELECT pos1_x, pos1_y, pos1_z, pos2_x, pos2_y, pos2_z FROM races WHERE id = ?")) {
+                            psMigrate.setInt(1, raceId);
+                            ResultSet rsMigrate = psMigrate.executeQuery();
+                            if (rsMigrate.next()) {
+                                addBorder(raceId,
+                                        new Location(null, rsMigrate.getDouble("pos1_x"), rsMigrate.getDouble("pos1_y"), rsMigrate.getDouble("pos1_z")),
+                                        new Location(null, rsMigrate.getDouble("pos2_x"), rsMigrate.getDouble("pos2_y"), rsMigrate.getDouble("pos2_z")));
+                                migratedIds.add(raceId);
+                            }
+                        }
+                    }
+                }
+            }
+
+            for (int id : migratedIds) {
+                try (var psClean = connection.prepareStatement("UPDATE races SET pos1_x = NULL, pos1_y = NULL, pos1_z = NULL, pos2_x = NULL, pos2_y = NULL, pos2_z = NULL WHERE id = ?")) {
+                    psClean.setInt(1, id);
+                    psClean.executeUpdate();
+                }
+            }
+        }
     }
 
     private void createTables() throws SQLException {
@@ -50,6 +85,15 @@ public class DatabaseManager {
                     world TEXT NOT NULL
                 );
             """);
+
+            // Ensure old columns exist for migration if they were already there
+            String[] oldColumns = {"pos1_x", "pos1_y", "pos1_z", "pos2_x", "pos2_y", "pos2_z"};
+            for (String col : oldColumns) {
+                try {
+                    stmt.executeUpdate("ALTER TABLE races ADD COLUMN " + col + " REAL;");
+                } catch (SQLException ignored) {
+                }
+            }
 
             // Player stats per race
             stmt.executeUpdate("""
@@ -78,6 +122,21 @@ public class DatabaseManager {
                     orientation TEXT NOT NULL,
                     material TEXT NOT NULL,
                     ring_index INTEGER NOT NULL,
+                    FOREIGN KEY (race_id) REFERENCES races(id)
+                );
+            """);
+
+            // Borders
+            stmt.executeUpdate("""
+                CREATE TABLE IF NOT EXISTS borders (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    race_id INTEGER NOT NULL,
+                    pos1_x REAL NOT NULL,
+                    pos1_y REAL NOT NULL,
+                    pos1_z REAL NOT NULL,
+                    pos2_x REAL NOT NULL,
+                    pos2_y REAL NOT NULL,
+                    pos2_z REAL NOT NULL,
                     FOREIGN KEY (race_id) REFERENCES races(id)
                 );
             """);
@@ -125,6 +184,96 @@ public class DatabaseManager {
             ps.setString(1, raceName.toLowerCase());
             ps.setString(2, world);
             ps.executeUpdate();
+        }
+    }
+
+    public synchronized int addBorder(int raceId, Location pos1, Location pos2) throws SQLException {
+        try (var ps = connection.prepareStatement(
+                "INSERT INTO borders (race_id, pos1_x, pos1_y, pos1_z, pos2_x, pos2_y, pos2_z) VALUES (?, ?, ?, ?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS)) {
+            ps.setInt(1, raceId);
+            ps.setDouble(2, pos1.getX());
+            ps.setDouble(3, pos1.getY());
+            ps.setDouble(4, pos1.getZ());
+            ps.setDouble(5, pos2.getX());
+            ps.setDouble(6, pos2.getY());
+            ps.setDouble(7, pos2.getZ());
+            ps.executeUpdate();
+
+            ResultSet generatedKeys = ps.getGeneratedKeys();
+            if (generatedKeys.next()) {
+                return generatedKeys.getInt(1);
+            }
+        }
+        return -1;
+    }
+
+    public synchronized void deleteBorder(int borderId) throws SQLException {
+        try (var ps = connection.prepareStatement("DELETE FROM borders WHERE id = ?")) {
+            ps.setInt(1, borderId);
+            ps.executeUpdate();
+        }
+    }
+
+    public synchronized void clearBorders(int raceId) throws SQLException {
+        try (var ps = connection.prepareStatement("DELETE FROM borders WHERE race_id = ?")) {
+            ps.setInt(1, raceId);
+            ps.executeUpdate();
+        }
+    }
+
+    public static class BorderData {
+        public final int id;
+        public final Location pos1;
+        public final Location pos2;
+
+        public BorderData(int id, Location pos1, Location pos2) {
+            this.id = id;
+            this.pos1 = pos1;
+            this.pos2 = pos2;
+        }
+    }
+
+    public synchronized List<BorderData> getBorders(int raceId, org.bukkit.World world) throws SQLException {
+        List<BorderData> borders = new ArrayList<>();
+        try (var ps = connection.prepareStatement("SELECT * FROM borders WHERE race_id = ?")) {
+            ps.setInt(1, raceId);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                borders.add(new BorderData(
+                        rs.getInt("id"),
+                        new Location(world, rs.getDouble("pos1_x"), rs.getDouble("pos1_y"), rs.getDouble("pos1_z")),
+                        new Location(world, rs.getDouble("pos2_x"), rs.getDouble("pos2_y"), rs.getDouble("pos2_z"))
+                ));
+            }
+        }
+        return borders;
+    }
+
+    public static class RaceData {
+        public final int id;
+        public final String name;
+        public final String world;
+
+        public RaceData(int id, String name, String world) {
+            this.id = id;
+            this.name = name;
+            this.world = world;
+        }
+    }
+
+    public synchronized RaceData getRaceData(String raceName) throws SQLException {
+        try (var ps = connection.prepareStatement(
+                "SELECT * FROM races WHERE name = ?")) {
+            ps.setString(1, raceName.toLowerCase());
+            var rs = ps.executeQuery();
+            if (rs.next()) {
+                return new RaceData(
+                        rs.getInt("id"),
+                        rs.getString("name"),
+                        rs.getString("world")
+                );
+            }
+            return null;
         }
     }
 

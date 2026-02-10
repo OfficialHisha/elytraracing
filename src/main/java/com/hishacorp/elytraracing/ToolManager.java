@@ -94,7 +94,12 @@ public class ToolManager implements Listener {
         if (player.isSneaking()) {
             event.setCancelled(true);
             Block targetBlock = player.getTargetBlockExact(100);
-            Location location = targetBlock != null ? targetBlock.getLocation() : player.getLocation();
+            Location location;
+            if (targetBlock != null) {
+                location = targetBlock.getLocation();
+            } else {
+                location = player.getEyeLocation().add(player.getLocation().getDirection().multiply(5));
+            }
 
             Location[] selection = selections.computeIfAbsent(player.getUniqueId(), k -> new Location[2]);
             if (event.getAction().isLeftClick()) {

@@ -37,41 +37,6 @@ public class DatabaseManager {
         plugin.getLogger().info("Connected to SQLite database.");
 
         createTables();
-        migrateBorders();
-    }
-
-    private void migrateBorders() throws SQLException {
-        try (Statement stmt = connection.createStatement()) {
-            ResultSet rs = stmt.executeQuery("SELECT id, pos1_x, pos2_x FROM races WHERE pos1_x IS NOT NULL AND pos2_x IS NOT NULL");
-            List<Integer> migratedIds = new ArrayList<>();
-            while (rs.next()) {
-                int raceId = rs.getInt("id");
-                // Check if already migrated (to avoid duplicates)
-                try (var ps = connection.prepareStatement("SELECT 1 FROM borders WHERE race_id = ? LIMIT 1")) {
-                    ps.setInt(1, raceId);
-                    if (!ps.executeQuery().next()) {
-                        // Not migrated yet, do it now
-                        try (var psMigrate = connection.prepareStatement("SELECT pos1_x, pos1_y, pos1_z, pos2_x, pos2_y, pos2_z FROM races WHERE id = ?")) {
-                            psMigrate.setInt(1, raceId);
-                            ResultSet rsMigrate = psMigrate.executeQuery();
-                            if (rsMigrate.next()) {
-                                addBorder(raceId,
-                                        new Location(null, rsMigrate.getDouble("pos1_x"), rsMigrate.getDouble("pos1_y"), rsMigrate.getDouble("pos1_z")),
-                                        new Location(null, rsMigrate.getDouble("pos2_x"), rsMigrate.getDouble("pos2_y"), rsMigrate.getDouble("pos2_z")));
-                                migratedIds.add(raceId);
-                            }
-                        }
-                    }
-                }
-            }
-
-            for (int id : migratedIds) {
-                try (var psClean = connection.prepareStatement("UPDATE races SET pos1_x = NULL, pos1_y = NULL, pos1_z = NULL, pos2_x = NULL, pos2_y = NULL, pos2_z = NULL WHERE id = ?")) {
-                    psClean.setInt(1, id);
-                    psClean.executeUpdate();
-                }
-            }
-        }
     }
 
     private void createTables() throws SQLException {
@@ -85,15 +50,6 @@ public class DatabaseManager {
                     world TEXT NOT NULL
                 );
             """);
-
-            // Ensure old columns exist for migration if they were already there
-            String[] oldColumns = {"pos1_x", "pos1_y", "pos1_z", "pos2_x", "pos2_y", "pos2_z"};
-            for (String col : oldColumns) {
-                try {
-                    stmt.executeUpdate("ALTER TABLE races ADD COLUMN " + col + " REAL;");
-                } catch (SQLException ignored) {
-                }
-            }
 
             // Player stats per race
             stmt.executeUpdate("""

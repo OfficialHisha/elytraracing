@@ -9,6 +9,7 @@ import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
@@ -102,10 +103,10 @@ public class ToolManager implements Listener {
             }
 
             Location[] selection = selections.computeIfAbsent(player.getUniqueId(), k -> new Location[2]);
-            if (event.getAction().isLeftClick()) {
+            if (event.getAction() == Action.LEFT_CLICK_AIR || event.getAction() == Action.LEFT_CLICK_BLOCK) {
                 selection[0] = location;
                 player.sendMessage("§aSelection Pos 1 set to " + location.getBlockX() + ", " + location.getBlockY() + ", " + location.getBlockZ());
-            } else if (event.getAction().isRightClick()) {
+            } else if (event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK) {
                 selection[1] = location;
                 player.sendMessage("§aSelection Pos 2 set to " + location.getBlockX() + ", " + location.getBlockY() + ", " + location.getBlockZ());
             }
@@ -113,7 +114,7 @@ public class ToolManager implements Listener {
             return;
         }
 
-        if (event.getAction().isRightClick()) {
+        if (event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK) {
             event.setCancelled(true);
             Ring clickedRing = getTargetedRing(player);
 
@@ -165,7 +166,7 @@ public class ToolManager implements Listener {
                     player.sendMessage("§cAn error occurred while creating the ring.");
                 }
             }
-        } else if (event.getAction().isLeftClick()) {
+        } else if (event.getAction() == Action.LEFT_CLICK_AIR || event.getAction() == Action.LEFT_CLICK_BLOCK) {
             Ring clickedRing = getTargetedRing(player);
 
             if (currentlyConfiguring != null) {

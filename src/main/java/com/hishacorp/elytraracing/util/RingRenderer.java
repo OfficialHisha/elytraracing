@@ -100,55 +100,66 @@ public class RingRenderer {
         List<Border> borders = playerVisibleBorders.get(player.getUniqueId());
         if (borders != null) {
             for (Border border : borders) {
-                drawBorder(player, border, Particle.HAPPY_VILLAGER);
+                drawBorder(player, border, Material.LIME_STAINED_GLASS);
             }
         }
 
         // Draw selection
         Border selection = playerSelection.get(player.getUniqueId());
         if (selection != null) {
-            drawBorder(player, selection, Particle.FLAME);
+            drawBorder(player, selection, Material.ORANGE_STAINED_GLASS);
         }
     }
 
-    private void drawBorder(Player player, Border border, Particle particle) {
+    private void drawBorder(Player player, Border border, Material material) {
         Location pos1 = border.getPos1();
         Location pos2 = border.getPos2();
 
         if (pos1 == null || pos2 == null) return;
+        if (pos1.getWorld() == null || !pos1.getWorld().equals(player.getWorld())) return;
 
-        double minX = Math.min(pos1.getX(), pos2.getX());
-        double maxX = Math.max(pos1.getX(), pos2.getX());
-        double minY = Math.min(pos1.getY(), pos2.getY());
-        double maxY = Math.max(pos1.getY(), pos2.getY());
-        double minZ = Math.min(pos1.getZ(), pos2.getZ());
-        double maxZ = Math.max(pos1.getZ(), pos2.getZ());
+        int minX = Math.min(pos1.getBlockX(), pos2.getBlockX());
+        int maxX = Math.max(pos1.getBlockX(), pos2.getBlockX());
+        int minY = Math.min(pos1.getBlockY(), pos2.getBlockY());
+        int maxY = Math.max(pos1.getBlockY(), pos2.getBlockY());
+        int minZ = Math.min(pos1.getBlockZ(), pos2.getBlockZ());
+        int maxZ = Math.max(pos1.getBlockZ(), pos2.getBlockZ());
 
         org.bukkit.World world = pos1.getWorld();
+        BlockData blockData = material.createBlockData();
+        Map<Location, BlockData> originalBlocks = playerOriginalBlocks.computeIfAbsent(player.getUniqueId(), k -> new HashMap<>());
 
         // Draw edges along X
-        for (double x = minX; x <= maxX; x += 1.0) {
-            player.spawnParticle(particle, new Location(world, x, minY, minZ), 1, 0, 0, 0, 0);
-            player.spawnParticle(particle, new Location(world, x, maxY, minZ), 1, 0, 0, 0, 0);
-            player.spawnParticle(particle, new Location(world, x, minY, maxZ), 1, 0, 0, 0, 0);
-            player.spawnParticle(particle, new Location(world, x, maxY, maxZ), 1, 0, 0, 0, 0);
+        for (int x = minX; x <= maxX; x++) {
+            setGhostBlock(player, world, x, minY, minZ, blockData, originalBlocks);
+            setGhostBlock(player, world, x, maxY, minZ, blockData, originalBlocks);
+            setGhostBlock(player, world, x, minY, maxZ, blockData, originalBlocks);
+            setGhostBlock(player, world, x, maxY, maxZ, blockData, originalBlocks);
         }
 
         // Draw edges along Y
-        for (double y = minY; y <= maxY; y += 1.0) {
-            player.spawnParticle(particle, new Location(world, minX, y, minZ), 1, 0, 0, 0, 0);
-            player.spawnParticle(particle, new Location(world, maxX, y, minZ), 1, 0, 0, 0, 0);
-            player.spawnParticle(particle, new Location(world, minX, y, maxZ), 1, 0, 0, 0, 0);
-            player.spawnParticle(particle, new Location(world, maxX, y, maxZ), 1, 0, 0, 0, 0);
+        for (int y = minY; y <= maxY; y++) {
+            setGhostBlock(player, world, minX, y, minZ, blockData, originalBlocks);
+            setGhostBlock(player, world, maxX, y, minZ, blockData, originalBlocks);
+            setGhostBlock(player, world, minX, y, maxZ, blockData, originalBlocks);
+            setGhostBlock(player, world, maxX, y, maxZ, blockData, originalBlocks);
         }
 
         // Draw edges along Z
-        for (double z = minZ; z <= maxZ; z += 1.0) {
-            player.spawnParticle(particle, new Location(world, minX, minY, z), 1, 0, 0, 0, 0);
-            player.spawnParticle(particle, new Location(world, maxX, minY, z), 1, 0, 0, 0, 0);
-            player.spawnParticle(particle, new Location(world, minX, maxY, z), 1, 0, 0, 0, 0);
-            player.spawnParticle(particle, new Location(world, maxX, maxY, z), 1, 0, 0, 0, 0);
+        for (int z = minZ; z <= maxZ; z++) {
+            setGhostBlock(player, world, minX, minY, z, blockData, originalBlocks);
+            setGhostBlock(player, world, maxX, minY, z, blockData, originalBlocks);
+            setGhostBlock(player, world, minX, maxY, z, blockData, originalBlocks);
+            setGhostBlock(player, world, maxX, maxY, z, blockData, originalBlocks);
         }
+    }
+
+    private void setGhostBlock(Player player, org.bukkit.World world, int x, int y, int z, BlockData data, Map<Location, BlockData> originalBlocks) {
+        Location loc = new Location(world, x, y, z).toBlockLocation();
+        if (!originalBlocks.containsKey(loc)) {
+            originalBlocks.put(loc, loc.getBlock().getBlockData());
+        }
+        player.sendBlockChange(loc, data);
     }
 
     public void showRaceRings(Player player, List<Ring> rings, int nextRingIndex) {

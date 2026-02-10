@@ -10,8 +10,11 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 
 import static com.hishacorp.elytraracing.input.AwaitInputEventType.CREATE;
 import static com.hishacorp.elytraracing.input.AwaitInputEventType.DELETE;
@@ -21,6 +24,7 @@ public class RaceManager {
     private final Elytraracing plugin;
     private final List<Race> races = new ArrayList<>();
     private final RingRenderer ringRenderer;
+    private final Set<UUID> seeSpectatorsAdmins = new HashSet<>();
 
     public RaceManager(Elytraracing plugin) {
         this.plugin = plugin;
@@ -114,7 +118,7 @@ public class RaceManager {
             player.setAllowFlight(true);
             player.setFlying(true);
             for (Player onlinePlayer : plugin.getServer().getOnlinePlayers()) {
-                if (onlinePlayer != player) {
+                if (onlinePlayer != player && !canSeeSpectators(onlinePlayer)) {
                     onlinePlayer.hidePlayer(plugin, player);
                 }
             }
@@ -249,5 +253,35 @@ public class RaceManager {
             plugin.getLogger().severe("Failed to delete race: " + ex.getMessage());
             player.sendMessage("§cA Race could not be deleted.");
         }
+    }
+
+    public boolean canSeeSpectators(Player player) {
+        return seeSpectatorsAdmins.contains(player.getUniqueId());
+    }
+
+    public void setSeeSpectators(Player player, boolean see) {
+        if (see) {
+            seeSpectatorsAdmins.add(player.getUniqueId());
+            // Show all spectators
+            for (Race race : races) {
+                for (Player spectator : race.getSpectators().values()) {
+                    player.showPlayer(plugin, spectator);
+                }
+            }
+        } else {
+            seeSpectatorsAdmins.remove(player.getUniqueId());
+            // Hide all spectators
+            for (Race race : races) {
+                for (Player spectator : race.getSpectators().values()) {
+                    if (spectator != player) {
+                        player.hidePlayer(plugin, spectator);
+                    }
+                }
+            }
+        }
+    }
+
+    public void toggleSeeSpectators(Player player) {
+        setSeeSpectators(player, !canSeeSpectators(player));
     }
 }

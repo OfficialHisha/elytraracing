@@ -6,6 +6,7 @@ import com.hishacorp.elytraracing.util.WorldUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.HumanEntity;
+import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
@@ -17,13 +18,20 @@ public class SetupGui implements Gui {
     private final Elytraracing plugin;
     private final Inventory inventory;
 
-    public SetupGui(Elytraracing plugin) {
+    public SetupGui(Elytraracing plugin, Player player) {
         this.plugin = plugin;
         this.inventory = Bukkit.createInventory(null, 27, "Elytra Racing Setup");
 
         inventory.setItem(11, button(ELYTRA, "§aCreate Race"));
         inventory.setItem(13, button(BARRIER, "§cDelete Race"));
         inventory.setItem(15, button(COMPASS, "§eSet Spawn"));
+
+        updateToggleItem(player);
+    }
+
+    private void updateToggleItem(Player player) {
+        boolean canSee = plugin.getRaceManager().canSeeSpectators(player);
+        inventory.setItem(17, button(canSee ? ENDER_EYE : ENDER_PEARL, "§eSee Spectators: " + (canSee ? "§aON" : "§cOFF")));
     }
 
     private ItemStack button(Material mat, String name) {
@@ -41,10 +49,15 @@ public class SetupGui implements Gui {
 
     @Override
     public void onClick(InventoryClickEvent event) {
+        Player player = (Player) event.getWhoClicked();
         switch (event.getSlot()) {
             case 11 -> plugin.getRaceManager().prepareCreateRace(event);
             case 13 -> plugin.getRaceManager().prepareDeleteRace(event);
-            case 15 -> setWorldSpawn(event.getWhoClicked());
+            case 15 -> setWorldSpawn(player);
+            case 17 -> {
+                plugin.getRaceManager().toggleSeeSpectators(player);
+                updateToggleItem(player);
+            }
         }
     }
 

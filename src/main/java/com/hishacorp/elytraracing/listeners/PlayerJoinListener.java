@@ -18,6 +18,7 @@ public class PlayerJoinListener implements Listener {
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
         Player joinedPlayer = event.getPlayer();
+        if (plugin.getRaceManager().canSeeSpectators(joinedPlayer)) return;
 
         for (Race race : plugin.getRaceManager().getRaces()) {
             for (Player spectator : race.getSpectators().values()) {

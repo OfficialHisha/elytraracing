@@ -64,7 +64,7 @@ public class ERCommand implements CommandExecutor {
                     return true;
                 }
 
-                plugin.getGuiManager().openGui(player, new SetupGui(plugin));
+                plugin.getGuiManager().openGui(player, new SetupGui(plugin, player));
             }
 
             case "tool" -> {

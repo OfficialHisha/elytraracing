@@ -94,4 +94,41 @@ public class SpectatorTest {
         server.execute("er", player, "join", raceName);
         player.assertSaid("§cYou are already in a race.");
     }
+
+    @Test
+    public void testAdminCanToggleSpectatorVisibility() {
+        PlayerMock admin = server.addPlayer();
+        assertFalse(raceManager.canSeeSpectators(admin));
+
+        raceManager.toggleSeeSpectators(admin);
+        assertTrue(raceManager.canSeeSpectators(admin));
+
+        raceManager.toggleSeeSpectators(admin);
+        assertFalse(raceManager.canSeeSpectators(admin));
+    }
+
+    @Test
+    public void testSpectatorVisibilityRespectsAdminPreference() {
+        PlayerMock admin = server.addPlayer();
+        PlayerMock spectator = server.addPlayer();
+        admin.setOp(true);
+        spectator.setOp(true);
+        String raceName = "testRace";
+
+        server.execute("er", admin, "create", raceName);
+        admin.nextMessage();
+        admin.nextMessage();
+
+        raceManager.setSeeSpectators(admin, true);
+
+        server.execute("er", spectator, "spectate", raceName);
+
+        assertTrue(admin.canSee(spectator));
+
+        raceManager.setSeeSpectators(admin, false);
+        assertFalse(admin.canSee(spectator));
+
+        raceManager.setSeeSpectators(admin, true);
+        assertTrue(admin.canSee(spectator));
+    }
 }

@@ -14,8 +14,10 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
+import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -54,8 +56,9 @@ public class ToolManager implements Listener {
             int raceId = plugin.getDatabaseManager().getRaceId(lowerCaseRaceName);
             if (raceId != -1) {
                 plugin.getRingManager().loadRings(raceId);
-                for (Ring ring : plugin.getRingManager().getRings(raceId)) {
-                    plugin.getRingRenderer().addRingForPlayer(player, ring);
+                plugin.getRingRenderer().setVisibleRings(player, new java.util.HashSet<>(plugin.getRingManager().getRings(raceId)));
+                if (isTool(player.getInventory().getItemInMainHand())) {
+                    plugin.getRingRenderer().updatePlayerView(player);
                 }
             }
         } catch (Exception e) {
@@ -68,7 +71,7 @@ public class ToolManager implements Listener {
         Player player = event.getPlayer();
         ItemStack item = event.getItem();
 
-        if (item == null || !item.hasItemMeta() || !item.getItemMeta().hasDisplayName() || !item.getItemMeta().getDisplayName().contains("Ring Tool")) {
+        if (!isTool(item)) {
             return;
         }
 
@@ -161,34 +164,75 @@ public class ToolManager implements Listener {
 
     private Ring getTargetedRing(Player player) {
         Location eyeLocation = player.getEyeLocation();
-        Map<Location, Ring> ringBlocks = plugin.getRingRenderer().getPlayerRingBlocks(player.getUniqueId());
-        if (ringBlocks == null) {
+        String raceName = editingRace.get(player.getUniqueId());
+        if (raceName == null) {
             return null;
         }
+        try {
+            int raceId = plugin.getDatabaseManager().getRaceId(raceName);
+            List<Ring> rings = plugin.getRingManager().getRings(raceId);
+            if (rings == null) {
+                return null;
+            }
 
-        for (double i = 0; i < 100; i += 0.5) {
-            Location point = eyeLocation.clone().add(eyeLocation.getDirection().clone().multiply(i));
-            for (Map.Entry<Location, Ring> entry : ringBlocks.entrySet()) {
-                if (entry.getKey().distance(point) < 1) {
-                    return entry.getValue();
+            for (double i = 0; i < 100; i += 0.5) {
+                Location point = eyeLocation.clone().add(eyeLocation.getDirection().clone().multiply(i));
+                for (Ring ring : rings) {
+                    if (ring.getLocation().distance(point) < ring.getRadius()) {
+                        return ring;
+                    }
                 }
             }
+        } catch (SQLException e) {
+            plugin.getLogger().severe("Could not get targeted ring: " + e.getMessage());
         }
         return null;
     }
 
-    @EventHandler
-    public void onPlayerQuit(PlayerQuitEvent event) {
-        Player player = event.getPlayer();
-        plugin.getRingRenderer().clearRingsForPlayer(player);
-        editingRace.remove(player.getUniqueId());
+    public boolean isTool(ItemStack item) {
+        return item != null && item.hasItemMeta() && item.getItemMeta().hasDisplayName() && item.getItemMeta().getDisplayName().contains("Ring Tool");
+    }
 
-        // Remove the tool from the player's inventory
-        ItemStack tool = getRingTool();
-        for (ItemStack item : player.getInventory().getContents()) {
-            if (item != null && item.hasItemMeta() && item.getItemMeta().getDisplayName().equals(tool.getItemMeta().getDisplayName())) {
-                player.getInventory().remove(item);
+    public boolean isPlayerUsingTool(Player player) {
+        return editingRace.containsKey(player.getUniqueId());
+    }
+
+    public void stopEditing(Player player) {
+        editingRace.remove(player.getUniqueId());
+        plugin.getRingRenderer().clearRingsForPlayer(player);
+    }
+
+    public String getRaceNameFromTool(ItemStack tool) {
+        if (!isTool(tool)) {
+            return null;
+        }
+        ItemMeta meta = tool.getItemMeta();
+        if (meta == null || !meta.hasLore()) {
+            return null;
+        }
+        List<String> lore = meta.getLore();
+        if (lore == null || lore.isEmpty()) {
+            return null;
+        }
+        // The race name is expected to be on the first line of the lore, prefixed with "§eRace: "
+        String raceLine = lore.get(0);
+        if (raceLine.startsWith("§eRace: ")) {
+            return raceLine.substring("§eRace: ".length());
+        }
+        return null;
+    }
+
+    public void reinitializeEditing(Player player, String raceName) {
+        String lowerCaseRaceName = raceName.toLowerCase();
+        editingRace.put(player.getUniqueId(), lowerCaseRaceName);
+        try {
+            int raceId = plugin.getDatabaseManager().getRaceId(lowerCaseRaceName);
+            if (raceId != -1) {
+                plugin.getRingManager().loadRings(raceId);
+                plugin.getRingRenderer().setVisibleRings(player, new java.util.HashSet<>(plugin.getRingManager().getRings(raceId)));
             }
+        } catch (Exception e) {
+            player.sendMessage("§cAn error occurred while re-initializing the rings for this race.");
         }
     }
 }

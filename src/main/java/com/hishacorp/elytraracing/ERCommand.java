@@ -40,7 +40,7 @@ public class ERCommand implements CommandExecutor {
                     sender.sendMessage("§cUsage: /er start <race>");
                     return true;
                 }
-                plugin.getRaceManager().startRace(args[1]);
+                plugin.getRaceManager().startRace(sender, args[1]);
             }
             case "end" -> {
                 if (!sender.hasPermission(END.getPermission())) {
@@ -83,6 +83,12 @@ public class ERCommand implements CommandExecutor {
                 }
 
                 String raceName = args[1].toLowerCase();
+
+                if (plugin.getRaceManager().getRace(raceName).isEmpty()) {
+                    player.sendMessage("§cRace not found: " + raceName);
+                    return true;
+                }
+
                 plugin.getToolManager().giveTool(player, raceName);
                 player.sendMessage("§aYou have been given the ring tool for race " + raceName + ".");
             }
@@ -119,18 +125,6 @@ public class ERCommand implements CommandExecutor {
                 }
             }
 
-            case "time" -> {
-                if (!sender.hasPermission(TIME.getPermission())) {
-                    sender.sendMessage("§cYou do not have permission to use this command");
-                    return true;
-                }
-                if (args.length < 2) {
-                    sender.sendMessage("§cUsage: /er time <seconds>");
-                    return true;
-                }
-                sender.sendMessage("§aSetting finish time to " + args[1]);
-            }
-
             case "setspawn" -> {
                 if (!sender.hasPermission(SETSPAWN.getPermission())) {
                     sender.sendMessage("§cYou do not have permission to use this command");
@@ -164,9 +158,7 @@ public class ERCommand implements CommandExecutor {
                     return true;
                 }
                 if (sender instanceof Player player) {
-                    plugin.getScoreboardManager().showScoreboard(player);
                     plugin.getRaceManager().joinRace(player, args[1]);
-                    sender.sendMessage("Joined race " + args[1]);
                 }
             }
 
@@ -174,7 +166,6 @@ public class ERCommand implements CommandExecutor {
                 if (sender instanceof Player player) {
                     plugin.getScoreboardManager().removeScoreboard(player);
                     plugin.getRaceManager().leaveRace(player);
-                    sender.sendMessage("Left race " + args[1]);
                 }
             }
 

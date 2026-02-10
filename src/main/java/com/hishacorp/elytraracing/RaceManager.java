@@ -3,6 +3,9 @@ package com.hishacorp.elytraracing;
 import com.hishacorp.elytraracing.input.events.CreateRaceInputEvent;
 import com.hishacorp.elytraracing.input.events.DeleteRaceInputEvent;
 import com.hishacorp.elytraracing.input.events.InputEvent;
+import com.hishacorp.elytraracing.model.Racer;
+import com.hishacorp.elytraracing.util.RingRenderer;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 
@@ -17,14 +20,24 @@ public class RaceManager {
 
     private final Elytraracing plugin;
     private final List<Race> races = new ArrayList<>();
+    private final RingRenderer ringRenderer;
 
     public RaceManager(Elytraracing plugin) {
         this.plugin = plugin;
+        this.ringRenderer = new RingRenderer();
     }
 
     public void loadRaces() {
         plugin.getDatabaseManager().getAllRaceNames().forEach(raceName -> {
-            races.add(new Race(plugin, raceName));
+            try {
+                int raceId = plugin.getDatabaseManager().getRaceId(raceName);
+                plugin.getRingManager().loadRings(raceId);
+                Race race = new Race(plugin, raceName);
+                race.setRings(plugin.getRingManager().getRings(raceId));
+                races.add(race);
+            } catch (java.sql.SQLException e) {
+                plugin.getLogger().severe("Failed to load race " + raceName + ": " + e.getMessage());
+            }
         });
     }
 
@@ -33,7 +46,7 @@ public class RaceManager {
     }
 
     public Optional<Race> getRace(Player player) {
-        return races.stream().filter(race -> race.getPlayers().contains(player.getUniqueId())).findFirst();
+        return races.stream().filter(race -> race.getRacers().containsKey(player.getUniqueId())).findFirst();
     }
 
     public List<Race> getRaces() {
@@ -41,7 +54,7 @@ public class RaceManager {
     }
 
     public boolean isPlayerInRace(Player player) {
-        return races.stream().anyMatch(race -> race.getPlayers().contains(player.getUniqueId()));
+        return races.stream().anyMatch(race -> race.getRacers().containsKey(player.getUniqueId()));
     }
 
     public void joinRace(Player player, String raceName) {
@@ -52,7 +65,24 @@ public class RaceManager {
 
         getRace(raceName).ifPresentOrElse(race -> {
             if (!race.isInProgress()) {
+                if (race.getStartTime() > 0) {
+                    player.sendMessage("§cThis race has already finished. A new race must be started.");
+                    return;
+                }
+                try {
+                    int raceId = plugin.getDatabaseManager().getRaceId(race.getName());
+                    plugin.getRingManager().loadRings(raceId);
+                    race.setRings(plugin.getRingManager().getRings(raceId));
+                } catch (java.sql.SQLException e) {
+                    player.sendMessage("§cCould not load race data.");
+                    return;
+                }
                 race.addPlayer(player);
+                plugin.getScoreboardManager().showScoreboard(player);
+                Racer racer = race.getRacers().get(player.getUniqueId());
+                if (racer != null) {
+                    ringRenderer.showRaceRings(player, race.getRings(), racer.getCurrentRingIndex());
+                }
                 player.sendMessage("§aYou have joined the race: " + raceName);
             } else {
                 player.sendMessage("§cThis race is already in progress.");
@@ -61,22 +91,38 @@ public class RaceManager {
     }
 
     public void leaveRace(Player player) {
+        if (!isPlayerInRace(player)) {
+            player.sendMessage("§cYou are not in a race.");
+            return;
+        }
         races.stream()
-                .filter(race -> race.getPlayers().contains(player.getUniqueId()))
+                .filter(race -> race.getRacers().containsKey(player.getUniqueId()))
                 .findFirst()
                 .ifPresent(race -> {
+                    ringRenderer.hideRaceRings(player, race.getRings());
                     race.removePlayer(player);
                     player.sendMessage("§aYou have left the race: " + race.getName());
                 });
     }
 
-    public void startRace(String raceName) {
-        getRace(raceName).ifPresent(Race::start);
+    public void startRace(CommandSender sender, String raceName) {
+        getRace(raceName).ifPresentOrElse(race -> {
+            if (race.getRacers().isEmpty()) {
+                sender.sendMessage("§cCannot start a race with no players.");
+                return;
+            }
+            race.start();
+        }, () -> sender.sendMessage("§cRace not found: " + raceName));
     }
 
     public void endRace(org.bukkit.command.CommandSender sender, String raceName) {
         if (getRace(raceName).isPresent()) {
-            getRace(raceName).get().end();
+            Race race = getRace(raceName).get();
+            if (!race.isInProgress()) {
+                sender.sendMessage("§cRace '" + raceName + "' is not in progress.");
+                return;
+            }
+            race.end();
             sender.sendMessage("§aRace '" + raceName + "' ended.");
         } else {
             sender.sendMessage("§cRace '" + raceName + "' not found.");
@@ -116,9 +162,15 @@ public class RaceManager {
             plugin.getDatabaseManager().createRace(createRaceInputEvent.raceName, createRaceInputEvent.world);
             races.add(new Race(plugin, createRaceInputEvent.raceName));
             createRaceInputEvent.player.sendMessage("§aRace '" + createRaceInputEvent.raceName + "' created!");
+            plugin.getToolManager().giveTool(createRaceInputEvent.player, createRaceInputEvent.raceName);
+            createRaceInputEvent.player.sendMessage("§aYou have been given the ring tool for race " + createRaceInputEvent.raceName + ".");
         } catch (Exception ex) {
             createRaceInputEvent.player.sendMessage("§cA race with that name already exists.");
         }
+    }
+
+    public RingRenderer getRingRenderer() {
+        return ringRenderer;
     }
 
     public void deleteRace(InputEvent inputEvent) {
@@ -142,7 +194,7 @@ public class RaceManager {
         Optional<Race> raceOptional = getRace(raceName);
         if (raceOptional.isPresent()) {
             Race race = raceOptional.get();
-            if (race.isInProgress() || !race.getPlayers().isEmpty()) {
+            if (race.isInProgress() || !race.getRacers().isEmpty()) {
                 player.sendMessage("§cCannot delete a race that is in progress or has players.");
                 return;
             }

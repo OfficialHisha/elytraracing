@@ -46,7 +46,9 @@ public class RaceManager {
     }
 
     public Optional<Race> getRace(Player player) {
-        return races.stream().filter(race -> race.getRacers().containsKey(player.getUniqueId())).findFirst();
+        return races.stream()
+                .filter(race -> race.getRacers().containsKey(player.getUniqueId()) || race.getSpectators().containsKey(player.getUniqueId()))
+                .findFirst();
     }
 
     public List<Race> getRaces() {
@@ -54,7 +56,7 @@ public class RaceManager {
     }
 
     public boolean isPlayerInRace(Player player) {
-        return races.stream().anyMatch(race -> race.getRacers().containsKey(player.getUniqueId()));
+        return races.stream().anyMatch(race -> race.getRacers().containsKey(player.getUniqueId()) || race.getSpectators().containsKey(player.getUniqueId()));
     }
 
     public void joinRace(Player player, String raceName) {
@@ -90,19 +92,54 @@ public class RaceManager {
         }, () -> player.sendMessage("§cRace not found: " + raceName));
     }
 
-    public void leaveRace(Player player) {
-        if (!isPlayerInRace(player)) {
-            player.sendMessage("§cYou are not in a race.");
+    public void spectateRace(Player player, String raceName) {
+        if (isPlayerInRace(player)) {
+            player.sendMessage("§cYou are already in a race.");
             return;
         }
-        races.stream()
-                .filter(race -> race.getRacers().containsKey(player.getUniqueId()))
-                .findFirst()
-                .ifPresent(race -> {
-                    ringRenderer.hideRaceRings(player, race.getRings());
-                    race.removePlayer(player);
-                    player.sendMessage("§aYou have left the race: " + race.getName());
-                });
+
+        getRace(raceName).ifPresentOrElse(race -> {
+            try {
+                int raceId = plugin.getDatabaseManager().getRaceId(race.getName());
+                plugin.getRingManager().loadRings(raceId);
+                race.setRings(plugin.getRingManager().getRings(raceId));
+            } catch (java.sql.SQLException e) {
+                player.sendMessage("§cCould not load race data.");
+                return;
+            }
+
+            race.addSpectator(player);
+            ringRenderer.showSpectatorRings(player, race.getRings());
+
+            player.setAllowFlight(true);
+            player.setFlying(true);
+            for (Player onlinePlayer : plugin.getServer().getOnlinePlayers()) {
+                if (onlinePlayer != player) {
+                    onlinePlayer.hidePlayer(plugin, player);
+                }
+            }
+
+            player.sendMessage("§aYou are now spectating the race: " + raceName);
+        }, () -> player.sendMessage("§cRace not found: " + raceName));
+    }
+
+    public void leaveRace(Player player) {
+        getRace(player).ifPresentOrElse(race -> {
+            if (race.getRacers().containsKey(player.getUniqueId())) {
+                ringRenderer.hideRaceRings(player, race.getRings());
+                race.removePlayer(player);
+            } else if (race.getSpectators().containsKey(player.getUniqueId())) {
+                ringRenderer.hideRaceRings(player, race.getRings());
+                race.removeSpectator(player);
+                // Reset spectator specific state
+                player.setAllowFlight(false);
+                player.setFlying(false);
+                for (Player onlinePlayer : plugin.getServer().getOnlinePlayers()) {
+                    onlinePlayer.showPlayer(plugin, player);
+                }
+            }
+            player.sendMessage("§aYou have left the race: " + race.getName());
+        }, () -> player.sendMessage("§cYou are not in a race."));
     }
 
     public void startRace(CommandSender sender, String raceName) {

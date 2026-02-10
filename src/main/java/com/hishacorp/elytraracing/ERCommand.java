@@ -1,6 +1,7 @@
 package com.hishacorp.elytraracing;
 
 import com.hishacorp.elytraracing.gui.screens.SetupGui;
+import com.hishacorp.elytraracing.gui.screens.TeleportGui;
 import com.hishacorp.elytraracing.input.events.CreateRaceInputEvent;
 import com.hishacorp.elytraracing.input.events.DeleteRaceInputEvent;
 import com.hishacorp.elytraracing.model.Ring;
@@ -160,6 +161,30 @@ public class ERCommand implements CommandExecutor {
                 if (sender instanceof Player player) {
                     plugin.getRaceManager().joinRace(player, args[1]);
                 }
+            }
+
+            case "spectate" -> {
+                if (args.length < 2) {
+                    sender.sendMessage("§cUsage: /er spectate <race>");
+                    return true;
+                }
+                if (sender instanceof Player player) {
+                    plugin.getRaceManager().spectateRace(player, args[1]);
+                }
+            }
+
+            case "tp" -> {
+                if (!(sender instanceof Player player)) {
+                    sender.sendMessage("§cOnly players can use this command.");
+                    return true;
+                }
+                plugin.getRaceManager().getRace(player).ifPresentOrElse(race -> {
+                    if (race.getSpectators().containsKey(player.getUniqueId())) {
+                        plugin.getGuiManager().openGui(player, new TeleportGui(plugin, race));
+                    } else {
+                        player.sendMessage("§cYou must be spectating a race to use this command.");
+                    }
+                }, () -> player.sendMessage("§cYou are not in a race."));
             }
 
             case "leave" -> {

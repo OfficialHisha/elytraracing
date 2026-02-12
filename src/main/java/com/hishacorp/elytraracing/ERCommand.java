@@ -164,6 +164,10 @@ public class ERCommand implements CommandExecutor {
             }
 
             case "spectate" -> {
+                if (!sender.hasPermission(SPECTATE.getPermission())) {
+                    sender.sendMessage("§cYou do not have permission to use this command");
+                    return true;
+                }
                 if (args.length < 2) {
                     sender.sendMessage("§cUsage: /er spectate <race>");
                     return true;
@@ -174,6 +178,10 @@ public class ERCommand implements CommandExecutor {
             }
 
             case "tp" -> {
+                if (!sender.hasPermission(TP.getPermission())) {
+                    sender.sendMessage("§cYou do not have permission to use this command");
+                    return true;
+                }
                 if (!(sender instanceof Player player)) {
                     sender.sendMessage("§cOnly players can use this command.");
                     return true;

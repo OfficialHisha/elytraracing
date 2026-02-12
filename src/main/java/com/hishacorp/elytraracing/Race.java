@@ -126,9 +126,9 @@ public class Race {
             }
         }
 
-        for (Player spectator : new ArrayList<>(spectators.values())) {
+        for (Player spectator : spectators.values()) {
             spectator.sendMessage("§aThe race has ended!");
-            plugin.getRaceManager().leaveRace(spectator);
+            spectator.sendMessage("§eYou can view the final scoreboard. Use /er leave to exit.");
         }
     }
 

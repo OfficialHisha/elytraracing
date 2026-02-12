@@ -32,7 +32,9 @@ public class SpectatorTest {
     @Test
     public void testSpectateRace() {
         PlayerMock player = server.addPlayer();
-        player.setOp(true);
+        player.addAttachment(plugin, Permissions.CREATE.getPermission(), true);
+        player.addAttachment(plugin, Permissions.TOOL.getPermission(), true);
+        player.addAttachment(plugin, Permissions.SPECTATE.getPermission(), true);
         String raceName = "testRace";
 
         // Create race
@@ -61,7 +63,9 @@ public class SpectatorTest {
     @Test
     public void testLeaveSpectating() {
         PlayerMock player = server.addPlayer();
-        player.setOp(true);
+        player.addAttachment(plugin, Permissions.CREATE.getPermission(), true);
+        player.addAttachment(plugin, Permissions.TOOL.getPermission(), true);
+        player.addAttachment(plugin, Permissions.SPECTATE.getPermission(), true);
         String raceName = "testRace";
 
         server.execute("er", player, "create", raceName);
@@ -90,7 +94,9 @@ public class SpectatorTest {
     @Test
     public void testSpectatorCannotJoinAsRacer() {
         PlayerMock player = server.addPlayer();
-        player.setOp(true);
+        player.addAttachment(plugin, Permissions.CREATE.getPermission(), true);
+        player.addAttachment(plugin, Permissions.TOOL.getPermission(), true);
+        player.addAttachment(plugin, Permissions.SPECTATE.getPermission(), true);
         String raceName = "testRace";
 
         server.execute("er", player, "create", raceName);
@@ -120,8 +126,9 @@ public class SpectatorTest {
     public void testSpectatorVisibilityRespectsAdminPreference() {
         PlayerMock admin = server.addPlayer();
         PlayerMock spectator = server.addPlayer();
-        admin.setOp(true);
-        spectator.setOp(true);
+        admin.addAttachment(plugin, Permissions.CREATE.getPermission(), true);
+        admin.addAttachment(plugin, Permissions.TOOL.getPermission(), true);
+        spectator.addAttachment(plugin, Permissions.SPECTATE.getPermission(), true);
         String raceName = "testRace";
 
         server.execute("er", admin, "create", raceName);
@@ -139,5 +146,33 @@ public class SpectatorTest {
 
         raceManager.setSeeSpectators(admin, true);
         assertTrue(admin.canSee(spectator));
+    }
+
+    @Test
+    public void testSpectatorStaysAfterRaceEnd() {
+        PlayerMock admin = server.addPlayer();
+        PlayerMock spectator = server.addPlayer();
+        PlayerMock racer = server.addPlayer();
+        admin.addAttachment(plugin, Permissions.CREATE.getPermission(), true);
+        admin.addAttachment(plugin, Permissions.START.getPermission(), true);
+        admin.addAttachment(plugin, Permissions.END.getPermission(), true);
+        spectator.addAttachment(plugin, Permissions.SPECTATE.getPermission(), true);
+
+        String raceName = "testRace";
+        server.execute("er", admin, "create", raceName);
+        admin.nextMessage(); admin.nextMessage();
+
+        server.execute("er", racer, "join", raceName);
+        racer.nextMessage();
+
+        server.execute("er", spectator, "spectate", raceName);
+        spectator.nextMessage();
+
+        server.execute("er", admin, "start", raceName);
+        server.execute("er", admin, "end", raceName);
+
+        assertTrue(raceManager.isPlayerInRace(spectator));
+        spectator.assertSaid("§aThe race has ended!");
+        spectator.assertSaid("§eYou can view the final scoreboard. Use /er leave to exit.");
     }
 }

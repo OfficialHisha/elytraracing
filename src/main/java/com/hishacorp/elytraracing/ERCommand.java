@@ -189,7 +189,6 @@ public class ERCommand implements CommandExecutor {
 
             case "leave" -> {
                 if (sender instanceof Player player) {
-                    plugin.getScoreboardManager().removeScoreboard(player);
                     plugin.getRaceManager().leaveRace(player);
                 }
             }

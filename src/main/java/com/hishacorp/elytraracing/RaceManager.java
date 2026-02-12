@@ -114,6 +114,7 @@ public class RaceManager {
 
             race.addSpectator(player);
             ringRenderer.showSpectatorRings(player, race.getRings());
+            plugin.getScoreboardManager().showScoreboard(player);
 
             player.setAllowFlight(true);
             player.setFlying(true);
@@ -129,6 +130,7 @@ public class RaceManager {
 
     public void leaveRace(Player player) {
         getRace(player).ifPresentOrElse(race -> {
+            plugin.getScoreboardManager().removeScoreboard(player);
             if (race.getRacers().containsKey(player.getUniqueId())) {
                 ringRenderer.hideRaceRings(player, race.getRings());
                 race.removePlayer(player);

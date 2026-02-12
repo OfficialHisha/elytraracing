@@ -51,6 +51,9 @@ public class SpectatorTest {
         assertTrue(player.getAllowFlight());
         assertTrue(player.isFlying());
 
+        // Check scoreboard
+        assertNotSame(server.getScoreboardManager().getMainScoreboard(), player.getScoreboard());
+
         // Check invisibility (MockBukkit might not fully support hidePlayer but we can check if it's called if we use a mock,
         // but here we just check it doesn't crash)
     }
@@ -76,6 +79,12 @@ public class SpectatorTest {
 
         assertFalse(player.getAllowFlight());
         assertFalse(player.isFlying());
+
+        // Check scoreboard removed
+        // Note: VanillaScoreboardProvider.removeScoreboard sets a NEW scoreboard, so it won't be the main one,
+        // but it will be different from the one it had during the race.
+        // Actually, we can just check if it's a fresh scoreboard with no objectives.
+        assertTrue(player.getScoreboard().getObjectives().isEmpty());
     }
 
     @Test

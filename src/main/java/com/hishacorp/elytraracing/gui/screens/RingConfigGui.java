@@ -4,6 +4,7 @@ import com.hishacorp.elytraracing.Elytraracing;
 import com.hishacorp.elytraracing.gui.Gui;
 import com.hishacorp.elytraracing.model.Ring;
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -106,6 +107,22 @@ public class RingConfigGui implements Gui {
                 plugin.getInputManager().awaitChatInput(player, message -> {
                     try {
                         int newIndex = Integer.parseInt(message);
+                        List<Ring> raceRings = plugin.getRingManager().getRings(ring.getRaceId());
+                        Ring conflict = null;
+                        if (raceRings != null) {
+                            for (Ring r : raceRings) {
+                                if (r.getId() != ring.getId() && r.getIndex() == newIndex) {
+                                    conflict = r;
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (conflict != null) {
+                            Location loc = conflict.getLocation();
+                            player.sendMessage("§eWarning: The index " + newIndex + " conflicts with another ring at (" +
+                                    loc.getBlockX() + ", " + loc.getBlockY() + ", " + loc.getBlockZ() + ").");
+                        }
                         ring.setIndex(newIndex);
                     } catch (NumberFormatException e) {
                         player.sendMessage("§cInvalid number.");
@@ -126,11 +143,7 @@ public class RingConfigGui implements Gui {
                     plugin.getRingManager().addRing(ring);
                     plugin.getRingRenderer().addRingForPlayer(player, ring);
                 } else {
-                    if (ring.getIndex() != originalIndex) {
-                        plugin.getRingManager().updateRingWithIndexShift(ring);
-                    } else {
-                        plugin.getRingManager().updateRing(ring);
-                    }
+                    plugin.getRingManager().updateRing(ring);
                 }
                 plugin.getRingRenderer().setConfiguringRingForPlayer(player, null);
                 player.closeInventory();

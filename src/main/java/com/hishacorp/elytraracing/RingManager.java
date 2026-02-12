@@ -55,32 +55,6 @@ public class RingManager {
         }
     }
 
-    public void updateRingWithIndexShift(Ring updatedRing) {
-        try {
-            List<Ring> ringList = rings.get(updatedRing.getRaceId());
-            if (ringList == null) {
-                updateRing(updatedRing);
-                return;
-            }
-
-            // Remove the updated ring, add it back at the new index position
-            ringList.removeIf(r -> r.getId() == updatedRing.getId());
-            ringList.add(updatedRing.getIndex(), updatedRing);
-
-            // Re-index all rings
-            for (int i = 0; i < ringList.size(); i++) {
-                Ring ring = ringList.get(i);
-                if (ring.getIndex() != i) {
-                    ring.setIndex(i);
-                    databaseManager.updateRing(ring);
-                }
-            }
-
-        } catch (SQLException e) {
-            plugin.getLogger().severe("Failed to update ring with index shift: " + e.getMessage());
-        }
-    }
-
     public void deleteRing(Ring ring) {
         try {
             databaseManager.deleteRing(ring.getId());

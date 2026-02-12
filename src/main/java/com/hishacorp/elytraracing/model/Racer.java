@@ -7,6 +7,7 @@ import java.util.UUID;
 public class Racer {
 
     private final UUID uuid;
+    private final org.bukkit.Location joinLocation;
     private int currentRingIndex;
     private long startTime;
     private long finishTime;
@@ -14,8 +15,13 @@ public class Racer {
 
     public Racer(Player player) {
         this.uuid = player.getUniqueId();
+        this.joinLocation = player.getLocation();
         this.currentRingIndex = 0;
         this.completed = false;
+    }
+
+    public org.bukkit.Location getJoinLocation() {
+        return joinLocation;
     }
 
     public UUID getUuid() {

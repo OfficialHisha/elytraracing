@@ -47,9 +47,22 @@ public class DatabaseManager {
                 CREATE TABLE IF NOT EXISTS races (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     name TEXT UNIQUE NOT NULL,
-                    world TEXT NOT NULL
+                    world TEXT NOT NULL,
+                    spawn_x REAL,
+                    spawn_y REAL,
+                    spawn_z REAL,
+                    spawn_yaw REAL,
+                    spawn_pitch REAL
                 );
             """);
+
+            // Add spawn columns if they don't exist
+            String[] spawnColumns = {"spawn_x", "spawn_y", "spawn_z", "spawn_yaw", "spawn_pitch"};
+            for (String col : spawnColumns) {
+                try {
+                    stmt.executeUpdate("ALTER TABLE races ADD COLUMN " + col + " REAL;");
+                } catch (SQLException ignored) {}
+            }
 
             // Player stats per race
             stmt.executeUpdate("""
@@ -78,6 +91,21 @@ public class DatabaseManager {
                     orientation TEXT NOT NULL,
                     material TEXT NOT NULL,
                     ring_index INTEGER NOT NULL,
+                    FOREIGN KEY (race_id) REFERENCES races(id)
+                );
+            """);
+
+            // Borders
+            stmt.executeUpdate("""
+                CREATE TABLE IF NOT EXISTS borders (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    race_id INTEGER NOT NULL,
+                    pos1_x REAL NOT NULL,
+                    pos1_y REAL NOT NULL,
+                    pos1_z REAL NOT NULL,
+                    pos2_x REAL NOT NULL,
+                    pos2_y REAL NOT NULL,
+                    pos2_z REAL NOT NULL,
                     FOREIGN KEY (race_id) REFERENCES races(id)
                 );
             """);
@@ -125,6 +153,127 @@ public class DatabaseManager {
             ps.setString(1, raceName.toLowerCase());
             ps.setString(2, world);
             ps.executeUpdate();
+        }
+    }
+
+    public synchronized void updateRaceSpawn(String raceName, Location spawn) throws SQLException {
+        try (var ps = connection.prepareStatement(
+                "UPDATE races SET spawn_x = ?, spawn_y = ?, spawn_z = ?, spawn_yaw = ?, spawn_pitch = ? WHERE name = ?")) {
+            if (spawn != null) {
+                ps.setDouble(1, spawn.getX());
+                ps.setDouble(2, spawn.getY());
+                ps.setDouble(3, spawn.getZ());
+                ps.setDouble(4, spawn.getYaw());
+                ps.setDouble(5, spawn.getPitch());
+            } else {
+                ps.setNull(1, java.sql.Types.REAL);
+                ps.setNull(2, java.sql.Types.REAL);
+                ps.setNull(3, java.sql.Types.REAL);
+                ps.setNull(4, java.sql.Types.REAL);
+                ps.setNull(5, java.sql.Types.REAL);
+            }
+            ps.setString(6, raceName.toLowerCase());
+            ps.executeUpdate();
+        }
+    }
+
+    public synchronized int addBorder(int raceId, Location pos1, Location pos2) throws SQLException {
+        try (var ps = connection.prepareStatement(
+                "INSERT INTO borders (race_id, pos1_x, pos1_y, pos1_z, pos2_x, pos2_y, pos2_z) VALUES (?, ?, ?, ?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS)) {
+            ps.setInt(1, raceId);
+            ps.setDouble(2, pos1.getX());
+            ps.setDouble(3, pos1.getY());
+            ps.setDouble(4, pos1.getZ());
+            ps.setDouble(5, pos2.getX());
+            ps.setDouble(6, pos2.getY());
+            ps.setDouble(7, pos2.getZ());
+            ps.executeUpdate();
+
+            ResultSet generatedKeys = ps.getGeneratedKeys();
+            if (generatedKeys.next()) {
+                return generatedKeys.getInt(1);
+            }
+        }
+        return -1;
+    }
+
+    public synchronized void deleteBorder(int borderId) throws SQLException {
+        try (var ps = connection.prepareStatement("DELETE FROM borders WHERE id = ?")) {
+            ps.setInt(1, borderId);
+            ps.executeUpdate();
+        }
+    }
+
+    public synchronized void clearBorders(int raceId) throws SQLException {
+        try (var ps = connection.prepareStatement("DELETE FROM borders WHERE race_id = ?")) {
+            ps.setInt(1, raceId);
+            ps.executeUpdate();
+        }
+    }
+
+    public static class BorderData {
+        public final int id;
+        public final Location pos1;
+        public final Location pos2;
+
+        public BorderData(int id, Location pos1, Location pos2) {
+            this.id = id;
+            this.pos1 = pos1;
+            this.pos2 = pos2;
+        }
+    }
+
+    public synchronized List<BorderData> getBorders(int raceId, org.bukkit.World world) throws SQLException {
+        List<BorderData> borders = new ArrayList<>();
+        try (var ps = connection.prepareStatement("SELECT * FROM borders WHERE race_id = ?")) {
+            ps.setInt(1, raceId);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                borders.add(new BorderData(
+                        rs.getInt("id"),
+                        new Location(world, rs.getDouble("pos1_x"), rs.getDouble("pos1_y"), rs.getDouble("pos1_z")),
+                        new Location(world, rs.getDouble("pos2_x"), rs.getDouble("pos2_y"), rs.getDouble("pos2_z"))
+                ));
+            }
+        }
+        return borders;
+    }
+
+    public static class RaceData {
+        public final int id;
+        public final String name;
+        public final String world;
+        public final Location spawn;
+
+        public RaceData(int id, String name, String world, Location spawn) {
+            this.id = id;
+            this.name = name;
+            this.world = world;
+            this.spawn = spawn;
+        }
+    }
+
+    public synchronized RaceData getRaceData(String raceName) throws SQLException {
+        try (var ps = connection.prepareStatement(
+                "SELECT * FROM races WHERE name = ?")) {
+            ps.setString(1, raceName.toLowerCase());
+            var rs = ps.executeQuery();
+            if (rs.next()) {
+                String worldName = rs.getString("world");
+                var world = Bukkit.getWorld(worldName);
+                Location spawn = null;
+                if (rs.getObject("spawn_x") != null) {
+                    spawn = new Location(world, rs.getDouble("spawn_x"), rs.getDouble("spawn_y"), rs.getDouble("spawn_z"), (float) rs.getDouble("spawn_yaw"), (float) rs.getDouble("spawn_pitch"));
+                }
+
+                return new RaceData(
+                        rs.getInt("id"),
+                        rs.getString("name"),
+                        worldName,
+                        spawn
+                );
+            }
+            return null;
         }
     }
 

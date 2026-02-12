@@ -231,6 +231,7 @@ public class ERCommand implements CommandExecutor {
                 }
             }
 
+
             default -> sender.sendMessage("§cUnknown subcommand.");
         }
 

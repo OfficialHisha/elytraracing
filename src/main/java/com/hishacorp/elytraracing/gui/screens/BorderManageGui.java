@@ -98,6 +98,9 @@ public class BorderManageGui implements Gui {
                         race.getBorders().add(newBorder);
                         plugin.getRingRenderer().setVisibleBorders(player, race.getBorders());
                         player.sendMessage("§aBorder added.");
+                        selection[0] = null;
+                        selection[1] = null;
+                        plugin.getRingRenderer().setSelection(player, null, null);
                         updateItems();
                     }
                 } catch (Exception e) {

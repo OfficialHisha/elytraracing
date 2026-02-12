@@ -86,6 +86,9 @@ public class BorderConfigGui implements Gui {
                         if (id != -1) {
                             race.getBorders().add(new Border(id, selection[0], selection[1]));
                             player.sendMessage("§aBorder added.");
+                            selection[0] = null;
+                            selection[1] = null;
+                            plugin.getRingRenderer().setSelection(player, null, null);
                         }
                     } else {
                         plugin.getDatabaseManager().deleteBorder(existingBorder.getId());
@@ -94,6 +97,9 @@ public class BorderConfigGui implements Gui {
                             race.getBorders().remove(existingBorder);
                             race.getBorders().add(new Border(id, selection[0], selection[1]));
                             player.sendMessage("§aBorder updated.");
+                            selection[0] = null;
+                            selection[1] = null;
+                            plugin.getRingRenderer().setSelection(player, null, null);
                         }
                     }
                     plugin.getRingRenderer().setVisibleBorders(player, race.getBorders());

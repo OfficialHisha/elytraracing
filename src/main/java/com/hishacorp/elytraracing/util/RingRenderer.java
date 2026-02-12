@@ -129,37 +129,50 @@ public class RingRenderer {
         BlockData blockData = material.createBlockData();
         Map<Location, BlockData> originalBlocks = playerOriginalBlocks.computeIfAbsent(player.getUniqueId(), k -> new HashMap<>());
 
+        List<Border> otherBorders = new ArrayList<>();
+        List<Border> savedBorders = playerVisibleBorders.get(player.getUniqueId());
+        if (savedBorders != null) otherBorders.addAll(savedBorders);
+        Border selection = playerSelection.get(player.getUniqueId());
+        if (selection != null) otherBorders.add(selection);
+
+        otherBorders.removeIf(b -> b == border || (b.getId() != 0 && b.getId() == border.getId()));
+
         // Draw edges along X
         for (int x = minX; x <= maxX; x++) {
-            setGhostBlock(player, world, x, minY, minZ, blockData, originalBlocks);
-            setGhostBlock(player, world, x, maxY, minZ, blockData, originalBlocks);
-            setGhostBlock(player, world, x, minY, maxZ, blockData, originalBlocks);
-            setGhostBlock(player, world, x, maxY, maxZ, blockData, originalBlocks);
+            setGhostBlockIfOutside(player, world, x, minY, minZ, blockData, originalBlocks, otherBorders);
+            setGhostBlockIfOutside(player, world, x, maxY, minZ, blockData, originalBlocks, otherBorders);
+            setGhostBlockIfOutside(player, world, x, minY, maxZ, blockData, originalBlocks, otherBorders);
+            setGhostBlockIfOutside(player, world, x, maxY, maxZ, blockData, originalBlocks, otherBorders);
         }
 
         // Draw edges along Y
         for (int y = minY; y <= maxY; y++) {
-            setGhostBlock(player, world, minX, y, minZ, blockData, originalBlocks);
-            setGhostBlock(player, world, maxX, y, minZ, blockData, originalBlocks);
-            setGhostBlock(player, world, minX, y, maxZ, blockData, originalBlocks);
-            setGhostBlock(player, world, maxX, y, maxZ, blockData, originalBlocks);
+            setGhostBlockIfOutside(player, world, minX, y, minZ, blockData, originalBlocks, otherBorders);
+            setGhostBlockIfOutside(player, world, maxX, y, minZ, blockData, originalBlocks, otherBorders);
+            setGhostBlockIfOutside(player, world, minX, y, maxZ, blockData, originalBlocks, otherBorders);
+            setGhostBlockIfOutside(player, world, maxX, y, maxZ, blockData, originalBlocks, otherBorders);
         }
 
         // Draw edges along Z
         for (int z = minZ; z <= maxZ; z++) {
-            setGhostBlock(player, world, minX, minY, z, blockData, originalBlocks);
-            setGhostBlock(player, world, maxX, minY, z, blockData, originalBlocks);
-            setGhostBlock(player, world, minX, maxY, z, blockData, originalBlocks);
-            setGhostBlock(player, world, maxX, maxY, z, blockData, originalBlocks);
+            setGhostBlockIfOutside(player, world, minX, minY, z, blockData, originalBlocks, otherBorders);
+            setGhostBlockIfOutside(player, world, minX, maxY, z, blockData, originalBlocks, otherBorders);
+            setGhostBlockIfOutside(player, world, maxX, minY, z, blockData, originalBlocks, otherBorders);
+            setGhostBlockIfOutside(player, world, maxX, maxY, z, blockData, originalBlocks, otherBorders);
         }
     }
 
-    private void setGhostBlock(Player player, org.bukkit.World world, int x, int y, int z, BlockData data, Map<Location, BlockData> originalBlocks) {
-        Location loc = new Location(world, x, y, z).toBlockLocation();
-        if (!originalBlocks.containsKey(loc)) {
-            originalBlocks.put(loc, loc.getBlock().getBlockData());
+    private void setGhostBlockIfOutside(Player player, org.bukkit.World world, int x, int y, int z, BlockData data, Map<Location, BlockData> originalBlocks, List<Border> others) {
+        Location loc = new Location(world, x, y, z);
+        for (Border other : others) {
+            if (other.isInside(loc)) return;
         }
-        player.sendBlockChange(loc, data);
+
+        Location blockLoc = loc.toBlockLocation();
+        if (!originalBlocks.containsKey(blockLoc)) {
+            originalBlocks.put(blockLoc, blockLoc.getBlock().getBlockData());
+        }
+        player.sendBlockChange(blockLoc, data);
     }
 
     public void showRaceRings(Player player, List<Ring> rings, int nextRingIndex) {

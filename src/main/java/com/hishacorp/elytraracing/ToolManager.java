@@ -216,6 +216,12 @@ public class ToolManager implements Listener {
         Location eye = player.getEyeLocation();
         org.bukkit.util.Vector dir = eye.getDirection();
 
+        double maxDist = 100;
+        org.bukkit.util.RayTraceResult rayTraceResult = player.getWorld().rayTraceBlocks(eye, dir, 100, FluidCollisionMode.NEVER, true);
+        if (rayTraceResult != null && rayTraceResult.getHitBlock() != null) {
+            maxDist = rayTraceResult.getHitPosition().distance(eye.toVector());
+        }
+
         for (com.hishacorp.elytraracing.model.Border border : race.getBorders()) {
             Location p1 = border.getPos1();
             Location p2 = border.getPos2();
@@ -228,9 +234,8 @@ public class ToolManager implements Listener {
             int maxZ = Math.max(p1.getBlockZ(), p2.getBlockZ());
 
             // Check against the 12 edges
-            for (double t = 0; t <= 100; t += 0.1) {
+            for (double t = 0; t <= maxDist; t += 0.1) {
                 Location loc = eye.clone().add(dir.clone().multiply(t));
-                if (loc.distance(eye) > 100) break;
 
                 int x = loc.getBlockX();
                 int y = loc.getBlockY();
@@ -267,7 +272,13 @@ public class ToolManager implements Listener {
                 return null;
             }
 
-            for (double i = 0; i < 100; i += 0.5) {
+            double maxDist = 100;
+            org.bukkit.util.RayTraceResult rayTraceResult = player.getWorld().rayTraceBlocks(eyeLocation, eyeLocation.getDirection(), 100, FluidCollisionMode.NEVER, true);
+            if (rayTraceResult != null && rayTraceResult.getHitBlock() != null) {
+                maxDist = rayTraceResult.getHitPosition().distance(eyeLocation.toVector());
+            }
+
+            for (double i = 0; i < maxDist; i += 0.5) {
                 Location point = eyeLocation.clone().add(eyeLocation.getDirection().clone().multiply(i));
                 for (Ring ring : rings) {
                     if (ring.getLocation().distance(point) < ring.getRadius()) {

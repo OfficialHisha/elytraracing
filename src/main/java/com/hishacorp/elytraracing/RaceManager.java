@@ -37,6 +37,7 @@ public class RaceManager {
                     plugin.getRingManager().loadRings(raceData.id);
                     Race race = new Race(plugin, raceName);
                     race.setRings(plugin.getRingManager().getRings(raceData.id));
+                    race.setSpawnLocation(raceData.spawn);
 
                     var world = Bukkit.getWorld(raceData.world);
                     List<Border> borders = plugin.getDatabaseManager().getBorders(raceData.id, world).stream()
@@ -85,6 +86,7 @@ public class RaceManager {
                     if (raceData != null) {
                         plugin.getRingManager().loadRings(raceData.id);
                         race.setRings(plugin.getRingManager().getRings(raceData.id));
+                        race.setSpawnLocation(raceData.spawn);
 
                         var world = Bukkit.getWorld(raceData.world);
                         List<Border> borders = plugin.getDatabaseManager().getBorders(raceData.id, world).stream()

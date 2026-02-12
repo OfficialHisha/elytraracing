@@ -22,6 +22,7 @@ public class Race {
 
     private final Elytraracing plugin;
     private final String name;
+    private Location spawnLocation;
     private final List<Border> borders = new ArrayList<>();
     private final List<Ring> rings = new ArrayList<>();
     private final Map<UUID, Racer> racers = new HashMap<>();
@@ -48,6 +49,10 @@ public class Race {
             Player player = Bukkit.getPlayer(playerUUID);
             if (player == null) {
                 continue;
+            }
+
+            if (spawnLocation != null) {
+                player.teleport(spawnLocation);
             }
 
             racers.get(playerUUID).setStartTime(startTime);
@@ -158,6 +163,14 @@ public class Race {
 
     public String getName() {
         return name;
+    }
+
+    public Location getSpawnLocation() {
+        return spawnLocation;
+    }
+
+    public void setSpawnLocation(Location spawnLocation) {
+        this.spawnLocation = spawnLocation;
     }
 
     public List<Border> getBorders() {

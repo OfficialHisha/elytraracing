@@ -47,9 +47,22 @@ public class DatabaseManager {
                 CREATE TABLE IF NOT EXISTS races (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     name TEXT UNIQUE NOT NULL,
-                    world TEXT NOT NULL
+                    world TEXT NOT NULL,
+                    spawn_x REAL,
+                    spawn_y REAL,
+                    spawn_z REAL,
+                    spawn_yaw REAL,
+                    spawn_pitch REAL
                 );
             """);
+
+            // Add spawn columns if they don't exist
+            String[] spawnColumns = {"spawn_x", "spawn_y", "spawn_z", "spawn_yaw", "spawn_pitch"};
+            for (String col : spawnColumns) {
+                try {
+                    stmt.executeUpdate("ALTER TABLE races ADD COLUMN " + col + " REAL;");
+                } catch (SQLException ignored) {}
+            }
 
             // Player stats per race
             stmt.executeUpdate("""
@@ -143,6 +156,27 @@ public class DatabaseManager {
         }
     }
 
+    public synchronized void updateRaceSpawn(String raceName, Location spawn) throws SQLException {
+        try (var ps = connection.prepareStatement(
+                "UPDATE races SET spawn_x = ?, spawn_y = ?, spawn_z = ?, spawn_yaw = ?, spawn_pitch = ? WHERE name = ?")) {
+            if (spawn != null) {
+                ps.setDouble(1, spawn.getX());
+                ps.setDouble(2, spawn.getY());
+                ps.setDouble(3, spawn.getZ());
+                ps.setDouble(4, spawn.getYaw());
+                ps.setDouble(5, spawn.getPitch());
+            } else {
+                ps.setNull(1, java.sql.Types.REAL);
+                ps.setNull(2, java.sql.Types.REAL);
+                ps.setNull(3, java.sql.Types.REAL);
+                ps.setNull(4, java.sql.Types.REAL);
+                ps.setNull(5, java.sql.Types.REAL);
+            }
+            ps.setString(6, raceName.toLowerCase());
+            ps.executeUpdate();
+        }
+    }
+
     public synchronized int addBorder(int raceId, Location pos1, Location pos2) throws SQLException {
         try (var ps = connection.prepareStatement(
                 "INSERT INTO borders (race_id, pos1_x, pos1_y, pos1_z, pos2_x, pos2_y, pos2_z) VALUES (?, ?, ?, ?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS)) {
@@ -209,11 +243,13 @@ public class DatabaseManager {
         public final int id;
         public final String name;
         public final String world;
+        public final Location spawn;
 
-        public RaceData(int id, String name, String world) {
+        public RaceData(int id, String name, String world, Location spawn) {
             this.id = id;
             this.name = name;
             this.world = world;
+            this.spawn = spawn;
         }
     }
 
@@ -223,10 +259,18 @@ public class DatabaseManager {
             ps.setString(1, raceName.toLowerCase());
             var rs = ps.executeQuery();
             if (rs.next()) {
+                String worldName = rs.getString("world");
+                var world = Bukkit.getWorld(worldName);
+                Location spawn = null;
+                if (rs.getObject("spawn_x") != null) {
+                    spawn = new Location(world, rs.getDouble("spawn_x"), rs.getDouble("spawn_y"), rs.getDouble("spawn_z"), (float) rs.getDouble("spawn_yaw"), (float) rs.getDouble("spawn_pitch"));
+                }
+
                 return new RaceData(
                         rs.getInt("id"),
                         rs.getString("name"),
-                        rs.getString("world")
+                        worldName,
+                        spawn
                 );
             }
             return null;

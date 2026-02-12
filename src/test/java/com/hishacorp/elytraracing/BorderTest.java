@@ -41,6 +41,8 @@ public class BorderTest {
         player.teleport(joinLoc);
 
         Race race = new Race(plugin, "test-race");
+        Location spawnLoc = new Location(player.getWorld(), 1, 101, 1);
+        race.setSpawnLocation(spawnLoc);
         race.addPlayer(player);
 
         // Border 1: 0 to 10
@@ -66,7 +68,7 @@ public class BorderTest {
         player.teleport(new Location(player.getWorld(), 15, 100, 15));
         org.bukkit.event.player.PlayerMoveEvent e2 = new org.bukkit.event.player.PlayerMoveEvent(player, player.getLocation(), player.getLocation());
         listener.onPlayerMove(e2);
-        assertEquals(0, e2.getTo().getX(), 0.001); // Teleported back
+        assertEquals(1, e2.getTo().getX(), 0.001); // Teleported back to spawnLoc
         player.assertSaid("§cYou have went out of bounds and were teleported back!");
 
         // Inside Border 2

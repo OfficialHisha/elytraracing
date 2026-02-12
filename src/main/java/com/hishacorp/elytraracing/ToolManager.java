@@ -27,6 +27,7 @@ public class ToolManager implements Listener {
     private final Elytraracing plugin;
     private final Map<UUID, String> editingRace = new HashMap<>();
     private final Map<UUID, Location[]> selections = new HashMap<>();
+    private final Map<UUID, com.hishacorp.elytraracing.model.Border> editingBorder = new HashMap<>();
 
     public ToolManager(Elytraracing plugin) {
         this.plugin = plugin;
@@ -116,6 +117,23 @@ public class ToolManager implements Listener {
 
         if (event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK) {
             event.setCancelled(true);
+
+            // 1. Check for targeted border
+            com.hishacorp.elytraracing.model.Border targetedBorder = getTargetedBorder(player);
+            if (targetedBorder != null) {
+                setEditingBorder(player, targetedBorder);
+                plugin.getGuiManager().openGui(player, new com.hishacorp.elytraracing.gui.screens.BorderConfigGui(plugin, player, raceName, targetedBorder));
+                return;
+            }
+
+            // 2. Check for active selection
+            Location[] selection = selections.get(player.getUniqueId());
+            if (selection != null && (selection[0] != null || selection[1] != null)) {
+                plugin.getGuiManager().openGui(player, new com.hishacorp.elytraracing.gui.screens.BorderConfigGui(plugin, player, raceName, null));
+                return;
+            }
+
+            // 3. Fallback to ring logic
             Ring clickedRing = getTargetedRing(player);
 
             if (clickedRing != null) {
@@ -186,6 +204,54 @@ public class ToolManager implements Listener {
                 }
             }
         }
+    }
+
+    private com.hishacorp.elytraracing.model.Border getTargetedBorder(Player player) {
+        String raceName = editingRace.get(player.getUniqueId());
+        if (raceName == null) return null;
+
+        Race race = plugin.getRaceManager().getRace(raceName).orElse(null);
+        if (race == null) return null;
+
+        Location eye = player.getEyeLocation();
+        org.bukkit.util.Vector dir = eye.getDirection();
+
+        for (com.hishacorp.elytraracing.model.Border border : race.getBorders()) {
+            Location p1 = border.getPos1();
+            Location p2 = border.getPos2();
+
+            int minX = Math.min(p1.getBlockX(), p2.getBlockX());
+            int maxX = Math.max(p1.getBlockX(), p2.getBlockX());
+            int minY = Math.min(p1.getBlockY(), p2.getBlockY());
+            int maxY = Math.max(p1.getBlockY(), p2.getBlockY());
+            int minZ = Math.min(p1.getBlockZ(), p2.getBlockZ());
+            int maxZ = Math.max(p1.getBlockZ(), p2.getBlockZ());
+
+            // Check against the 12 edges
+            for (double t = 0; t <= 100; t += 0.1) {
+                Location loc = eye.clone().add(dir.clone().multiply(t));
+                if (loc.distance(eye) > 100) break;
+
+                int x = loc.getBlockX();
+                int y = loc.getBlockY();
+                int z = loc.getBlockZ();
+
+                // If loc is near an edge
+                boolean atX = (x >= minX && x <= maxX);
+                boolean atY = (y >= minY && y <= maxY);
+                boolean atZ = (z >= minZ && z <= maxZ);
+
+                int edgeCount = 0;
+                if (x == minX || x == maxX) edgeCount++;
+                if (y == minY || y == maxY) edgeCount++;
+                if (z == minZ || z == maxZ) edgeCount++;
+
+                if (edgeCount >= 2 && atX && atY && atZ) {
+                    return border;
+                }
+            }
+        }
+        return null;
     }
 
     private Ring getTargetedRing(Player player) {
@@ -276,5 +342,17 @@ public class ToolManager implements Listener {
 
     public String getEditingRace(UUID playerUuid) {
         return editingRace.get(playerUuid);
+    }
+
+    public void setEditingBorder(Player player, com.hishacorp.elytraracing.model.Border border) {
+        if (border == null) {
+            editingBorder.remove(player.getUniqueId());
+        } else {
+            editingBorder.put(player.getUniqueId(), border);
+        }
+    }
+
+    public com.hishacorp.elytraracing.model.Border getEditingBorder(UUID playerUuid) {
+        return editingBorder.get(playerUuid);
     }
 }

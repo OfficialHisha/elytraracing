@@ -34,7 +34,7 @@ public class PlayerMoveListener implements Listener {
                         if (racer.getCurrentRingIndex() > 0) {
                             teleportLocation = race.getRings().get(racer.getCurrentRingIndex() - 1).getLocation();
                         } else {
-                            teleportLocation = racer.getJoinLocation();
+                            teleportLocation = race.getSpawnLocation() != null ? race.getSpawnLocation() : racer.getJoinLocation();
                         }
                         event.setTo(teleportLocation);
                         player.sendMessage("§cYou have went out of bounds and were teleported back!");

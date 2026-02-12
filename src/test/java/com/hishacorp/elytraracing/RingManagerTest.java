@@ -33,32 +33,23 @@ public class RingManagerTest {
     }
 
     @Test
-    public void testUpdateRingWithIndexShift() throws Exception {
+    public void testUpdateRing() throws Exception {
         RingManager ringManager = new RingManager(plugin);
-        List<Ring> rings = new ArrayList<>();
-        rings.add(new Ring(1, 1, player.getLocation(), 5, Ring.Orientation.HORIZONTAL, Material.GOLD_BLOCK, 0));
-        rings.add(new Ring(2, 1, player.getLocation(), 5, Ring.Orientation.HORIZONTAL, Material.GOLD_BLOCK, 1));
-        rings.add(new Ring(3, 1, player.getLocation(), 5, Ring.Orientation.HORIZONTAL, Material.GOLD_BLOCK, 2));
 
         plugin.getDatabaseManager().createRace("test_race", "test_world");
         int raceId = plugin.getDatabaseManager().getRaceId("test_race");
 
-        for (Ring ring : rings) {
-            ring.setRaceId(raceId);
-            plugin.getDatabaseManager().createRing(ring);
-        }
+        Ring ring = new Ring(1, raceId, player.getLocation(), 5, Ring.Orientation.HORIZONTAL, Material.GOLD_BLOCK, 0);
+        int id = plugin.getDatabaseManager().createRing(ring);
+        ring.setId(id);
 
         ringManager.loadRings(raceId);
 
-        Ring updatedRing = new Ring(1, raceId, player.getLocation(), 5, Ring.Orientation.HORIZONTAL, Material.GOLD_BLOCK, 2);
-        ringManager.updateRingWithIndexShift(updatedRing);
+        ring.setRadius(10);
+        ringManager.updateRing(ring);
 
         List<Ring> updatedRings = ringManager.getRings(raceId);
-        updatedRings.sort(java.util.Comparator.comparingInt(Ring::getIndex));
-
-        assertEquals(3, updatedRings.size());
-        for (int i = 0; i < updatedRings.size(); i++) {
-            assertEquals(i, updatedRings.get(i).getIndex());
-        }
+        assertEquals(1, updatedRings.size());
+        assertEquals(10, updatedRings.get(0).getRadius());
     }
 }

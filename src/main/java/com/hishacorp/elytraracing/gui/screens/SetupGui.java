@@ -27,7 +27,6 @@ public class SetupGui implements Gui {
         inventory.setItem(10, button(ELYTRA, "§aCreate Race"));
         inventory.setItem(12, button(BARRIER, "§cDelete Race"));
         inventory.setItem(14, button(COMPASS, "§eSet Spawn", "§7Sets the race spawn if editing a race,", "§7otherwise sets the world spawn."));
-        inventory.setItem(16, button(IRON_BARS, "§6Manage Borders"));
     }
 
     private ItemStack button(Material mat, String name, String... lore) {
@@ -59,13 +58,6 @@ public class SetupGui implements Gui {
                     setRaceSpawn(player, editingRace);
                 } else {
                     setWorldSpawn(player);
-                }
-            }
-            case 16 -> {
-                if (editingRace != null) {
-                    plugin.getGuiManager().openGui(player, new BorderManageGui(plugin, editingRace));
-                } else {
-                    player.sendMessage("§cYou must be editing a race to manage its borders.");
                 }
             }
         }

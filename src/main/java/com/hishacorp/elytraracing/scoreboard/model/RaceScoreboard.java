@@ -9,16 +9,26 @@ import org.bukkit.entity.Player;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.UUID;
+
+import com.hishacorp.elytraracing.Elytraracing;
+import com.hishacorp.elytraracing.scoreboard.ScoreboardManager;
+
+import java.util.ArrayList;
 
 public class RaceScoreboard implements Scoreboard<Player> {
     private final String name;
     private final List<ScoreboardLine<Player>> titles;
-    private final List<ScoreboardScore<Player>> scores;
+    private final Elytraracing plugin;
+    private final Map<UUID, Long> lastUpdate = new HashMap<>();
+    private final Map<UUID, List<ScoreboardScore<Player>>> cachedScores = new HashMap<>();
 
-    public RaceScoreboard(String name, List<ScoreboardLine<Player>> titles, List<ScoreboardScore<Player>> scores) {
+    public RaceScoreboard(String name, List<ScoreboardLine<Player>> titles, Elytraracing plugin) {
         this.name = name;
         this.titles = titles;
-        this.scores = scores;
+        this.plugin = plugin;
     }
 
     @Override
@@ -33,7 +43,7 @@ public class RaceScoreboard implements Scoreboard<Player> {
 
     @Override
     public List<ScoreboardScore<Player>> getScores() {
-        return scores;
+        return Collections.emptyList();
     }
 
     @Override
@@ -47,6 +57,26 @@ public class RaceScoreboard implements Scoreboard<Player> {
 
     @Override
     public List<ScoreboardScore<Player>> getScores(Player player, VarReplacer<Player> varReplacer) {
+        long now = System.currentTimeMillis();
+        long intervalTicks = plugin.getConfig().getLong("scoreboard-update-interval", 1L);
+        long intervalMs = intervalTicks * 50;
+
+        if (cachedScores.containsKey(player.getUniqueId()) && now - lastUpdate.getOrDefault(player.getUniqueId(), 0L) < intervalMs) {
+            return cachedScores.get(player.getUniqueId());
+        }
+
+        ScoreboardManager scoreboardManager = plugin.getScoreboardManager();
+        if (scoreboardManager == null) {
+            return Collections.emptyList();
+        }
+        List<String> lines = scoreboardManager.getScoreboardLines(player);
+        List<ScoreboardScore<Player>> scores = new ArrayList<>();
+        for (int i = 0; i < lines.size(); i++) {
+            scores.add(new StaticScoreboardScore(lines.get(i), lines.size() - i));
+        }
+
+        lastUpdate.put(player.getUniqueId(), now);
+        cachedScores.put(player.getUniqueId(), scores);
         return scores;
     }
 

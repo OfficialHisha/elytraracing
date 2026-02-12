@@ -2,7 +2,6 @@ package com.hishacorp.elytraracing.listeners;
 
 import com.hishacorp.elytraracing.Elytraracing;
 import com.hishacorp.elytraracing.ToolManager;
-import com.hishacorp.elytraracing.model.Racer;
 import com.hishacorp.elytraracing.util.RingRenderer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;

@@ -26,6 +26,7 @@ public class Race {
     private final List<Border> borders = new ArrayList<>();
     private final List<Ring> rings = new ArrayList<>();
     private final Map<UUID, Racer> racers = new HashMap<>();
+    private final Map<UUID, Player> spectators = new HashMap<>();
     private final Map<UUID, BukkitTask> cooldownTasks = new HashMap<>();
     private boolean inProgress = false;
     private long startTime;
@@ -131,6 +132,11 @@ public class Race {
                 player.sendMessage("§eYou can view the final scoreboard. Use /er leave to exit.");
             }
         }
+
+        for (Player spectator : spectators.values()) {
+            spectator.sendMessage("§aThe race has ended!");
+            spectator.sendMessage("§eYou can view the final scoreboard. Use /er leave to exit.");
+        }
     }
 
     public void playerFinished(Player player) {
@@ -215,6 +221,18 @@ public class Race {
         }
 
         racers.remove(player.getUniqueId());
+    }
+
+    public void addSpectator(Player player) {
+        spectators.put(player.getUniqueId(), player);
+    }
+
+    public void removeSpectator(Player player) {
+        spectators.remove(player.getUniqueId());
+    }
+
+    public Map<UUID, Player> getSpectators() {
+        return spectators;
     }
 
     public List<Ring> getRings() {

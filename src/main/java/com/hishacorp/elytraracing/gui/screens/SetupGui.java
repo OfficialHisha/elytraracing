@@ -20,13 +20,20 @@ public class SetupGui implements Gui {
     private final Elytraracing plugin;
     private final Inventory inventory;
 
-    public SetupGui(Elytraracing plugin) {
+    public SetupGui(Elytraracing plugin, Player player) {
         this.plugin = plugin;
         this.inventory = Bukkit.createInventory(null, 27, "Elytra Racing Setup");
 
         inventory.setItem(10, button(ELYTRA, "§aCreate Race"));
         inventory.setItem(12, button(BARRIER, "§cDelete Race"));
         inventory.setItem(14, button(COMPASS, "§eSet Spawn", "§7Sets the race spawn if editing a race,", "§7otherwise sets the world spawn."));
+
+        updateToggleItem(player);
+    }
+
+    private void updateToggleItem(Player player) {
+        boolean canSee = plugin.getRaceManager().canSeeSpectators(player);
+        inventory.setItem(17, button(canSee ? ENDER_EYE : ENDER_PEARL, "§eSee Spectators: " + (canSee ? "§aON" : "§cOFF")));
     }
 
     private ItemStack button(Material mat, String name, String... lore) {
@@ -59,6 +66,10 @@ public class SetupGui implements Gui {
                 } else {
                     setWorldSpawn(player);
                 }
+            }
+            case 16 -> {
+                plugin.getRaceManager().toggleSeeSpectators(player);
+                updateToggleItem(player);
             }
         }
     }

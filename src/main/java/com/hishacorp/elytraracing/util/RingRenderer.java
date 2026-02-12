@@ -181,6 +181,12 @@ public class RingRenderer {
         updatePlayerView(player);
     }
 
+    public void showSpectatorRings(Player player, List<Ring> rings) {
+        playerVisibleRings.computeIfAbsent(player.getUniqueId(), k -> new HashSet<>()).addAll(rings);
+        playerNextRing.remove(player.getUniqueId());
+        updatePlayerView(player);
+    }
+
     public void hideRaceRings(Player player, List<Ring> rings) {
         Set<Ring> visibleRings = playerVisibleRings.get(player.getUniqueId());
         if (visibleRings != null) {

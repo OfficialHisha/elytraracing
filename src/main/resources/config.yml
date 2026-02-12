@@ -1,2 +1,3 @@
 firework-replenishment-cooldown: 5
 dnf-timer: 30
+scoreboard-update-interval: 1

@@ -43,20 +43,22 @@ public class ScoreboardManager {
         lines.add("§f§lRace Time");
 
         Racer racer = race.getRacers().get(player.getUniqueId());
-        long time = 0;
+        String timeDisplay = "§e00:00.000";
         if (racer != null) {
             if (racer.isCompleted()) {
-                time = racer.getFinishTime() - racer.getStartTime();
+                timeDisplay = "§e" + formatTime(racer.getFinishTime() - racer.getStartTime());
             } else if (race.isInProgress()) {
-                time = System.currentTimeMillis() - racer.getStartTime();
+                timeDisplay = "§e" + formatTime(System.currentTimeMillis() - racer.getStartTime());
+            } else {
+                timeDisplay = "§cDNF";
             }
         } else {
             // Spectator
             if (race.isInProgress()) {
-                time = System.currentTimeMillis() - race.getStartTime();
+                timeDisplay = "§e" + formatTime(System.currentTimeMillis() - race.getStartTime());
             }
         }
-        lines.add("§e" + formatTime(time));
+        lines.add(timeDisplay);
 
         lines.add("§f "); // Unique empty lines for scoreboard
         lines.add("§f§lPlayers");
@@ -70,13 +72,15 @@ public class ScoreboardManager {
             Racer r = rankings.get(i);
             Player p = Bukkit.getPlayer(r.getUuid());
             String name = (p != null) ? p.getName() : "Unknown";
-            long rTime = 0;
+            String rTimeDisplay;
             if (r.isCompleted()) {
-                rTime = r.getFinishTime() - r.getStartTime();
+                rTimeDisplay = formatTime(r.getFinishTime() - r.getStartTime());
             } else if (race.isInProgress()) {
-                rTime = System.currentTimeMillis() - r.getStartTime();
+                rTimeDisplay = formatTime(System.currentTimeMillis() - r.getStartTime());
+            } else {
+                rTimeDisplay = "§cDNF";
             }
-            lines.add(String.format("§e%d. §a%s §7- §f%s", i + 1, name, formatTime(rTime)));
+            lines.add(String.format("§e%d. §a%s §7- §f%s", i + 1, name, rTimeDisplay));
         }
 
         return lines;

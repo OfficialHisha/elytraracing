@@ -35,6 +35,7 @@ public class RaceManager {
     }
 
     private void startScoreboardUpdateTask() {
+        long interval = plugin.getConfig().getLong("scoreboard-update-interval", 1L);
         Bukkit.getScheduler().runTaskTimer(plugin, () -> {
             for (Race race : races) {
                 for (UUID uuid : race.getRacers().keySet()) {
@@ -47,7 +48,7 @@ public class RaceManager {
                     plugin.getScoreboardManager().updateScoreboard(spectator);
                 }
             }
-        }, 1L, 1L);
+        }, interval, interval);
     }
 
     public void loadRaces() {

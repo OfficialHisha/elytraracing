@@ -10,6 +10,7 @@ import org.bukkit.entity.Player;
 import java.util.Collections;
 import java.util.List;
 
+import com.hishacorp.elytraracing.Elytraracing;
 import com.hishacorp.elytraracing.scoreboard.ScoreboardManager;
 
 import java.util.ArrayList;
@@ -17,12 +18,12 @@ import java.util.ArrayList;
 public class RaceScoreboard implements Scoreboard<Player> {
     private final String name;
     private final List<ScoreboardLine<Player>> titles;
-    private final ScoreboardManager scoreboardManager;
+    private final Elytraracing plugin;
 
-    public RaceScoreboard(String name, List<ScoreboardLine<Player>> titles, ScoreboardManager scoreboardManager) {
+    public RaceScoreboard(String name, List<ScoreboardLine<Player>> titles, Elytraracing plugin) {
         this.name = name;
         this.titles = titles;
-        this.scoreboardManager = scoreboardManager;
+        this.plugin = plugin;
     }
 
     @Override
@@ -51,6 +52,10 @@ public class RaceScoreboard implements Scoreboard<Player> {
 
     @Override
     public List<ScoreboardScore<Player>> getScores(Player player, VarReplacer<Player> varReplacer) {
+        ScoreboardManager scoreboardManager = plugin.getScoreboardManager();
+        if (scoreboardManager == null) {
+            return Collections.emptyList();
+        }
         List<String> lines = scoreboardManager.getScoreboardLines(player);
         List<ScoreboardScore<Player>> scores = new ArrayList<>();
         for (int i = 0; i < lines.size(); i++) {

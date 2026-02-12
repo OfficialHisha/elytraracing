@@ -37,7 +37,7 @@ public class SimpleScoreProvider implements ScoreboardProvider {
                 this.scoreboard = new RaceScoreboard(
                         "elytraracing",
                         titles,
-                        plugin.getScoreboardManager()
+                        plugin
                 );
                 api.addScoreboard(scoreboard);
             }

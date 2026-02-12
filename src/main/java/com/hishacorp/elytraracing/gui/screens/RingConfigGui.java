@@ -120,11 +120,10 @@ public class RingConfigGui implements Gui {
 
                         if (conflict != null) {
                             Location loc = conflict.getLocation();
-                            player.sendMessage("§cThe index " + newIndex + " conflicts with another ring at (" +
+                            player.sendMessage("§eWarning: The index " + newIndex + " conflicts with another ring at (" +
                                     loc.getBlockX() + ", " + loc.getBlockY() + ", " + loc.getBlockZ() + ").");
-                        } else {
-                            ring.setIndex(newIndex);
                         }
+                        ring.setIndex(newIndex);
                     } catch (NumberFormatException e) {
                         player.sendMessage("§cInvalid number.");
                     }

@@ -95,7 +95,7 @@ public class ToolManager implements Listener {
 
         if (player.isSneaking()) {
             event.setCancelled(true);
-            Block targetBlock = player.getTargetBlockExact(100);
+            Block targetBlock = player.getTargetBlockExact(5);
             Location location;
             if (targetBlock != null) {
                 location = targetBlock.getLocation();

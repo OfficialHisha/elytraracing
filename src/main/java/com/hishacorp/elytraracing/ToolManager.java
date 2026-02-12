@@ -100,7 +100,7 @@ public class ToolManager implements Listener {
             if (targetBlock != null) {
                 location = targetBlock.getLocation();
             } else {
-                location = player.getEyeLocation().add(player.getLocation().getDirection().multiply(5));
+                location = player.getLocation();
             }
 
             Location[] selection = selections.computeIfAbsent(player.getUniqueId(), k -> new Location[2]);

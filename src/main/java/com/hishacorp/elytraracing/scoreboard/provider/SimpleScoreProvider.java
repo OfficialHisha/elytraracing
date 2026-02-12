@@ -32,31 +32,12 @@ public class SimpleScoreProvider implements ScoreboardProvider {
                 this.api = rsp.getProvider();
                 this.provider = new Provider(plugin.getName(), "elytraracing");
 
-                List<String> lines = Arrays.asList(
-                        "§f",
-                        "§f§lRace Time",
-                        "§e00:00",
-                        "§f",
-                        "§f§lPlayers",
-                        "§e1/1",
-                        "§f",
-                        "§f§lLineup",
-                        "§e1. §aPlayer1 §7- §f00:00.000",
-                        "§e2. §aPlayer2 §7- §f00:00.000",
-                        "§e3. §aPlayer3 §7- §f00:00.000",
-                        "§e4. §aPlayer4 §7- §f00:00.000",
-                        "§e5. §aPlayer5 §7- §f00:00.000"
-                );
                 List<ScoreboardLine<Player>> titles = Collections.singletonList(new StaticScoreboardLine("§e§lElytra Racing"));
-                final int[] i = {lines.size()};
-                List<ScoreboardScore<Player>> scores = lines.stream()
-                        .map(line -> new StaticScoreboardScore(line, i[0]--))
-                        .collect(Collectors.toList());
 
                 this.scoreboard = new RaceScoreboard(
                         "elytraracing",
                         titles,
-                        scores
+                        plugin.getScoreboardManager()
                 );
                 api.addScoreboard(scoreboard);
             }
@@ -71,7 +52,6 @@ public class SimpleScoreProvider implements ScoreboardProvider {
 
     @Override
     public void updateScoreboard(Player player) {
-        // TODO: Implement scoreboard update
     }
 
     @Override

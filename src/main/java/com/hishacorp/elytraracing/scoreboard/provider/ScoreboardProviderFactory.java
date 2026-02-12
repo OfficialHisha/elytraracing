@@ -8,7 +8,7 @@ public class ScoreboardProviderFactory {
         if (Bukkit.getPluginManager().isPluginEnabled("SimpleScore")) {
             return new SimpleScoreProvider(plugin);
         } else {
-            return new VanillaScoreboardProvider();
+            return new VanillaScoreboardProvider(plugin);
         }
     }
 }

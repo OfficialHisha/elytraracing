@@ -31,6 +31,23 @@ public class RaceManager {
     public RaceManager(Elytraracing plugin) {
         this.plugin = plugin;
         this.ringRenderer = new RingRenderer();
+        startScoreboardUpdateTask();
+    }
+
+    private void startScoreboardUpdateTask() {
+        Bukkit.getScheduler().runTaskTimer(plugin, () -> {
+            for (Race race : races) {
+                for (UUID uuid : race.getRacers().keySet()) {
+                    Player player = Bukkit.getPlayer(uuid);
+                    if (player != null) {
+                        plugin.getScoreboardManager().updateScoreboard(player);
+                    }
+                }
+                for (Player spectator : race.getSpectators().values()) {
+                    plugin.getScoreboardManager().updateScoreboard(spectator);
+                }
+            }
+        }, 1L, 1L);
     }
 
     public void loadRaces() {

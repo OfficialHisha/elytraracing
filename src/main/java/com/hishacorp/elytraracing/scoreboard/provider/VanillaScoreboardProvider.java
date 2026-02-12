@@ -1,49 +1,51 @@
 package com.hishacorp.elytraracing.scoreboard.provider;
 
 import org.bukkit.Bukkit;
+import com.hishacorp.elytraracing.Elytraracing;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.scoreboard.*;
 
+import java.util.List;
+
 public class VanillaScoreboardProvider implements ScoreboardProvider {
+
+    private final Elytraracing plugin;
+
+    public VanillaScoreboardProvider(Elytraracing plugin) {
+        this.plugin = plugin;
+    }
 
     @Override
     public void showScoreboard(Player player) {
-        ScoreboardManager manager = Bukkit.getScoreboardManager();
-        Scoreboard board = manager.getNewScoreboard();
+        Scoreboard board = Bukkit.getScoreboardManager().getNewScoreboard();
         Objective objective = board.registerNewObjective("er-race", "dummy", "§e§lElytra Racing");
         objective.setDisplaySlot(DisplaySlot.SIDEBAR);
 
-        String[] lines = {
-                "§f",
-                "§f§lRace Time",
-                "§e00:00",
-                "§f",
-                "§f§lPlayers",
-                "§e1/1",
-                "§f",
-                "§f§lLineup",
-                "§e1. §aPlayer1 §7- §f00:00.000",
-                "§e2. §aPlayer2 §7- §f00:00.000",
-                "§e3. §aPlayer3 §7- §f00:00.000",
-                "§e4. §aPlayer4 §7- §f00:00.000",
-                "§e5. §aPlayer5 §7- §f00:00.000"
-        };
-
-        for (int i = 0; i < lines.length; i++) {
-            String line = lines[i];
-            if (line.equals("§f")) {
-                line += ChatColor.values()[i];
-            }
-            objective.getScore(line).setScore(15 - i);
-        }
-
         player.setScoreboard(board);
+        updateScoreboard(player);
     }
 
     @Override
     public void updateScoreboard(Player player) {
-        // TODO: Implement scoreboard update
+        Scoreboard board = player.getScoreboard();
+        Objective objective = board.getObjective("er-race");
+        if (objective == null) {
+            return;
+        }
+
+        List<String> lines = plugin.getScoreboardManager().getScoreboardLines(player);
+
+        // Remove old entries
+        for (String entry : board.getEntries()) {
+            board.resetScores(entry);
+        }
+
+        // Add new entries
+        for (int i = 0; i < lines.size(); i++) {
+            String line = lines.get(i);
+            objective.getScore(line).setScore(lines.size() - i);
+        }
     }
 
     @Override

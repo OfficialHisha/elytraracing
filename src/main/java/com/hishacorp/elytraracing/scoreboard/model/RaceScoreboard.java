@@ -10,15 +10,19 @@ import org.bukkit.entity.Player;
 import java.util.Collections;
 import java.util.List;
 
+import com.hishacorp.elytraracing.scoreboard.ScoreboardManager;
+
+import java.util.ArrayList;
+
 public class RaceScoreboard implements Scoreboard<Player> {
     private final String name;
     private final List<ScoreboardLine<Player>> titles;
-    private final List<ScoreboardScore<Player>> scores;
+    private final ScoreboardManager scoreboardManager;
 
-    public RaceScoreboard(String name, List<ScoreboardLine<Player>> titles, List<ScoreboardScore<Player>> scores) {
+    public RaceScoreboard(String name, List<ScoreboardLine<Player>> titles, ScoreboardManager scoreboardManager) {
         this.name = name;
         this.titles = titles;
-        this.scores = scores;
+        this.scoreboardManager = scoreboardManager;
     }
 
     @Override
@@ -33,7 +37,7 @@ public class RaceScoreboard implements Scoreboard<Player> {
 
     @Override
     public List<ScoreboardScore<Player>> getScores() {
-        return scores;
+        return Collections.emptyList();
     }
 
     @Override
@@ -47,6 +51,11 @@ public class RaceScoreboard implements Scoreboard<Player> {
 
     @Override
     public List<ScoreboardScore<Player>> getScores(Player player, VarReplacer<Player> varReplacer) {
+        List<String> lines = scoreboardManager.getScoreboardLines(player);
+        List<ScoreboardScore<Player>> scores = new ArrayList<>();
+        for (int i = 0; i < lines.size(); i++) {
+            scores.add(new StaticScoreboardScore(lines.get(i), lines.size() - i));
+        }
         return scores;
     }
 

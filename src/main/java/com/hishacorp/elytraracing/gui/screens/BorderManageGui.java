@@ -101,7 +101,7 @@ public class BorderManageGui implements Gui {
                         selection[0] = null;
                         selection[1] = null;
                         plugin.getRingRenderer().setSelection(player, null, null);
-                        updateItems();
+                        player.closeInventory();
                     }
                 } catch (Exception e) {
                     player.sendMessage("§cFailed to add border.");
@@ -115,6 +115,7 @@ public class BorderManageGui implements Gui {
             }
             plugin.getRingRenderer().setSelection(player, null, null);
             player.sendMessage("§eSelection cleared.");
+            player.closeInventory();
         } else if (slot == 49) { // Back
             plugin.getGuiManager().openGui(player, new SetupGui(plugin));
         }

@@ -128,7 +128,7 @@ public class BorderConfigGui implements Gui {
             }
             plugin.getRingRenderer().setSelection(player, null, null);
             player.sendMessage("§eSelection cleared.");
-            updateItems();
+            player.closeInventory();
         }
     }
 }

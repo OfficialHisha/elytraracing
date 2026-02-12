@@ -10,8 +10,6 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerMoveEvent;
 
-import java.util.Optional;
-
 public class PlayerMoveListener implements Listener {
 
     private final Elytraracing plugin;

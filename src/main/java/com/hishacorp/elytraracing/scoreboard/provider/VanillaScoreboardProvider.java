@@ -2,7 +2,6 @@ package com.hishacorp.elytraracing.scoreboard.provider;
 
 import org.bukkit.Bukkit;
 import com.hishacorp.elytraracing.Elytraracing;
-import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.scoreboard.*;
 

@@ -30,10 +30,6 @@ public class Elytraracing extends JavaPlugin {
     @Override
     public void onEnable() {
         saveDefaultConfig();
-        if (!getConfig().contains("scoreboard-update-interval")) {
-            getConfig().set("scoreboard-update-interval", 1L);
-            saveConfig();
-        }
 
         guiManager = new GuiManager(this);
         databaseManager = new DatabaseManager(this);

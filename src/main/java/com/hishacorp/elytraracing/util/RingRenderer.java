@@ -4,7 +4,6 @@ import com.hishacorp.elytraracing.model.Border;
 import com.hishacorp.elytraracing.model.Ring;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.Particle;
 import org.bukkit.entity.Player;
 import org.bukkit.block.data.BlockData;
 

@@ -17,13 +17,11 @@ import java.util.UUID;
 
 public class TeleportGui implements Gui {
 
-    private final Elytraracing plugin;
     private final Race race;
     private final Inventory inventory;
     private final List<UUID> racerUuids = new ArrayList<>();
 
-    public TeleportGui(Elytraracing plugin, Race race) {
-        this.plugin = plugin;
+    public TeleportGui(Race race) {
         this.race = race;
         this.inventory = Bukkit.createInventory(null, 54, "§8Teleport to Racer");
         updateInventory();

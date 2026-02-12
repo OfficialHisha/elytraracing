@@ -3,29 +3,23 @@ package com.hishacorp.elytraracing.scoreboard.provider;
 import com.hishacorp.elytraracing.Elytraracing;
 import com.hishacorp.elytraracing.scoreboard.model.RaceScoreboard;
 import com.hishacorp.elytraracing.scoreboard.model.StaticScoreboardLine;
-import com.hishacorp.elytraracing.scoreboard.model.StaticScoreboardScore;
 import com.r4g3baby.simplescore.api.Manager;
 import com.r4g3baby.simplescore.api.scoreboard.ScoreboardLine;
-import com.r4g3baby.simplescore.api.scoreboard.ScoreboardScore;
 import com.r4g3baby.simplescore.api.scoreboard.data.Provider;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.RegisteredServiceProvider;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class SimpleScoreProvider implements ScoreboardProvider {
 
-    private final Elytraracing plugin;
     private Manager api;
     private Provider provider;
     private RaceScoreboard scoreboard;
 
     public SimpleScoreProvider(Elytraracing plugin) {
-        this.plugin = plugin;
         if (Bukkit.getPluginManager().isPluginEnabled("SimpleScore")) {
             RegisteredServiceProvider<Manager> rsp = Bukkit.getServicesManager().getRegistration(Manager.class);
             if (rsp != null) {

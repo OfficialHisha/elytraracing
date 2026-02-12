@@ -188,7 +188,7 @@ public class ERCommand implements CommandExecutor {
                 }
                 plugin.getRaceManager().getRace(player).ifPresentOrElse(race -> {
                     if (race.getSpectators().containsKey(player.getUniqueId())) {
-                        plugin.getGuiManager().openGui(player, new TeleportGui(plugin, race));
+                        plugin.getGuiManager().openGui(player, new TeleportGui(race));
                     } else {
                         player.sendMessage("§cYou must be spectating a race to use this command.");
                     }

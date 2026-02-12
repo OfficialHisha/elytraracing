@@ -40,7 +40,7 @@ public class SpectatorTest {
         // Create race
         server.execute("er", player, "create", raceName);
         player.nextMessage(); // consume "Race 'testRace' created!"
-        player.nextMessage(); // consume "You have been given the ring tool..."
+        player.nextMessage(); // consume "You have been given the admin tool..."
 
         // Join as spectator
         server.execute("er", player, "spectate", raceName);

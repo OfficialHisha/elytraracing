@@ -32,7 +32,7 @@ public class ERCommandTest {
         player.performCommand("er create test_race");
         assertTrue(plugin.getDatabaseManager().raceExists("test_race"));
         player.assertSaid("§aRace 'test_race' created!");
-        player.assertSaid("§aYou have been given the ring tool for race test_race.");
+        player.assertSaid("§aYou have been given the admin tool for race test_race.");
         assertTrue(plugin.getToolManager().isTool(player.getInventory().getItemInMainHand()));
     }
 
@@ -64,7 +64,7 @@ public class ERCommandTest {
         player.nextMessage(); // Consume create message
         player.nextMessage(); // Consume tool message
         player.performCommand("er tool test_race");
-        player.assertSaid("§aYou have been given the ring tool for race test_race.");
+        player.assertSaid("§aYou have been given the admin tool for race test_race.");
     }
 
     @Test
@@ -84,19 +84,19 @@ public class ERCommandTest {
         // Test race creation
         player.performCommand("er create MyRace");
         player.assertSaid("§aRace 'myrace' created!");
-        player.assertSaid("§aYou have been given the ring tool for race myrace.");
+        player.assertSaid("§aYou have been given the admin tool for race myrace.");
         assertTrue(plugin.getToolManager().isTool(player.getInventory().getItemInMainHand()));
         player.getInventory().clear();
 
         // Test tool command
         player.performCommand("er tool myrace");
-        player.assertSaid("§aYou have been given the ring tool for race myrace.");
+        player.assertSaid("§aYou have been given the admin tool for race myrace.");
         assertNotNull(player.getInventory().getItemInMainHand());
         player.getInventory().clear(); // Clean up for the next command
 
         // Test tool command with different casing
         player.performCommand("er tool MyRace");
-        player.assertSaid("§aYou have been given the ring tool for race myrace.");
+        player.assertSaid("§aYou have been given the admin tool for race myrace.");
         assertNotNull(player.getInventory().getItemInMainHand());
         player.getInventory().clear();
 

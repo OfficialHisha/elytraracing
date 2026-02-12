@@ -11,7 +11,6 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
@@ -33,7 +32,7 @@ public class ToolManager implements Listener {
         this.plugin = plugin;
     }
 
-    public ItemStack getRingTool() {
+    public ItemStack getAdminTool() {
         ItemStack tool = new ItemStack(Material.BLAZE_ROD);
         ItemMeta meta = tool.getItemMeta();
         if (meta != null) {
@@ -46,7 +45,7 @@ public class ToolManager implements Listener {
     public void giveTool(Player player, String raceName) {
         String lowerCaseRaceName = raceName.toLowerCase();
         editingRace.put(player.getUniqueId(), lowerCaseRaceName);
-        ItemStack tool = getRingTool();
+        ItemStack tool = getAdminTool();
         ItemMeta meta = tool.getItemMeta();
         if (meta != null) {
             meta.setLore(Arrays.asList("§eRace: " + lowerCaseRaceName));
@@ -297,7 +296,7 @@ public class ToolManager implements Listener {
             return false;
         }
         String displayName = item.getItemMeta().getDisplayName();
-        return displayName.contains("Elytra Racing Tool") || displayName.contains("Ring Tool");
+        return displayName.contains("Elytra Racing Tool");
     }
 
     public boolean isPlayerUsingTool(Player player) {

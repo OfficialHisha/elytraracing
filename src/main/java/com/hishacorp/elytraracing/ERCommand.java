@@ -91,7 +91,7 @@ public class ERCommand implements CommandExecutor {
                 }
 
                 plugin.getToolManager().giveTool(player, raceName);
-                player.sendMessage("§aYou have been given the ring tool for race " + raceName + ".");
+                player.sendMessage("§aYou have been given the admin tool for race " + raceName + ".");
             }
 
             case "create" -> {

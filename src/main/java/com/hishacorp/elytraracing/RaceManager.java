@@ -227,7 +227,7 @@ public class RaceManager {
             races.add(new Race(plugin, createRaceInputEvent.raceName));
             createRaceInputEvent.player.sendMessage("§aRace '" + createRaceInputEvent.raceName + "' created!");
             plugin.getToolManager().giveTool(createRaceInputEvent.player, createRaceInputEvent.raceName);
-            createRaceInputEvent.player.sendMessage("§aYou have been given the ring tool for race " + createRaceInputEvent.raceName + ".");
+            createRaceInputEvent.player.sendMessage("§aYou have been given the admin tool for race " + createRaceInputEvent.raceName + ".");
         } catch (Exception ex) {
             createRaceInputEvent.player.sendMessage("§cA race with that name already exists.");
         }

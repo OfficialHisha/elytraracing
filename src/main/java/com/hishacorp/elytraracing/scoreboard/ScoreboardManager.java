@@ -49,7 +49,7 @@ public class ScoreboardManager {
                 timeDisplay = "§e" + formatTime(racer.getFinishTime() - racer.getStartTime());
             } else if (race.isInProgress()) {
                 timeDisplay = "§e" + formatTime(System.currentTimeMillis() - racer.getStartTime());
-            } else {
+            } else if (race.getStartTime() > 0) {
                 timeDisplay = "§cDNF";
             }
         } else {
@@ -77,8 +77,10 @@ public class ScoreboardManager {
                 rTimeDisplay = formatTime(r.getFinishTime() - r.getStartTime());
             } else if (race.isInProgress()) {
                 rTimeDisplay = formatTime(System.currentTimeMillis() - r.getStartTime());
-            } else {
+            } else if (race.getStartTime() > 0) {
                 rTimeDisplay = "§cDNF";
+            } else {
+                rTimeDisplay = formatTime(0);
             }
             lines.add(String.format("§e%d. §a%s §7- §f%s", i + 1, name, rTimeDisplay));
         }

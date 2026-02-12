@@ -35,16 +35,23 @@ public class VanillaScoreboardProvider implements ScoreboardProvider {
         }
 
         List<String> lines = plugin.getScoreboardManager().getScoreboardLines(player);
+        java.util.Set<String> newEntries = new java.util.HashSet<>(lines);
 
-        // Remove old entries
+        // Remove old entries that are not in the new lines
         for (String entry : board.getEntries()) {
-            board.resetScores(entry);
+            if (!newEntries.contains(entry)) {
+                board.resetScores(entry);
+            }
         }
 
-        // Add new entries
+        // Add/Update new entries
         for (int i = 0; i < lines.size(); i++) {
             String line = lines.get(i);
-            objective.getScore(line).setScore(lines.size() - i);
+            int score = lines.size() - i;
+            Score s = objective.getScore(line);
+            if (!s.isScoreSet() || s.getScore() != score) {
+                s.setScore(score);
+            }
         }
     }
 

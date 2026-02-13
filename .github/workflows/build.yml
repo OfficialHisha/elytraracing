@@ -39,6 +39,7 @@ jobs:
         run: mvn -B clean package
 
       - name: Create Release
+        id: create_release
         if: github.event_name == 'push' && github.ref == 'refs/heads/master'
         uses: softprops/action-gh-release@v2
         with:
@@ -46,3 +47,44 @@ jobs:
           name: SNAPSHOT-elytraracing-${{ steps.project_version.outputs.VERSION }}-${{ github.run_number }}
           prerelease: true
           files: target/elytraracing-*.jar
+
+      - name: Send Discord Notification
+        if: always()
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+          STATUS: ${{ job.status }}
+          RELEASE_URL: ${{ steps.create_release.outputs.url }}
+        run: |
+          if [ -z "$DISCORD_WEBHOOK" ]; then
+            echo "Discord webhook not set, skipping notification."
+            exit 0
+          fi
+
+          COLOR=15158332 # Default Red
+          if [ "$STATUS" == "success" ]; then
+            COLOR=3066993 # Green
+          fi
+
+          REPO_URL="https://github.com/${{ github.repository }}"
+
+          DESCRIPTION="Build $STATUS for [${{ github.repository }}]($REPO_URL)"
+          if [ ! -z "$RELEASE_URL" ]; then
+            DESCRIPTION="$DESCRIPTION\n\n[View Release]($RELEASE_URL)"
+          fi
+
+          # Simple JSON payload construction
+          PAYLOAD=$(cat <<EOF
+          {
+            "embeds": [{
+              "title": "Build $STATUS",
+              "description": "$DESCRIPTION",
+              "color": $COLOR,
+              "footer": {
+                "text": "Build #${{ github.run_number }}"
+              }
+            }]
+          }
+          EOF
+          )
+
+          curl -X POST -H "Content-Type: application/json" -d "$PAYLOAD" "$DISCORD_WEBHOOK"

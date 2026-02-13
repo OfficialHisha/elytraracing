@@ -31,6 +31,10 @@ jobs:
           restore-keys: |
             maven-shared-${{ runner.os }}-
 
+      - name: Get project version
+        id: project_version
+        run: echo "VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)" >> $GITHUB_OUTPUT
+
       - name: Build with Maven
         run: mvn -B clean package
 
@@ -38,7 +42,7 @@ jobs:
         if: github.event_name == 'push' && github.ref == 'refs/heads/master'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: SNAPSHOT-elytraracing-${{ github.run_number }}
-          name: SNAPSHOT-elytraracing-${{ github.run_number }}
+          tag_name: SNAPSHOT-elytraracing-${{ steps.project_version.outputs.VERSION }}-${{ github.run_number }}
+          name: SNAPSHOT-elytraracing-${{ steps.project_version.outputs.VERSION }}-${{ github.run_number }}
           prerelease: true
           files: target/elytraracing-*.jar

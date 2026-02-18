@@ -154,6 +154,10 @@ public class ERCommand implements CommandExecutor {
             }
 
             case "join" -> {
+                if (!sender.hasPermission(JOIN.getPermission())) {
+                    sender.sendMessage("§cYou do not have permission to use this command");
+                    return true;
+                }
                 if (args.length < 2) {
                     sender.sendMessage("§cUsage: /er join <race>");
                     return true;

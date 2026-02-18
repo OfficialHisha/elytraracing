@@ -12,7 +12,8 @@ public enum Permissions {
     END("elytraracing.admin.end"),
     RINGS("elytraracing.admin.rings"),
     SPECTATE("elytraracing.admin.spectate"),
-    TP("elytraracing.admin.tp");
+    TP("elytraracing.admin.tp"),
+    LIST("elytraracing.admin.list");
 
     private final String permission;
 

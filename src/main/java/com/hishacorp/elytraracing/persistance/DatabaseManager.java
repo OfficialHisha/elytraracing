@@ -124,6 +124,18 @@ public class DatabaseManager {
         }
     }
 
+    public synchronized String getRaceName(int raceId) throws SQLException {
+        try (var ps = connection.prepareStatement(
+                "SELECT name FROM races WHERE id = ?")) {
+            ps.setInt(1, raceId);
+            var rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getString("name");
+            }
+            return null;
+        }
+    }
+
     public void close() {
         try {
             if (connection != null && !connection.isClosed()) {

@@ -149,4 +149,22 @@ public class ERCommandTest {
         player.performCommand("er start non_existent_race");
         player.assertSaid("§cRace not found: non_existent_race");
     }
+
+    @Test
+    public void testListCommand() {
+        player.performCommand("er list");
+        player.assertSaid("§eNo races found.");
+
+        player.performCommand("er create race1");
+        player.nextMessage(); // Consume create message
+        player.nextMessage(); // Consume tool message
+        player.performCommand("er create race2");
+        player.nextMessage(); // Consume create message
+        player.nextMessage(); // Consume tool message
+
+        player.performCommand("er list");
+        player.assertSaid("§aAvailable Races:");
+        player.assertSaid("§e- race1 §7(World: " + player.getWorld().getName() + ")");
+        player.assertSaid("§e- race2 §7(World: " + player.getWorld().getName() + ")");
+    }
 }

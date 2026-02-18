@@ -14,9 +14,13 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
+import org.bukkit.Bukkit;
+
 import java.sql.SQLException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -195,6 +199,9 @@ public class ToolManager implements Listener {
                 }
                 currentlyConfiguring.setLocation(newLocation);
                 plugin.getRingRenderer().updatePlayerView(player); // Force a redraw
+                plugin.getRaceManager().getRace(currentlyConfiguring.getRaceId()).ifPresent(race -> {
+                    syncRaceView(race.getName());
+                });
                 player.sendMessage("§aRing relocated.");
             } else {
                 if (clickedRing != null) {
@@ -364,5 +371,36 @@ public class ToolManager implements Listener {
 
     public com.hishacorp.elytraracing.model.Border getEditingBorder(UUID playerUuid) {
         return editingBorder.get(playerUuid);
+    }
+
+    public void syncRaceView(String raceName) {
+        String lowerCaseRaceName = raceName.toLowerCase();
+        try {
+            var raceData = plugin.getDatabaseManager().getRaceData(lowerCaseRaceName);
+            if (raceData == null) {
+                return;
+            }
+
+            List<Ring> rings = plugin.getRingManager().getRings(raceData.id);
+            if (rings == null) {
+                rings = Collections.emptyList();
+            }
+            List<com.hishacorp.elytraracing.model.Border> borders = plugin.getRaceManager().getRace(lowerCaseRaceName)
+                    .map(Race::getBorders)
+                    .orElse(Collections.emptyList());
+
+            for (Map.Entry<UUID, String> entry : editingRace.entrySet()) {
+                if (entry.getValue().equals(lowerCaseRaceName)) {
+                    Player editor = Bukkit.getPlayer(entry.getKey());
+                    if (editor != null) {
+                        plugin.getRingRenderer().setVisibleRings(editor, new HashSet<>(rings));
+                        plugin.getRingRenderer().setVisibleBorders(editor, borders);
+                        plugin.getRingRenderer().updatePlayerView(editor);
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            plugin.getLogger().severe("Failed to sync race view: " + e.getMessage());
+        }
     }
 }

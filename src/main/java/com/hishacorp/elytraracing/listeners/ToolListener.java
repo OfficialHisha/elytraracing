@@ -29,14 +29,13 @@ public class ToolListener implements Listener {
         ItemStack newStack = player.getInventory().getItem(event.getNewSlot());
 
         if (toolManager.isTool(newStack)) {
-            // Player is holding the tool. Check if we need to re-initialize their session.
-            if (!toolManager.isPlayerUsingTool(player)) {
-                String raceName = toolManager.getRaceNameFromTool(newStack);
-                if (raceName != null) {
-                    toolManager.reinitializeEditing(player, raceName);
-                }
+            // Player is holding the tool. Check if we need to re-initialize or switch their session.
+            String raceName = toolManager.getRaceNameFromTool(newStack);
+            String currentRace = toolManager.getEditingRace(player.getUniqueId());
+            if (raceName != null && !raceName.equalsIgnoreCase(currentRace)) {
+                toolManager.reinitializeEditing(player, raceName);
             }
-            // Now that the session is potentially restored, update the view.
+            // Now that the session is restored or switched, update the view.
             ringRenderer.updatePlayerView(player);
         } else {
             // Player is holding something else. If they were holding the tool before, hide the rings.

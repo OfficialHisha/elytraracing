@@ -21,6 +21,9 @@ public class RingManager {
     }
 
     public void loadRings(int raceId) {
+        if (rings.containsKey(raceId)) {
+            return;
+        }
         try {
             rings.put(raceId, databaseManager.getRings(raceId));
         } catch (SQLException e) {

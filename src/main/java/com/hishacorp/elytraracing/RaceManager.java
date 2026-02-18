@@ -79,6 +79,18 @@ public class RaceManager {
         return races.stream().filter(race -> race.getName().equalsIgnoreCase(name)).findFirst();
     }
 
+    public Optional<Race> getRace(int raceId) {
+        try {
+            String name = plugin.getDatabaseManager().getRaceName(raceId);
+            if (name != null) {
+                return getRace(name);
+            }
+        } catch (java.sql.SQLException e) {
+            plugin.getLogger().severe("Failed to get race by id: " + e.getMessage());
+        }
+        return Optional.empty();
+    }
+
     public Optional<Race> getRace(Player player) {
         return races.stream()
                 .filter(race -> race.getRacers().containsKey(player.getUniqueId()) || race.getSpectators().containsKey(player.getUniqueId()))

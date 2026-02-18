@@ -87,17 +87,25 @@ public class RingConfigGui implements Gui {
                 ring.setRadius(ring.getRadius() + (event.isLeftClick() ? 1 : -1));
                 if (ring.getRadius() < 1) ring.setRadius(1);
                 needsUpdate = true;
+                plugin.getRaceManager().getRace(ring.getRaceId()).ifPresent(race -> {
+                    plugin.getToolManager().syncRaceView(race.getName());
+                });
                 break;
             case 12: // Orientation
                 Ring.Orientation[] orientations = Ring.Orientation.values();
                 int next = (ring.getOrientation().ordinal() + 1) % orientations.length;
                 ring.setOrientation(orientations[next]);
                 needsUpdate = true;
+                plugin.getRaceManager().getRace(ring.getRaceId()).ifPresent(race -> {
+                    plugin.getToolManager().syncRaceView(race.getName());
+                });
                 break;
             case 14: // Material
                 plugin.getGuiManager().openGui(player, new MaterialSelectionGui(allowedMaterials, material -> {
                     ring.setMaterial(material);
-                    plugin.getRingRenderer().updatePlayerView(player);
+                    plugin.getRaceManager().getRace(ring.getRaceId()).ifPresent(race -> {
+                        plugin.getToolManager().syncRaceView(race.getName());
+                    });
                     plugin.getGuiManager().openGui(player, this);
                 }));
                 break;
@@ -124,6 +132,9 @@ public class RingConfigGui implements Gui {
                                     loc.getBlockX() + ", " + loc.getBlockY() + ", " + loc.getBlockZ() + ").");
                         }
                         ring.setIndex(newIndex);
+                        plugin.getRaceManager().getRace(ring.getRaceId()).ifPresent(race -> {
+                            plugin.getToolManager().syncRaceView(race.getName());
+                        });
                     } catch (NumberFormatException e) {
                         player.sendMessage("§cInvalid number.");
                     }
@@ -134,6 +145,9 @@ public class RingConfigGui implements Gui {
                 if (!isNew) {
                     plugin.getRingManager().deleteRing(ring);
                 }
+                plugin.getRaceManager().getRace(ring.getRaceId()).ifPresent(race -> {
+                    plugin.getToolManager().syncRaceView(race.getName());
+                });
                 plugin.getRingRenderer().removeRingForPlayer(player, ring);
                 plugin.getRingRenderer().setConfiguringRingForPlayer(player, null);
                 player.closeInventory();
@@ -145,6 +159,9 @@ public class RingConfigGui implements Gui {
                 } else {
                     plugin.getRingManager().updateRing(ring);
                 }
+                plugin.getRaceManager().getRace(ring.getRaceId()).ifPresent(race -> {
+                    plugin.getToolManager().syncRaceView(race.getName());
+                });
                 plugin.getRingRenderer().setConfiguringRingForPlayer(player, null);
                 player.closeInventory();
                 break;

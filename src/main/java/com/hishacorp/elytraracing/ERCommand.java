@@ -25,7 +25,7 @@ public class ERCommand implements CommandExecutor {
 
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (args.length == 0) {
-            sender.sendMessage("§eUsage: /er <setup|tool|create|delete|time|setspawn|resetstats|join|leave|rings>");
+            sender.sendMessage("§eUsage: /er <setup|tool|create|delete|time|setspawn|resetstats|join|leave|rings|list>");
             return true;
         }
 
@@ -198,6 +198,29 @@ public class ERCommand implements CommandExecutor {
             case "leave" -> {
                 if (sender instanceof Player player) {
                     plugin.getRaceManager().leaveRace(player);
+                }
+            }
+
+            case "list" -> {
+                if (!sender.hasPermission(LIST.getPermission())) {
+                    sender.sendMessage("§cYou do not have permission to use this command");
+                    return true;
+                }
+                List<Race> races = plugin.getRaceManager().getRaces();
+                if (races.isEmpty()) {
+                    sender.sendMessage("§eNo races found.");
+                    return true;
+                }
+                sender.sendMessage("§aAvailable Races:");
+                for (Race race : races) {
+                    String worldName = "Unknown";
+                    try {
+                        var raceData = plugin.getDatabaseManager().getRaceData(race.getName());
+                        if (raceData != null) {
+                            worldName = raceData.world;
+                        }
+                    } catch (SQLException ignored) {}
+                    sender.sendMessage("§e- " + race.getName() + " §7(World: " + worldName + ")");
                 }
             }
 

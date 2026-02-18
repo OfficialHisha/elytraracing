@@ -149,4 +149,35 @@ public class ERCommandTest {
         player.performCommand("er start non_existent_race");
         player.assertSaid("§cRace not found: non_existent_race");
     }
+
+    @Test
+    public void testListCommand() {
+        player.performCommand("er list");
+        player.assertSaid("§eNo races found.");
+
+        player.performCommand("er create race1");
+        player.nextMessage(); // Consume create message
+        player.nextMessage(); // Consume tool message
+        player.performCommand("er create race2");
+        player.nextMessage(); // Consume create message
+        player.nextMessage(); // Consume tool message
+
+        player.performCommand("er list");
+        player.assertSaid("§aAvailable Races:");
+        player.assertSaid("§e- race1 §7(World: " + player.getWorld().getName() + ")");
+        player.assertSaid("§e- race2 §7(World: " + player.getWorld().getName() + ")");
+    }
+
+    @Test
+    public void testJoinDisabledRace() {
+        player.performCommand("er create test_race");
+        player.nextMessage(); // Consume create
+        player.nextMessage(); // Consume tool
+
+        player.performCommand("er disable test_race");
+        player.assertSaid("§aRace 'test_race' has been disabled.");
+
+        player.performCommand("er join test_race");
+        player.assertSaid("§cThis race is currently disabled.");
+    }
 }

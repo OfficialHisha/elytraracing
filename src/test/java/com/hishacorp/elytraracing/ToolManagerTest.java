@@ -9,6 +9,7 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.EquipmentSlot;
+import org.bukkit.inventory.ItemStack;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -155,5 +156,43 @@ public class ToolManagerTest {
         // 6. Verify the session is restored and rings are visible again
         assertTrue(plugin.getToolManager().isPlayerUsingTool(player), "Player's editing session should be re-initialized upon holding the tool.");
         assertFalse(plugin.getRingRenderer().getPlayerRingBlocks(player.getUniqueId()).isEmpty(), "Rings should be visible again after re-selecting the tool.");
+    }
+
+    @Test
+    public void testToolSwitchingVisibility() throws Exception {
+        // 1. Setup: create two races with different rings
+        player.performCommand("er create race_a");
+        int raceIdA = plugin.getDatabaseManager().getRaceId("race_a");
+        Ring ringA = new Ring(1, raceIdA, player.getEyeLocation().add(5, 0, 0), 5, Ring.Orientation.HORIZONTAL, Material.GOLD_BLOCK, 0);
+        plugin.getRingManager().addRing(ringA);
+
+        player.performCommand("er create race_b");
+        int raceIdB = plugin.getDatabaseManager().getRaceId("race_b");
+        Ring ringB = new Ring(2, raceIdB, player.getEyeLocation().add(0, 5, 0), 5, Ring.Orientation.HORIZONTAL, Material.DIAMOND_BLOCK, 0);
+        plugin.getRingManager().addRing(ringB);
+
+        // 2. Get tools for both races
+        player.getInventory().clear();
+        player.performCommand("er tool race_a");
+        ItemStack toolA = player.getInventory().getItem(0);
+        player.performCommand("er tool race_b");
+        ItemStack toolB = player.getInventory().getItem(1);
+
+        // 3. Hold tool A and verify Race A rings are visible
+        player.getInventory().setItem(0, toolA);
+        player.getInventory().setItem(1, toolB);
+
+        player.getInventory().setHeldItemSlot(0);
+        server.getPluginManager().callEvent(new org.bukkit.event.player.PlayerItemHeldEvent(player, 8, 0));
+
+        assertTrue(plugin.getRingRenderer().getPlayerRingBlocks(player.getUniqueId()).containsValue(ringA), "Race A ring should be visible when holding tool A.");
+        assertFalse(plugin.getRingRenderer().getPlayerRingBlocks(player.getUniqueId()).containsValue(ringB), "Race B ring should not be visible when holding tool A.");
+
+        // 4. Switch to tool B and verify Race B rings are visible
+        player.getInventory().setHeldItemSlot(1);
+        server.getPluginManager().callEvent(new org.bukkit.event.player.PlayerItemHeldEvent(player, 0, 1));
+
+        assertTrue(plugin.getRingRenderer().getPlayerRingBlocks(player.getUniqueId()).containsValue(ringB), "Race B ring should be visible when holding tool B.");
+        assertFalse(plugin.getRingRenderer().getPlayerRingBlocks(player.getUniqueId()).containsValue(ringA), "Race A ring should not be visible when holding tool B.");
     }
 }

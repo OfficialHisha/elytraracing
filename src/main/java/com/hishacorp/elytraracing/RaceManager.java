@@ -60,6 +60,7 @@ public class RaceManager {
                     Race race = new Race(plugin, raceName);
                     race.setRings(plugin.getRingManager().getRings(raceData.id));
                     race.setSpawnLocation(raceData.spawn);
+                    race.setEnabled(raceData.enabled);
 
                     var world = Bukkit.getWorld(raceData.world);
                     List<Border> borders = plugin.getDatabaseManager().getBorders(raceData.id, world).stream()
@@ -112,6 +113,10 @@ public class RaceManager {
         }
 
         getRace(raceName).ifPresentOrElse(race -> {
+            if (!race.isEnabled()) {
+                player.sendMessage("§cThis race is currently disabled.");
+                return;
+            }
             if (!race.isInProgress()) {
                 if (race.getStartTime() > 0) {
                     player.sendMessage("§cThis race has already finished. A new race must be started.");
@@ -154,6 +159,10 @@ public class RaceManager {
         }
 
         getRace(raceName).ifPresentOrElse(race -> {
+            if (!race.isEnabled()) {
+                player.sendMessage("§cThis race is currently disabled.");
+                return;
+            }
             try {
                 int raceId = plugin.getDatabaseManager().getRaceId(race.getName());
                 plugin.getRingManager().loadRings(raceId);

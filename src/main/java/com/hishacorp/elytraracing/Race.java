@@ -31,6 +31,7 @@ public class Race {
     private boolean inProgress = false;
     private long startTime;
     private BukkitTask dnfTask;
+    private boolean enabled = true;
 
     public Race(Elytraracing plugin, String name) {
         this.plugin = plugin;
@@ -241,6 +242,14 @@ public class Race {
 
     public Map<UUID, Racer> getRacers() {
         return racers;
+    }
+
+    public boolean isEnabled() {
+        return enabled;
+    }
+
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
     }
 
     public List<Racer> getRankings() {

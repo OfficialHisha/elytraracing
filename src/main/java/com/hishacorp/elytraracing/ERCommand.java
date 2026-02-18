@@ -25,7 +25,7 @@ public class ERCommand implements CommandExecutor {
 
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (args.length == 0) {
-            sender.sendMessage("§eUsage: /er <setup|tool|create|delete|time|setspawn|resetstats|join|leave|rings|list>");
+            sender.sendMessage("§eUsage: /er <setup|tool|create|delete|time|setspawn|resetstats|join|leave|rings|list|enable|disable>");
             return true;
         }
 
@@ -199,6 +199,48 @@ public class ERCommand implements CommandExecutor {
                 if (sender instanceof Player player) {
                     plugin.getRaceManager().leaveRace(player);
                 }
+            }
+
+            case "enable" -> {
+                if (!sender.hasPermission(ENABLE.getPermission())) {
+                    sender.sendMessage("§cYou do not have permission to use this command");
+                    return true;
+                }
+                if (args.length < 2) {
+                    sender.sendMessage("§cUsage: /er enable <race>");
+                    return true;
+                }
+                String raceName = args[1].toLowerCase();
+                plugin.getRaceManager().getRace(raceName).ifPresentOrElse(race -> {
+                    try {
+                        plugin.getDatabaseManager().setRaceEnabled(raceName, true);
+                        race.setEnabled(true);
+                        sender.sendMessage("§aRace '" + raceName + "' has been enabled.");
+                    } catch (SQLException e) {
+                        sender.sendMessage("§cAn error occurred while enabling the race.");
+                    }
+                }, () -> sender.sendMessage("§cRace not found: " + raceName));
+            }
+
+            case "disable" -> {
+                if (!sender.hasPermission(DISABLE.getPermission())) {
+                    sender.sendMessage("§cYou do not have permission to use this command");
+                    return true;
+                }
+                if (args.length < 2) {
+                    sender.sendMessage("§cUsage: /er disable <race>");
+                    return true;
+                }
+                String raceName = args[1].toLowerCase();
+                plugin.getRaceManager().getRace(raceName).ifPresentOrElse(race -> {
+                    try {
+                        plugin.getDatabaseManager().setRaceEnabled(raceName, false);
+                        race.setEnabled(false);
+                        sender.sendMessage("§aRace '" + raceName + "' has been disabled.");
+                    } catch (SQLException e) {
+                        sender.sendMessage("§cAn error occurred while disabling the race.");
+                    }
+                }, () -> sender.sendMessage("§cRace not found: " + raceName));
             }
 
             case "list" -> {

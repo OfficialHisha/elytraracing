@@ -102,6 +102,7 @@ public class BorderConfigGui implements Gui {
                         }
                     }
                     plugin.getRingRenderer().setVisibleBorders(player, race.getBorders());
+                    plugin.getToolManager().syncRaceView(raceName);
                     player.closeInventory();
                 } catch (Exception e) {
                     player.sendMessage("§cAn error occurred.");
@@ -113,6 +114,7 @@ public class BorderConfigGui implements Gui {
                     plugin.getDatabaseManager().deleteBorder(existingBorder.getId());
                     race.getBorders().remove(existingBorder);
                     plugin.getRingRenderer().setVisibleBorders(player, race.getBorders());
+                    plugin.getToolManager().syncRaceView(raceName);
                     player.sendMessage("§aBorder removed.");
                     player.closeInventory();
                 } catch (Exception e) {

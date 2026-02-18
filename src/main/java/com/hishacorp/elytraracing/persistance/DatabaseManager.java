@@ -52,7 +52,8 @@ public class DatabaseManager {
                     spawn_y REAL,
                     spawn_z REAL,
                     spawn_yaw REAL,
-                    spawn_pitch REAL
+                    spawn_pitch REAL,
+                    enabled INTEGER DEFAULT 1
                 );
             """);
 
@@ -63,6 +64,11 @@ public class DatabaseManager {
                     stmt.executeUpdate("ALTER TABLE races ADD COLUMN " + col + " REAL;");
                 } catch (SQLException ignored) {}
             }
+
+            // Add enabled column if it doesn't exist (for existing databases)
+            try {
+                stmt.executeUpdate("ALTER TABLE races ADD COLUMN enabled INTEGER DEFAULT 1;");
+            } catch (SQLException ignored) {}
 
             // Player stats per race
             stmt.executeUpdate("""
@@ -121,6 +127,18 @@ public class DatabaseManager {
                 return rs.getInt("id");
             }
             return -1;
+        }
+    }
+
+    public synchronized String getRaceName(int raceId) throws SQLException {
+        try (var ps = connection.prepareStatement(
+                "SELECT name FROM races WHERE id = ?")) {
+            ps.setInt(1, raceId);
+            var rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getString("name");
+            }
+            return null;
         }
     }
 
@@ -244,12 +262,14 @@ public class DatabaseManager {
         public final String name;
         public final String world;
         public final Location spawn;
+        public final boolean enabled;
 
-        public RaceData(int id, String name, String world, Location spawn) {
+        public RaceData(int id, String name, String world, Location spawn, boolean enabled) {
             this.id = id;
             this.name = name;
             this.world = world;
             this.spawn = spawn;
+            this.enabled = enabled;
         }
     }
 
@@ -270,10 +290,20 @@ public class DatabaseManager {
                         rs.getInt("id"),
                         rs.getString("name"),
                         worldName,
-                        spawn
+                        spawn,
+                        rs.getInt("enabled") == 1
                 );
             }
             return null;
+        }
+    }
+
+    public synchronized void setRaceEnabled(String raceName, boolean enabled) throws SQLException {
+        try (var ps = connection.prepareStatement(
+                "UPDATE races SET enabled = ? WHERE name = ?")) {
+            ps.setInt(1, enabled ? 1 : 0);
+            ps.setString(2, raceName.toLowerCase());
+            ps.executeUpdate();
         }
     }
 

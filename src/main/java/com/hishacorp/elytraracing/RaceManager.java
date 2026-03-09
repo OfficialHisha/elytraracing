@@ -61,6 +61,8 @@ public class RaceManager {
                     race.setRings(plugin.getRingManager().getRings(raceData.id));
                     race.setSpawnLocation(raceData.spawn);
                     race.setEnabled(raceData.enabled);
+                    race.setLaps(raceData.laps);
+                    race.setResetDelay(raceData.resetDelay);
 
                     var world = Bukkit.getWorld(raceData.world);
                     List<Border> borders = plugin.getDatabaseManager().getBorders(raceData.id, world).stream()
@@ -128,6 +130,8 @@ public class RaceManager {
                         plugin.getRingManager().loadRings(raceData.id);
                         race.setRings(plugin.getRingManager().getRings(raceData.id));
                         race.setSpawnLocation(raceData.spawn);
+                        race.setLaps(raceData.laps);
+                        race.setResetDelay(raceData.resetDelay);
 
                         var world = Bukkit.getWorld(raceData.world);
                         List<Border> borders = plugin.getDatabaseManager().getBorders(raceData.id, world).stream()
@@ -345,5 +349,33 @@ public class RaceManager {
 
     public void toggleSeeSpectators(Player player) {
         setSeeSpectators(player, !canSeeSpectators(player));
+    }
+
+    public void resetRace(Race race) {
+        // Remove all racers
+        List<UUID> racerUuids = new ArrayList<>(race.getRacers().keySet());
+        for (UUID uuid : racerUuids) {
+            Player player = Bukkit.getPlayer(uuid);
+            if (player != null) {
+                leaveRace(player);
+                player.sendMessage("§eThe race has been reset.");
+            }
+        }
+
+        // Remove all spectators
+        List<UUID> spectatorUuids = new ArrayList<>(race.getSpectators().keySet());
+        for (UUID uuid : spectatorUuids) {
+            Player player = Bukkit.getPlayer(uuid);
+            if (player != null) {
+                leaveRace(player);
+                player.sendMessage("§eThe race has been reset.");
+            }
+        }
+
+        // Reset race state
+        race.end(); // This handles some cleanup
+        // In case end() was already called, ensure variables are cleared
+        // Note: end() sets inProgress to false and clears tasks.
+        // We might need to clear more state if necessary.
     }
 }

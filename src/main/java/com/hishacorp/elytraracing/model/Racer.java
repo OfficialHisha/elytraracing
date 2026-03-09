@@ -12,12 +12,16 @@ public class Racer {
     private long startTime;
     private long finishTime;
     private boolean completed;
+    private int currentLap;
+    private long bestLapTime = -1;
+    private long lastLapStartTime;
 
     public Racer(Player player) {
         this.uuid = player.getUniqueId();
         this.joinLocation = player.getLocation();
         this.currentRingIndex = 0;
         this.completed = false;
+        this.currentLap = 1;
     }
 
     public org.bukkit.Location getJoinLocation() {
@@ -58,5 +62,29 @@ public class Racer {
 
     public void setCompleted(boolean completed) {
         this.completed = completed;
+    }
+
+    public int getCurrentLap() {
+        return currentLap;
+    }
+
+    public void setCurrentLap(int currentLap) {
+        this.currentLap = currentLap;
+    }
+
+    public long getBestLapTime() {
+        return bestLapTime;
+    }
+
+    public void setBestLapTime(long bestLapTime) {
+        this.bestLapTime = bestLapTime;
+    }
+
+    public long getLastLapStartTime() {
+        return lastLapStartTime;
+    }
+
+    public void setLastLapStartTime(long lastLapStartTime) {
+        this.lastLapStartTime = lastLapStartTime;
     }
 }

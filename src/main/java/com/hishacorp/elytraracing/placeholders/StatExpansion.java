@@ -60,6 +60,13 @@ public class StatExpansion extends PlaceholderExpansion {
                 long seconds = TimeUnit.MILLISECONDS.toSeconds(time) % 60;
                 long millis = time % 1000;
                 return String.format("%02d:%02d.%03d", minutes, seconds, millis);
+            case "bestlap":
+                long lapTime = stat.getBestLapTime();
+                if (lapTime == 0) return "N/A";
+                long lapMinutes = TimeUnit.MILLISECONDS.toMinutes(lapTime);
+                long lapSeconds = TimeUnit.MILLISECONDS.toSeconds(lapTime) % 60;
+                long lapMillis = lapTime % 1000;
+                return String.format("%02d:%02d.%03d", lapMinutes, lapSeconds, lapMillis);
             case "player":
                 return plugin.getServer().getOfflinePlayer(stat.getPlayerUUID()).getName();
             case "wins":

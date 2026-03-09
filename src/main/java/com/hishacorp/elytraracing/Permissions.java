@@ -16,6 +16,7 @@ public enum Permissions {
     LIST("elytraracing.admin.list"),
     ENABLE("elytraracing.admin.enable"),
     DISABLE("elytraracing.admin.disable"),
+    RESET("elytraracing.admin.reset"),
     JOIN("elytraracing.racer.join");
 
     private final String permission;

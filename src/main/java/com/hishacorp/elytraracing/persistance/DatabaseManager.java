@@ -53,7 +53,9 @@ public class DatabaseManager {
                     spawn_z REAL,
                     spawn_yaw REAL,
                     spawn_pitch REAL,
-                    enabled INTEGER DEFAULT 1
+                    enabled INTEGER DEFAULT 1,
+                    laps INTEGER DEFAULT 1,
+                    reset_delay INTEGER DEFAULT 0
                 );
             """);
 
@@ -65,9 +67,15 @@ public class DatabaseManager {
                 } catch (SQLException ignored) {}
             }
 
-            // Add enabled column if it doesn't exist (for existing databases)
+            // Add new columns if they don't exist (for existing databases)
             try {
                 stmt.executeUpdate("ALTER TABLE races ADD COLUMN enabled INTEGER DEFAULT 1;");
+            } catch (SQLException ignored) {}
+            try {
+                stmt.executeUpdate("ALTER TABLE races ADD COLUMN laps INTEGER DEFAULT 1;");
+            } catch (SQLException ignored) {}
+            try {
+                stmt.executeUpdate("ALTER TABLE races ADD COLUMN reset_delay INTEGER DEFAULT 0;");
             } catch (SQLException ignored) {}
 
             // Player stats per race
@@ -77,12 +85,17 @@ public class DatabaseManager {
                     race_id INTEGER NOT NULL,
                     player_uuid TEXT NOT NULL,
                     best_time INTEGER,
+                    best_lap_time INTEGER,
                     finishes INTEGER DEFAULT 0,
                     wins INTEGER DEFAULT 0,
                     rounds_played INTEGER DEFAULT 0,
                     FOREIGN KEY (race_id) REFERENCES races(id)
                 );
             """);
+
+            try {
+                stmt.executeUpdate("ALTER TABLE race_stats ADD COLUMN best_lap_time INTEGER;");
+            } catch (SQLException ignored) {}
 
             // Rings
             stmt.executeUpdate("""
@@ -170,6 +183,24 @@ public class DatabaseManager {
                 "INSERT INTO races (name, world) VALUES (?, ?)")) {
             ps.setString(1, raceName.toLowerCase());
             ps.setString(2, world);
+            ps.executeUpdate();
+        }
+    }
+
+    public synchronized void updateRaceLaps(String raceName, int laps) throws SQLException {
+        try (var ps = connection.prepareStatement(
+                "UPDATE races SET laps = ? WHERE name = ?")) {
+            ps.setInt(1, laps);
+            ps.setString(2, raceName.toLowerCase());
+            ps.executeUpdate();
+        }
+    }
+
+    public synchronized void updateRaceResetDelay(String raceName, int delay) throws SQLException {
+        try (var ps = connection.prepareStatement(
+                "UPDATE races SET reset_delay = ? WHERE name = ?")) {
+            ps.setInt(1, delay);
+            ps.setString(2, raceName.toLowerCase());
             ps.executeUpdate();
         }
     }
@@ -263,13 +294,17 @@ public class DatabaseManager {
         public final String world;
         public final Location spawn;
         public final boolean enabled;
+        public final int laps;
+        public final int resetDelay;
 
-        public RaceData(int id, String name, String world, Location spawn, boolean enabled) {
+        public RaceData(int id, String name, String world, Location spawn, boolean enabled, int laps, int resetDelay) {
             this.id = id;
             this.name = name;
             this.world = world;
             this.spawn = spawn;
             this.enabled = enabled;
+            this.laps = laps;
+            this.resetDelay = resetDelay;
         }
     }
 
@@ -291,7 +326,9 @@ public class DatabaseManager {
                         rs.getString("name"),
                         worldName,
                         spawn,
-                        rs.getInt("enabled") == 1
+                        rs.getInt("enabled") == 1,
+                        rs.getInt("laps"),
+                        rs.getInt("reset_delay")
                 );
             }
             return null;
@@ -330,7 +367,7 @@ public class DatabaseManager {
 
     public RaceStat getTopTimeByRace(String raceName, int position) {
         try (var ps = connection.prepareStatement(
-                "SELECT player_uuid, best_time, wins, rounds_played FROM race_stats rs " +
+                "SELECT player_uuid, best_time, best_lap_time, wins, rounds_played FROM race_stats rs " +
                         "JOIN races r ON rs.race_id = r.id " +
                         "WHERE r.name = ? AND rs.best_time IS NOT NULL " +
                         "ORDER BY rs.best_time ASC LIMIT 1 OFFSET ?")) {
@@ -341,6 +378,7 @@ public class DatabaseManager {
                 return new RaceStat(
                         UUID.fromString(rs.getString("player_uuid")),
                         rs.getLong("best_time"),
+                        rs.getLong("best_lap_time"),
                         rs.getInt("wins"),
                         rs.getInt("rounds_played")
                 );
@@ -349,6 +387,63 @@ public class DatabaseManager {
             plugin.getLogger().severe("Failed to get top time by race: " + e.getMessage());
         }
         return null;
+    }
+
+    public synchronized void saveRaceStat(UUID playerUuid, int raceId, long raceTime, Long bestLapTime, boolean win) throws SQLException {
+        try (var ps = connection.prepareStatement(
+                "SELECT id, best_time, best_lap_time, finishes, wins, rounds_played FROM race_stats WHERE race_id = ? AND player_uuid = ?")) {
+            ps.setInt(1, raceId);
+            ps.setString(2, playerUuid.toString());
+            var rs = ps.executeQuery();
+
+            if (rs.next()) {
+                int id = rs.getInt("id");
+                long currentBest = rs.getLong("best_time");
+                if (rs.wasNull()) currentBest = Long.MAX_VALUE;
+                long currentBestLap = rs.getLong("best_lap_time");
+                if (rs.wasNull()) currentBestLap = Long.MAX_VALUE;
+                int finishes = rs.getInt("finishes");
+                int wins = rs.getInt("wins");
+                int rounds = rs.getInt("rounds_played");
+
+                long newBest = Math.min(currentBest, raceTime);
+                long newBestLap = currentBestLap;
+                if (bestLapTime != null) {
+                    newBestLap = Math.min(currentBestLap, bestLapTime);
+                }
+
+                try (var updatePs = connection.prepareStatement(
+                        "UPDATE race_stats SET best_time = ?, best_lap_time = ?, finishes = ?, wins = ?, rounds_played = ? WHERE id = ?")) {
+                    updatePs.setLong(1, newBest);
+                    if (newBestLap == Long.MAX_VALUE) {
+                        updatePs.setNull(2, java.sql.Types.INTEGER);
+                    } else {
+                        updatePs.setLong(2, newBestLap);
+                    }
+                    updatePs.setInt(3, finishes + 1);
+                    updatePs.setInt(4, win ? wins + 1 : wins);
+                    updatePs.setInt(5, rounds + 1);
+                    updatePs.setInt(6, id);
+                    updatePs.executeUpdate();
+                }
+            } else {
+                try (var insertPs = connection.prepareStatement(
+                        "INSERT INTO race_stats (race_id, player_uuid, best_time, best_lap_time, finishes, wins, rounds_played) VALUES (?, ?, ?, ?, ?, ?, ?)")) {
+                    insertPs.setInt(1, raceId);
+                    insertPs.setString(2, playerUuid.toString());
+                    insertPs.setLong(3, raceTime);
+                    if (bestLapTime == null) {
+                        insertPs.setNull(4, java.sql.Types.INTEGER);
+                    } else {
+                        insertPs.setLong(4, bestLapTime);
+                    }
+                    insertPs.setInt(5, 1);
+                    insertPs.setInt(6, win ? 1 : 0);
+                    insertPs.setInt(7, 1);
+                    insertPs.executeUpdate();
+                }
+            }
+        }
     }
 
     public synchronized int createRing(Ring ring) throws SQLException {

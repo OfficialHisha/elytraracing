@@ -23,6 +23,7 @@ permissions:
       elytraracing.admin.start: true
       elytraracing.admin.end: true
       elytraracing.admin.rings: true
+      elytraracing.admin.reset: true
   elytraracing.spectator:
     description: "Spectator permissions for the Elytra Racing plugin"
     default: true

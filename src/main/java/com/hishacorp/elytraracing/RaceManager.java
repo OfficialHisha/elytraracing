@@ -61,6 +61,8 @@ public class RaceManager {
                     race.setRings(plugin.getRingManager().getRings(raceData.id));
                     race.setSpawnLocation(raceData.spawn);
                     race.setEnabled(raceData.enabled);
+                    race.setLaps(raceData.laps);
+                    race.setResetDelay(raceData.resetDelay);
 
                     var world = Bukkit.getWorld(raceData.world);
                     List<Border> borders = plugin.getDatabaseManager().getBorders(raceData.id, world).stream()
@@ -128,6 +130,8 @@ public class RaceManager {
                         plugin.getRingManager().loadRings(raceData.id);
                         race.setRings(plugin.getRingManager().getRings(raceData.id));
                         race.setSpawnLocation(raceData.spawn);
+                        race.setLaps(raceData.laps);
+                        race.setResetDelay(raceData.resetDelay);
 
                         var world = Bukkit.getWorld(raceData.world);
                         List<Border> borders = plugin.getDatabaseManager().getBorders(raceData.id, world).stream()
@@ -345,5 +349,23 @@ public class RaceManager {
 
     public void toggleSeeSpectators(Player player) {
         setSeeSpectators(player, !canSeeSpectators(player));
+    }
+
+    public void resetRace(Race race) {
+        // Notify and clear racers and spectators properly through leaveRace for cleanup
+        List<UUID> participants = new ArrayList<>();
+        participants.addAll(race.getRacers().keySet());
+        participants.addAll(race.getSpectators().keySet());
+
+        for (UUID uuid : participants) {
+            Player player = Bukkit.getPlayer(uuid);
+            if (player != null) {
+                leaveRace(player);
+                player.sendMessage("§eThe race has been reset.");
+            }
+        }
+
+        // Fully reset the race state to allow rejoining
+        race.resetState();
     }
 }

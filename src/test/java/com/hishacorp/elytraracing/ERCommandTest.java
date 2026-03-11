@@ -180,4 +180,40 @@ public class ERCommandTest {
         player.performCommand("er join test_race");
         player.assertSaid("§cThis race is currently disabled.");
     }
+
+    @Test
+    public void testResetCommand() {
+        player.performCommand("er create test_race");
+        player.nextMessage(); // Consume create
+        player.nextMessage(); // Consume tool
+        player.performCommand("er join test_race");
+        player.nextMessage(); // Consume join message
+
+        assertTrue(plugin.getRaceManager().isPlayerInRace(player));
+
+        player.performCommand("er reset test_race");
+        player.assertSaid("§aYou have left the race: test_race");
+        player.assertSaid("§eThe race has been reset.");
+        player.assertSaid("§aRace 'test_race' has been reset.");
+        assertFalse(plugin.getRaceManager().isPlayerInRace(player));
+
+        // Test rejoining after reset
+        player.performCommand("er join test_race");
+        player.assertSaid("§aYou have joined the race: test_race");
+        assertTrue(plugin.getRaceManager().isPlayerInRace(player));
+    }
+
+    @Test
+    public void testResetDelayCommand() {
+        player.performCommand("er create test_race");
+        player.nextMessage(); // Consume create
+        player.nextMessage(); // Consume tool
+
+        player.performCommand("er reset test_race 10");
+        player.assertSaid("§aReset delay for race 'test_race' set to 10s.");
+
+        plugin.getRaceManager().getRace("test_race").ifPresent(race -> {
+            assertEquals(10, race.getResetDelay());
+        });
+    }
 }

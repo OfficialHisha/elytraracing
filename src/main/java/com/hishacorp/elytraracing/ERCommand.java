@@ -247,6 +247,35 @@ public class ERCommand implements CommandExecutor {
                 }, () -> sender.sendMessage("§cRace not found: " + raceName));
             }
 
+            case "reset" -> {
+                if (!sender.hasPermission(RESET.getPermission())) {
+                    sender.sendMessage("§cYou do not have permission to use this command");
+                    return true;
+                }
+                if (args.length < 2) {
+                    sender.sendMessage("§cUsage: /er reset <race> [delay]");
+                    return true;
+                }
+                String raceName = args[1].toLowerCase();
+                plugin.getRaceManager().getRace(raceName).ifPresentOrElse(race -> {
+                    if (args.length >= 3) {
+                        try {
+                            int delay = Integer.parseInt(args[2]);
+                            race.setResetDelay(delay);
+                            plugin.getDatabaseManager().updateRaceResetDelay(raceName, delay);
+                            sender.sendMessage("§aReset delay for race '" + raceName + "' set to " + delay + "s.");
+                        } catch (NumberFormatException e) {
+                            sender.sendMessage("§cInvalid delay value.");
+                        } catch (SQLException e) {
+                            sender.sendMessage("§cAn error occurred while saving reset delay.");
+                        }
+                    } else {
+                        plugin.getRaceManager().resetRace(race);
+                        sender.sendMessage("§aRace '" + raceName + "' has been reset.");
+                    }
+                }, () -> sender.sendMessage("§cRace not found: " + raceName));
+            }
+
             case "list" -> {
                 if (!sender.hasPermission(LIST.getPermission())) {
                     sender.sendMessage("§cYou do not have permission to use this command");

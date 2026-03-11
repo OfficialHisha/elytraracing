@@ -60,12 +60,24 @@ public class ScoreboardManager {
         }
         lines.add(timeDisplay);
 
-        lines.add("§f "); // Unique empty lines for scoreboard
+        if (racer != null && race.getLaps() > 1) {
+            lines.add("§f ");
+            lines.add("§f§lLap");
+            lines.add("§e" + racer.getCurrentLap() + "/" + race.getLaps());
+
+            if (racer.getBestLapTime() != -1) {
+                lines.add("§f  ");
+                lines.add("§f§lBest Lap");
+                lines.add("§e" + formatTime(racer.getBestLapTime()));
+            }
+        }
+
+        lines.add("§f   "); // Unique empty lines for scoreboard
         lines.add("§f§lPlayers");
         long finishedCount = race.getRacers().values().stream().filter(Racer::isCompleted).count();
         lines.add("§e" + finishedCount + "/" + race.getRacers().size());
 
-        lines.add("§f  ");
+        lines.add("§f    ");
         lines.add("§f§lLineup");
         List<Racer> rankings = race.getRankings();
         for (int i = 0; i < Math.min(rankings.size(), 5); i++) {

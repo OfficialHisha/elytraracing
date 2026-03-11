@@ -31,7 +31,10 @@ public class Race {
     private boolean inProgress = false;
     private long startTime;
     private BukkitTask dnfTask;
+    private BukkitTask resetTask;
     private boolean enabled = true;
+    private int laps = 1;
+    private int resetDelay = 0;
 
     public Race(Elytraracing plugin, String name) {
         this.plugin = plugin;
@@ -47,6 +50,11 @@ public class Race {
         this.inProgress = true;
         this.startTime = System.currentTimeMillis();
 
+        if (resetTask != null) {
+            resetTask.cancel();
+            resetTask = null;
+        }
+
         for (UUID playerUUID : racers.keySet()) {
             Player player = Bukkit.getPlayer(playerUUID);
             if (player == null) {
@@ -57,7 +65,9 @@ public class Race {
                 player.teleport(spawnLocation);
             }
 
-            racers.get(playerUUID).setStartTime(startTime);
+            Racer racer = racers.get(playerUUID);
+            racer.setStartTime(startTime);
+            racer.setLastLapStartTime(startTime);
             player.sendMessage("§aThe race has started!");
             PlayerInventory inventory = player.getInventory();
             inventory.setChestplate(new ItemStack(Material.ELYTRA));
@@ -83,11 +93,32 @@ public class Race {
         racer.setCurrentRingIndex(nextRingIndex + 1);
 
         if (racer.getCurrentRingIndex() >= rings.size()) {
-            playerFinished(player);
+            long now = System.currentTimeMillis();
+            long lapTime = now - racer.getLastLapStartTime();
+            if (racer.getBestLapTime() == -1 || lapTime < racer.getBestLapTime()) {
+                racer.setBestLapTime(lapTime);
+            }
+
+            if (racer.getCurrentLap() < laps) {
+                racer.setCurrentLap(racer.getCurrentLap() + 1);
+                racer.setCurrentRingIndex(0);
+                racer.setLastLapStartTime(now);
+                plugin.getRaceManager().getRingRenderer().updateRingHighlight(player, rings.get(nextRingIndex), rings.get(0));
+                player.sendMessage("§aYou completed lap " + (racer.getCurrentLap() - 1) + "! Best lap: " + formatTime(racer.getBestLapTime()));
+            } else {
+                playerFinished(player);
+            }
         } else {
             plugin.getRaceManager().getRingRenderer().updateRingHighlight(player, rings.get(nextRingIndex), rings.get(racer.getCurrentRingIndex()));
             player.sendMessage("§aYou passed a ring! Next ring: " + (racer.getCurrentRingIndex() + 1));
         }
+    }
+
+    private String formatTime(long millis) {
+        long minutes = (millis / 1000) / 60;
+        long seconds = (millis / 1000) % 60;
+        long ms = millis % 1000;
+        return String.format("%02d:%02d.%03d", minutes, seconds, ms);
     }
 
     public void startFireworkCooldown(Player player) {
@@ -138,6 +169,13 @@ public class Race {
             spectator.sendMessage("§aThe race has ended!");
             spectator.sendMessage("§eYou can view the final scoreboard. Use /er leave to exit.");
         }
+
+        if (resetDelay > 0) {
+            resetTask = Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                plugin.getRaceManager().resetRace(this);
+                resetTask = null;
+            }, resetDelay * 20L);
+        }
     }
 
     public void playerFinished(Player player) {
@@ -150,6 +188,20 @@ public class Race {
         racer.setFinishTime(System.currentTimeMillis());
 
         player.sendMessage(String.format(Locale.US, "§aYou finished the race in %.2f seconds!", (racer.getFinishTime() - racer.getStartTime()) / 1000.0));
+
+        int raceId = -1;
+        try {
+            raceId = plugin.getDatabaseManager().getRaceId(name);
+        } catch (Exception ignored) {}
+
+        if (raceId != -1) {
+            boolean win = racers.values().stream().filter(Racer::isCompleted).count() == 1;
+            try {
+                plugin.getDatabaseManager().saveRaceStat(player.getUniqueId(), raceId, racer.getFinishTime() - racer.getStartTime(), racer.getBestLapTime(), win);
+            } catch (Exception e) {
+                plugin.getLogger().severe("Failed to save race stats for " + player.getName() + ": " + e.getMessage());
+            }
+        }
 
         boolean allFinished = racers.values().stream().allMatch(Racer::isCompleted);
 
@@ -211,6 +263,23 @@ public class Race {
         return startTime;
     }
 
+    public void resetState() {
+        this.inProgress = false;
+        this.startTime = 0;
+        if (dnfTask != null) {
+            dnfTask.cancel();
+            dnfTask = null;
+        }
+        if (resetTask != null) {
+            resetTask.cancel();
+            resetTask = null;
+        }
+        cooldownTasks.values().forEach(BukkitTask::cancel);
+        cooldownTasks.clear();
+        racers.clear();
+        spectators.clear();
+    }
+
     public void addPlayer(Player player) {
         racers.put(player.getUniqueId(), new Racer(player));
     }
@@ -250,6 +319,22 @@ public class Race {
 
     public void setEnabled(boolean enabled) {
         this.enabled = enabled;
+    }
+
+    public int getLaps() {
+        return laps;
+    }
+
+    public void setLaps(int laps) {
+        this.laps = laps;
+    }
+
+    public int getResetDelay() {
+        return resetDelay;
+    }
+
+    public void setResetDelay(int resetDelay) {
+        this.resetDelay = resetDelay;
     }
 
     public List<Racer> getRankings() {

@@ -29,11 +29,25 @@ public class SetupGui implements Gui {
         inventory.setItem(14, button(COMPASS, "§eSet Spawn", "§7Sets the race spawn if editing a race,", "§7otherwise sets the world spawn."));
 
         updateToggleItem(player);
+        updateRaceConfigItems(player);
     }
 
     private void updateToggleItem(Player player) {
         boolean canSee = plugin.getRaceManager().canSeeSpectators(player);
         inventory.setItem(17, button(canSee ? ENDER_EYE : ENDER_PEARL, "§eSee Spectators: " + (canSee ? "§aON" : "§cOFF")));
+    }
+
+    private void updateRaceConfigItems(Player player) {
+        String editingRace = plugin.getToolManager().getEditingRace(player.getUniqueId());
+        if (editingRace != null) {
+            plugin.getRaceManager().getRace(editingRace).ifPresent(race -> {
+                inventory.setItem(19, button(REPEATER, "§eLaps: " + race.getLaps(), "§7Left-click to increase", "§7Right-click to decrease"));
+                inventory.setItem(21, button(CLOCK, "§eReset Delay: " + race.getResetDelay() + "s", "§7Click to cycle through", "§70, 5, 10, 30, 60 seconds"));
+            });
+        } else {
+            inventory.setItem(19, null);
+            inventory.setItem(21, null);
+        }
     }
 
     private ItemStack button(Material mat, String name, String... lore) {
@@ -70,6 +84,49 @@ public class SetupGui implements Gui {
             case 16 -> {
                 plugin.getRaceManager().toggleSeeSpectators(player);
                 updateToggleItem(player);
+            }
+            case 19 -> {
+                if (editingRace != null) {
+                    plugin.getRaceManager().getRace(editingRace).ifPresent(race -> {
+                        int currentLaps = race.getLaps();
+                        if (event.isLeftClick()) {
+                            currentLaps = (currentLaps % 10) + 1;
+                        } else if (event.isRightClick()) {
+                            currentLaps = (currentLaps == 1) ? 10 : currentLaps - 1;
+                        }
+                        race.setLaps(currentLaps);
+                        try {
+                            plugin.getDatabaseManager().updateRaceLaps(editingRace, currentLaps);
+                            player.sendMessage("§aLaps for race '" + editingRace + "' set to " + currentLaps);
+                        } catch (Exception e) {
+                            player.sendMessage("§cFailed to save laps configuration.");
+                        }
+                        updateRaceConfigItems(player);
+                    });
+                }
+            }
+            case 21 -> {
+                if (editingRace != null) {
+                    plugin.getRaceManager().getRace(editingRace).ifPresent(race -> {
+                        int[] delays = {0, 5, 10, 30, 60};
+                        int currentDelay = race.getResetDelay();
+                        int nextDelay = 0;
+                        for (int i = 0; i < delays.length; i++) {
+                            if (delays[i] == currentDelay) {
+                                nextDelay = delays[(i + 1) % delays.length];
+                                break;
+                            }
+                        }
+                        race.setResetDelay(nextDelay);
+                        try {
+                            plugin.getDatabaseManager().updateRaceResetDelay(editingRace, nextDelay);
+                            player.sendMessage("§aReset delay for race '" + editingRace + "' set to " + nextDelay + "s");
+                        } catch (Exception e) {
+                            player.sendMessage("§cFailed to save reset delay configuration.");
+                        }
+                        updateRaceConfigItems(player);
+                    });
+                }
             }
         }
     }

@@ -196,6 +196,11 @@ public class ERCommandTest {
         player.assertSaid("§eThe race has been reset.");
         player.assertSaid("§aRace 'test_race' has been reset.");
         assertFalse(plugin.getRaceManager().isPlayerInRace(player));
+
+        // Test rejoining after reset
+        player.performCommand("er join test_race");
+        player.assertSaid("§aYou have joined the race: test_race");
+        assertTrue(plugin.getRaceManager().isPlayerInRace(player));
     }
 
     @Test

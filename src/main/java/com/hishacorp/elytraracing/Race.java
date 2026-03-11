@@ -31,6 +31,7 @@ public class Race {
     private boolean inProgress = false;
     private long startTime;
     private BukkitTask dnfTask;
+    private BukkitTask resetTask;
     private boolean enabled = true;
     private int laps = 1;
     private int resetDelay = 0;
@@ -48,6 +49,11 @@ public class Race {
     public void start() {
         this.inProgress = true;
         this.startTime = System.currentTimeMillis();
+
+        if (resetTask != null) {
+            resetTask.cancel();
+            resetTask = null;
+        }
 
         for (UUID playerUUID : racers.keySet()) {
             Player player = Bukkit.getPlayer(playerUUID);
@@ -165,8 +171,9 @@ public class Race {
         }
 
         if (resetDelay > 0) {
-            Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            resetTask = Bukkit.getScheduler().runTaskLater(plugin, () -> {
                 plugin.getRaceManager().resetRace(this);
+                resetTask = null;
             }, resetDelay * 20L);
         }
     }
@@ -254,6 +261,23 @@ public class Race {
 
     public long getStartTime() {
         return startTime;
+    }
+
+    public void resetState() {
+        this.inProgress = false;
+        this.startTime = 0;
+        if (dnfTask != null) {
+            dnfTask.cancel();
+            dnfTask = null;
+        }
+        if (resetTask != null) {
+            resetTask.cancel();
+            resetTask = null;
+        }
+        cooldownTasks.values().forEach(BukkitTask::cancel);
+        cooldownTasks.clear();
+        racers.clear();
+        spectators.clear();
     }
 
     public void addPlayer(Player player) {

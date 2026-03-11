@@ -31,6 +31,8 @@ public class PlayerMoveListener implements Listener {
                         Location teleportLocation;
                         if (racer.getCurrentRingIndex() > 0) {
                             teleportLocation = race.getRings().get(racer.getCurrentRingIndex() - 1).getLocation();
+                        } else if (racer.getCurrentLap() > 1) {
+                            teleportLocation = race.getRings().get(race.getRings().size() - 1).getLocation();
                         } else {
                             teleportLocation = race.getSpawnLocation() != null ? race.getSpawnLocation() : racer.getJoinLocation();
                         }

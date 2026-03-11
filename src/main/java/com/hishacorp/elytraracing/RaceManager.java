@@ -352,9 +352,12 @@ public class RaceManager {
     }
 
     public void resetRace(Race race) {
-        // Remove all racers
-        List<UUID> racerUuids = new ArrayList<>(race.getRacers().keySet());
-        for (UUID uuid : racerUuids) {
+        // Notify and clear racers and spectators properly through leaveRace for cleanup
+        List<UUID> participants = new ArrayList<>();
+        participants.addAll(race.getRacers().keySet());
+        participants.addAll(race.getSpectators().keySet());
+
+        for (UUID uuid : participants) {
             Player player = Bukkit.getPlayer(uuid);
             if (player != null) {
                 leaveRace(player);
@@ -362,20 +365,7 @@ public class RaceManager {
             }
         }
 
-        // Remove all spectators
-        List<UUID> spectatorUuids = new ArrayList<>(race.getSpectators().keySet());
-        for (UUID uuid : spectatorUuids) {
-            Player player = Bukkit.getPlayer(uuid);
-            if (player != null) {
-                leaveRace(player);
-                player.sendMessage("§eThe race has been reset.");
-            }
-        }
-
-        // Reset race state
-        race.end(); // This handles some cleanup
-        // In case end() was already called, ensure variables are cleared
-        // Note: end() sets inProgress to false and clears tasks.
-        // We might need to clear more state if necessary.
+        // Fully reset the race state to allow rejoining
+        race.resetState();
     }
 }

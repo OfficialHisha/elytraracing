@@ -29,16 +29,20 @@ public class LapLogicTest {
     public void setUp() {
         server = MockBukkit.mock();
         plugin = MockBukkit.load(Elytraracing.class);
-        race = new Race(plugin, "test_race");
+
+        // Register the race in the manager
+        Race newRace = new Race(plugin, "test_race");
+        plugin.getRaceManager().getRaces().add(newRace);
+        race = newRace;
         race.setLaps(2);
 
         player = server.addPlayer();
-        race.addPlayer(player);
+        plugin.getRaceManager().joinRace(player, "test_race");
         racer = race.getRacers().get(player.getUniqueId());
 
         rings = new ArrayList<>();
-        rings.add(new Ring(1, 1, new Location(null, 10, 0, 0), 5, Ring.Orientation.HORIZONTAL, Material.WHITE_STAINED_GLASS, 0));
-        rings.add(new Ring(2, 1, new Location(null, 20, 0, 0), 5, Ring.Orientation.HORIZONTAL, Material.WHITE_STAINED_GLASS, 1));
+        rings.add(new Ring(1, 1, new Location(player.getWorld(), 10, 0, 0), 5, Ring.Orientation.HORIZONTAL, Material.WHITE_STAINED_GLASS, 0));
+        rings.add(new Ring(2, 1, new Location(player.getWorld(), 20, 0, 0), 5, Ring.Orientation.HORIZONTAL, Material.WHITE_STAINED_GLASS, 1));
         race.setRings(rings);
 
         race.start();
@@ -78,5 +82,33 @@ public class LapLogicTest {
         race.playerPassedRing(player);
         race.playerPassedRing(player);
         assertTrue(racer.isCompleted());
+    }
+
+    @Test
+    public void testOutOfBoundsTeleportOnSecondLap() {
+        // Add a border so we can go out of bounds
+        race.getBorders().add(new com.hishacorp.elytraracing.model.Border(1, new Location(player.getWorld(), -10, -10, -10), new Location(player.getWorld(), 100, 100, 100)));
+
+        // Pass first ring of first lap
+        race.playerPassedRing(player);
+
+        // Pass second ring of first lap (now on second lap, first ring)
+        race.playerPassedRing(player);
+        assertEquals(2, racer.getCurrentLap());
+        assertEquals(0, racer.getCurrentRingIndex());
+
+        // Set player location out of bounds
+        Location outOfBounds = new Location(player.getWorld(), 1000, 1000, 1000);
+        player.teleport(outOfBounds);
+
+        // Trigger move event
+        org.bukkit.event.player.PlayerMoveEvent moveEvent = new org.bukkit.event.player.PlayerMoveEvent(player, player.getLocation(), outOfBounds);
+        new com.hishacorp.elytraracing.listeners.PlayerMoveListener(plugin).onPlayerMove(moveEvent);
+
+        // Should be teleported to the last ring of the race
+        Location lastRingLoc = rings.get(rings.size() - 1).getLocation();
+        assertEquals(lastRingLoc.getX(), moveEvent.getTo().getX());
+        assertEquals(lastRingLoc.getY(), moveEvent.getTo().getY());
+        assertEquals(lastRingLoc.getZ(), moveEvent.getTo().getZ());
     }
 }

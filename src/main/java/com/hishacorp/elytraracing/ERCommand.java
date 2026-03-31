@@ -276,6 +276,18 @@ public class ERCommand implements CommandExecutor {
                 }, () -> sender.sendMessage("§cRace not found: " + raceName));
             }
 
+            case "seespectators" -> {
+                if (!sender.hasPermission(SEESPECTATORS.getPermission())) {
+                    sender.sendMessage("§cYou do not have permission to use this command");
+                    return true;
+                }
+                if (sender instanceof Player player) {
+                    plugin.getRaceManager().toggleSeeSpectators(player);
+                    boolean canSee = plugin.getRaceManager().canSeeSpectators(player);
+                    player.sendMessage("§aSee Spectators: " + (canSee ? "§aON" : "§cOFF"));
+                }
+            }
+
             case "list" -> {
                 if (!sender.hasPermission(LIST.getPermission())) {
                     sender.sendMessage("§cYou do not have permission to use this command");

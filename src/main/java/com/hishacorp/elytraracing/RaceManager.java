@@ -63,6 +63,7 @@ public class RaceManager {
                     race.setEnabled(raceData.enabled);
                     race.setLaps(raceData.laps);
                     race.setResetDelay(raceData.resetDelay);
+                    race.setDnfTimer(raceData.dnfTimer);
 
                     var world = Bukkit.getWorld(raceData.world);
                     List<Border> borders = plugin.getDatabaseManager().getBorders(raceData.id, world).stream()
@@ -119,6 +120,10 @@ public class RaceManager {
                 player.sendMessage("§cThis race is currently disabled.");
                 return;
             }
+            if (race.isStarting()) {
+                player.sendMessage("§cThis race is starting. You cannot join now.");
+                return;
+            }
             if (!race.isInProgress()) {
                 if (race.getStartTime() > 0) {
                     player.sendMessage("§cThis race has already finished. A new race must be started.");
@@ -132,6 +137,7 @@ public class RaceManager {
                         race.setSpawnLocation(raceData.spawn);
                         race.setLaps(raceData.laps);
                         race.setResetDelay(raceData.resetDelay);
+                        race.setDnfTimer(raceData.dnfTimer);
 
                         var world = Bukkit.getWorld(raceData.world);
                         List<Border> borders = plugin.getDatabaseManager().getBorders(raceData.id, world).stream()
@@ -204,9 +210,10 @@ public class RaceManager {
                 // Reset spectator specific state
                 player.setAllowFlight(false);
                 player.setFlying(false);
-                for (Player onlinePlayer : plugin.getServer().getOnlinePlayers()) {
-                    onlinePlayer.showPlayer(plugin, player);
-                }
+            }
+            // Ensure player is visible to everyone again
+            for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
+                onlinePlayer.showPlayer(plugin, player);
             }
             player.sendMessage("§aYou have left the race: " + race.getName());
         }, () -> player.sendMessage("§cYou are not in a race."));
@@ -218,7 +225,15 @@ public class RaceManager {
                 sender.sendMessage("§cCannot start a race with no players.");
                 return;
             }
-            race.start();
+            if (race.isInProgress() || race.getStartTime() > 0) {
+                sender.sendMessage("§cThis race is already in progress or needs to be reset first.");
+                return;
+            }
+            if (race.isStarting()) {
+                sender.sendMessage("§cThis race is already starting.");
+                return;
+            }
+            race.startCountdown(5);
         }, () -> sender.sendMessage("§cRace not found: " + raceName));
     }
 

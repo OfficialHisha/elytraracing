@@ -29,12 +29,14 @@ public class Race {
     private final Map<UUID, Player> spectators = new HashMap<>();
     private final Map<UUID, BukkitTask> cooldownTasks = new HashMap<>();
     private boolean inProgress = false;
+    private boolean starting = false;
     private long startTime;
     private BukkitTask dnfTask;
     private BukkitTask resetTask;
     private boolean enabled = true;
     private int laps = 1;
     private int resetDelay = 0;
+    private int dnfTimer = 30;
 
     public Race(Elytraracing plugin, String name) {
         this.plugin = plugin;
@@ -44,6 +46,49 @@ public class Race {
     public void setRings(List<Ring> rings) {
         this.rings.clear();
         this.rings.addAll(rings);
+    }
+
+    public void startCountdown(int seconds) {
+        this.starting = true;
+        new org.bukkit.scheduler.BukkitRunnable() {
+            int count = seconds;
+
+            @Override
+            public void run() {
+                if (count > 0) {
+                    String color = count <= 3 ? "§c§l" : "§e§l";
+                    sendTitle(color + count, "", 0, 20, 0);
+                    playSound(org.bukkit.Sound.BLOCK_NOTE_BLOCK_PLING, 1.0f, 1.0f);
+                    count--;
+                } else {
+                    sendTitle("§a§lGO!", "", 0, 20, 10);
+                    playSound(org.bukkit.Sound.BLOCK_NOTE_BLOCK_PLING, 1.0f, 2.0f);
+                    starting = false;
+                    start();
+                    cancel();
+                }
+            }
+        }.runTaskTimer(plugin, 0L, 20L);
+    }
+
+    private void sendTitle(String title, String subtitle, int fadeIn, int stay, int fadeOut) {
+        for (UUID uuid : racers.keySet()) {
+            Player p = Bukkit.getPlayer(uuid);
+            if (p != null) p.sendTitle(title, subtitle, fadeIn, stay, fadeOut);
+        }
+        for (Player p : spectators.values()) {
+            p.sendTitle(title, subtitle, fadeIn, stay, fadeOut);
+        }
+    }
+
+    private void playSound(org.bukkit.Sound sound, float volume, float pitch) {
+        for (UUID uuid : racers.keySet()) {
+            Player p = Bukkit.getPlayer(uuid);
+            if (p != null) p.playSound(p.getLocation(), sound, volume, pitch);
+        }
+        for (Player p : spectators.values()) {
+            p.playSound(p.getLocation(), sound, volume, pitch);
+        }
     }
 
     public void start() {
@@ -70,6 +115,7 @@ public class Race {
             racer.setLastLapStartTime(startTime);
             player.sendMessage("§aThe race has started!");
             PlayerInventory inventory = player.getInventory();
+            inventory.clear();
             inventory.setChestplate(new ItemStack(Material.ELYTRA));
             inventory.addItem(new ItemStack(Material.FIREWORK_ROCKET));
         }
@@ -208,8 +254,7 @@ public class Race {
         if (allFinished) {
             end();
         } else if (dnfTask == null) {
-            long dnfTimer = plugin.getConfig().getLong("dnf-timer", 30);
-            long dnfTime = dnfTimer * 20;
+            long dnfTime = dnfTimer * 20L;
             dnfTask = Bukkit.getScheduler().runTaskLater(plugin, this::end, dnfTime);
             for (UUID playerUUID : racers.keySet()) {
                 Player p = Bukkit.getPlayer(playerUUID);
@@ -257,6 +302,10 @@ public class Race {
 
     public boolean isInProgress() {
         return inProgress;
+    }
+
+    public boolean isStarting() {
+        return starting;
     }
 
     public long getStartTime() {
@@ -335,6 +384,14 @@ public class Race {
 
     public void setResetDelay(int resetDelay) {
         this.resetDelay = resetDelay;
+    }
+
+    public int getDnfTimer() {
+        return dnfTimer;
+    }
+
+    public void setDnfTimer(int dnfTimer) {
+        this.dnfTimer = dnfTimer;
     }
 
     public List<Racer> getRankings() {

@@ -44,6 +44,7 @@ public class RaceTest {
 
         // Then
         player.assertSaid("§aThe race has started!");
+        assertEquals(org.bukkit.GameMode.SURVIVAL, player.getGameMode());
         assertFalse(player.getInventory().contains(Material.DIAMOND));
         assertNotNull(player.getInventory().getChestplate());
         assertEquals(Material.ELYTRA, player.getInventory().getChestplate().getType());

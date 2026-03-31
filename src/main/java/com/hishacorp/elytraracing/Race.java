@@ -114,6 +114,7 @@ public class Race {
             racer.setStartTime(startTime);
             racer.setLastLapStartTime(startTime);
             player.sendMessage("§aThe race has started!");
+            player.setGameMode(org.bukkit.GameMode.SURVIVAL);
             PlayerInventory inventory = player.getInventory();
             inventory.clear();
             inventory.setChestplate(new ItemStack(Material.ELYTRA));

@@ -73,6 +73,7 @@ public class RaceManager {
                     race.setLaps(raceData.laps);
                     race.setResetDelay(raceData.resetDelay);
                     race.setDnfTimer(raceData.dnfTimer);
+                    race.setRocketCooldown(raceData.rocketCooldown);
 
                     var world = Bukkit.getWorld(raceData.world);
                     List<Border> borders = plugin.getDatabaseManager().getBorders(raceData.id, world).stream()
@@ -147,6 +148,7 @@ public class RaceManager {
                         race.setLaps(raceData.laps);
                         race.setResetDelay(raceData.resetDelay);
                         race.setDnfTimer(raceData.dnfTimer);
+                        race.setRocketCooldown(raceData.rocketCooldown);
 
                         var world = Bukkit.getWorld(raceData.world);
                         List<Border> borders = plugin.getDatabaseManager().getBorders(raceData.id, world).stream()

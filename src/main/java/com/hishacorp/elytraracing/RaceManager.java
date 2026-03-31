@@ -197,6 +197,7 @@ public class RaceManager {
 
             player.setAllowFlight(true);
             player.setFlying(true);
+            player.setFlySpeed(0.2f);
             for (Player onlinePlayer : plugin.getServer().getOnlinePlayers()) {
                 if (onlinePlayer != player && !canSeeSpectators(onlinePlayer)) {
                     onlinePlayer.hidePlayer(plugin, player);
@@ -219,6 +220,7 @@ public class RaceManager {
                 // Reset spectator specific state
                 player.setAllowFlight(false);
                 player.setFlying(false);
+                player.setFlySpeed(0.1f);
             }
             // Ensure player is visible to everyone again
             for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {

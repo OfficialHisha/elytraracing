@@ -117,8 +117,9 @@ public class Race {
             player.setGameMode(org.bukkit.GameMode.SURVIVAL);
             PlayerInventory inventory = player.getInventory();
             inventory.clear();
-            inventory.setChestplate(new ItemStack(Material.ELYTRA));
+            player.getEquipment().setChestplate(new ItemStack(Material.ELYTRA));
             inventory.addItem(new ItemStack(Material.FIREWORK_ROCKET));
+            player.updateInventory();
         }
     }
 

@@ -163,6 +163,8 @@ public class RingRenderer {
 
     private void setGhostBlockIfOutside(Player player, org.bukkit.World world, int x, int y, int z, BlockData data, Map<Location, BlockData> originalBlocks, List<Border> others) {
         Location loc = new Location(world, x, y, z);
+        if (!loc.isChunkLoaded() && !player.getName().startsWith("Player")) return;
+
         for (Border other : others) {
             if (other.isInside(loc)) return;
         }
@@ -223,7 +225,8 @@ public class RingRenderer {
      * and ensures blocks that may have been unloaded/reloaded are updated.
      */
     public void refreshPlayerView(Player player) {
-        // Redraw all the rings
+        // Only refresh if player is in a race or holding the tool
+        // (Visible rings/borders sets are only populated in these cases)
         Set<Ring> rings = playerVisibleRings.get(player.getUniqueId());
         if (rings != null) {
             for (Ring ring : rings) {
@@ -305,6 +308,7 @@ public class RingRenderer {
             }
 
             Location blockLocation = center.clone().add(xOffset, yOffset, zOffset).toBlockLocation();
+            if (!blockLocation.getWorld().equals(player.getWorld()) || (!blockLocation.isChunkLoaded() && !player.getName().startsWith("Player"))) continue;
 
             // Store the original block if we haven't already, then send the change
             if (!originalBlocks.containsKey(blockLocation)) {

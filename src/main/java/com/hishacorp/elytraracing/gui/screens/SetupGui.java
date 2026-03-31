@@ -38,13 +38,11 @@ public class SetupGui implements Gui {
                 inventory.setItem(19, button(REPEATER, "§eLaps: " + race.getLaps(), "§7Left-click to increase", "§7Right-click to decrease"));
                 inventory.setItem(21, button(CLOCK, "§eReset Delay: " + race.getResetDelay() + "s", "§7Click to cycle through", "§70, 5, 10, 30, 60 seconds"));
                 inventory.setItem(23, button(ENDER_PEARL, "§eDNF Timer: " + race.getDnfTimer() + "s", "§7Click to cycle through", "§710, 30, 60, 120, 300 seconds"));
-                inventory.setItem(25, button(FIREWORK_ROCKET, "§eRocket Cooldown: " + race.getRocketCooldown() + "s", "§7Click to cycle through", "§71, 2, 3, 5, 10 seconds"));
             });
         } else {
             inventory.setItem(19, null);
             inventory.setItem(21, null);
             inventory.setItem(23, null);
-            inventory.setItem(25, null);
         }
     }
 
@@ -117,29 +115,6 @@ public class SetupGui implements Gui {
                             player.sendMessage("§aDNF timer for race '" + editingRace + "' set to " + nextTimer + "s");
                         } catch (Exception e) {
                             player.sendMessage("§cFailed to save DNF timer configuration.");
-                        }
-                        updateRaceConfigItems(player);
-                    });
-                }
-            }
-            case 25 -> {
-                if (editingRace != null) {
-                    plugin.getRaceManager().getRace(editingRace).ifPresent(race -> {
-                        int[] cooldowns = {1, 2, 3, 5, 10};
-                        int currentCooldown = race.getRocketCooldown();
-                        int nextCooldown = cooldowns[0];
-                        for (int i = 0; i < cooldowns.length; i++) {
-                            if (cooldowns[i] == currentCooldown) {
-                                nextCooldown = cooldowns[(i + 1) % cooldowns.length];
-                                break;
-                            }
-                        }
-                        race.setRocketCooldown(nextCooldown);
-                        try {
-                            plugin.getDatabaseManager().updateRaceRocketCooldown(editingRace, nextCooldown);
-                            player.sendMessage("§aRocket cooldown for race '" + editingRace + "' set to " + nextCooldown + "s");
-                        } catch (Exception e) {
-                            player.sendMessage("§cFailed to save rocket cooldown configuration.");
                         }
                         updateRaceConfigItems(player);
                     });

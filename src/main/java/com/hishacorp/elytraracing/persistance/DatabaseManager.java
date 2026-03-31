@@ -56,8 +56,7 @@ public class DatabaseManager {
                     enabled INTEGER DEFAULT 1,
                     laps INTEGER DEFAULT 1,
                     reset_delay INTEGER DEFAULT 0,
-                    dnf_timer INTEGER DEFAULT 30,
-                    rocket_cooldown INTEGER DEFAULT 5
+                    dnf_timer INTEGER DEFAULT 30
                 );
             """);
 
@@ -81,9 +80,6 @@ public class DatabaseManager {
             } catch (SQLException ignored) {}
             try {
                 stmt.executeUpdate("ALTER TABLE races ADD COLUMN dnf_timer INTEGER DEFAULT 30;");
-            } catch (SQLException ignored) {}
-            try {
-                stmt.executeUpdate("ALTER TABLE races ADD COLUMN rocket_cooldown INTEGER DEFAULT 5;");
             } catch (SQLException ignored) {}
 
             // Player stats per race
@@ -191,15 +187,6 @@ public class DatabaseManager {
                 "INSERT INTO races (name, world) VALUES (?, ?)")) {
             ps.setString(1, raceName.toLowerCase());
             ps.setString(2, world);
-            ps.executeUpdate();
-        }
-    }
-
-    public synchronized void updateRaceRocketCooldown(String raceName, int cooldown) throws SQLException {
-        try (var ps = connection.prepareStatement(
-                "UPDATE races SET rocket_cooldown = ? WHERE name = ?")) {
-            ps.setInt(1, cooldown);
-            ps.setString(2, raceName.toLowerCase());
             ps.executeUpdate();
         }
     }
@@ -323,9 +310,8 @@ public class DatabaseManager {
         public final int laps;
         public final int resetDelay;
         public final int dnfTimer;
-        public final int rocketCooldown;
 
-        public RaceData(int id, String name, String world, Location spawn, boolean enabled, int laps, int resetDelay, int dnfTimer, int rocketCooldown) {
+        public RaceData(int id, String name, String world, Location spawn, boolean enabled, int laps, int resetDelay, int dnfTimer) {
             this.id = id;
             this.name = name;
             this.world = world;
@@ -334,7 +320,6 @@ public class DatabaseManager {
             this.laps = laps;
             this.resetDelay = resetDelay;
             this.dnfTimer = dnfTimer;
-            this.rocketCooldown = rocketCooldown;
         }
     }
 
@@ -359,8 +344,7 @@ public class DatabaseManager {
                         rs.getInt("enabled") == 1,
                         rs.getInt("laps"),
                         rs.getInt("reset_delay"),
-                        rs.getInt("dnf_timer"),
-                        rs.getInt("rocket_cooldown")
+                        rs.getInt("dnf_timer")
                 );
             }
             return null;

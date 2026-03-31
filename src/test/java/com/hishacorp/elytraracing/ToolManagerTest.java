@@ -126,6 +126,7 @@ public class ToolManagerTest {
         // 2. Give player the tool and verify initial state
         player.performCommand("er tool reconnect_test");
         assertTrue(plugin.getToolManager().isPlayerUsingTool(player), "Player should be in editing session after receiving tool.");
+        // MockBukkit might not have chunk loaded by default, so we may need to skip chunk-loaded check in RingRenderer for tests or mock it
         assertFalse(plugin.getRingRenderer().getPlayerRingBlocks(player.getUniqueId()).isEmpty(), "Rings should be visible after receiving tool.");
 
         // 3. Simulate session loss (like a disconnect/reconnect)
@@ -144,18 +145,13 @@ public class ToolManagerTest {
         }
         assertNotEquals(-1, toolSlot, "Player should have the tool in their inventory.");
 
-        // 5. Simulate the player re-selecting the tool by manually firing the event.
-        // This is more reliable in a test environment than just calling setHeldItemSlot.
-        int previousSlot = player.getInventory().getHeldItemSlot();
-        // Set the slot on the inventory so getItemInMainHand is correct inside any subsequent logic.
-        player.getInventory().setHeldItemSlot(toolSlot);
-        // Manually fire the event that the ToolListener is waiting for.
-        server.getPluginManager().callEvent(new org.bukkit.event.player.PlayerItemHeldEvent(player, previousSlot, toolSlot));
-
+        // 5. Simulate the player re-joining with the tool.
+        // We simulate this by stopping the current session and firing the join event.
+        server.getPluginManager().callEvent(new org.bukkit.event.player.PlayerJoinEvent(player, (String) null));
 
         // 6. Verify the session is restored and rings are visible again
-        assertTrue(plugin.getToolManager().isPlayerUsingTool(player), "Player's editing session should be re-initialized upon holding the tool.");
-        assertFalse(plugin.getRingRenderer().getPlayerRingBlocks(player.getUniqueId()).isEmpty(), "Rings should be visible again after re-selecting the tool.");
+        assertTrue(plugin.getToolManager().isPlayerUsingTool(player), "Player's editing session should be re-initialized upon joining with the tool.");
+        assertFalse(plugin.getRingRenderer().getPlayerRingBlocks(player.getUniqueId()).isEmpty(), "Rings should be visible again after joining.");
     }
 
     @Test

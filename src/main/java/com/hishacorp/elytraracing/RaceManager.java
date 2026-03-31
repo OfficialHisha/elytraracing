@@ -40,7 +40,7 @@ public class RaceManager {
             for (Player player : Bukkit.getOnlinePlayers()) {
                 ringRenderer.refreshPlayerView(player);
             }
-        }, 100L, 100L); // Every 5 seconds
+        }, 40L, 40L); // Every 2 seconds
     }
 
     private void startScoreboardUpdateTask() {
@@ -73,7 +73,6 @@ public class RaceManager {
                     race.setLaps(raceData.laps);
                     race.setResetDelay(raceData.resetDelay);
                     race.setDnfTimer(raceData.dnfTimer);
-                    race.setRocketCooldown(raceData.rocketCooldown);
 
                     var world = Bukkit.getWorld(raceData.world);
                     List<Border> borders = plugin.getDatabaseManager().getBorders(raceData.id, world).stream()
@@ -148,7 +147,6 @@ public class RaceManager {
                         race.setLaps(raceData.laps);
                         race.setResetDelay(raceData.resetDelay);
                         race.setDnfTimer(raceData.dnfTimer);
-                        race.setRocketCooldown(raceData.rocketCooldown);
 
                         var world = Bukkit.getWorld(raceData.world);
                         List<Border> borders = plugin.getDatabaseManager().getBorders(raceData.id, world).stream()

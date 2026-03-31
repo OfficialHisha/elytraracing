@@ -32,6 +32,15 @@ public class RaceManager {
         this.plugin = plugin;
         this.ringRenderer = new RingRenderer();
         startScoreboardUpdateTask();
+        startRingRefreshTask();
+    }
+
+    private void startRingRefreshTask() {
+        Bukkit.getScheduler().runTaskTimer(plugin, () -> {
+            for (Player player : Bukkit.getOnlinePlayers()) {
+                ringRenderer.refreshPlayerView(player);
+            }
+        }, 100L, 100L); // Every 5 seconds
     }
 
     private void startScoreboardUpdateTask() {

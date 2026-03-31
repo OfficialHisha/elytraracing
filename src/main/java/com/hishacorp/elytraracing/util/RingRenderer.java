@@ -217,6 +217,41 @@ public class RingRenderer {
         revertBlocksForPlayer(player);
     }
 
+    /**
+     * Refresh the player's view by re-drawing rings and borders.
+     * Unlike updatePlayerView, this doesn't revert first to minimize flicker
+     * and ensures blocks that may have been unloaded/reloaded are updated.
+     */
+    public void refreshPlayerView(Player player) {
+        // Redraw all the rings
+        Set<Ring> rings = playerVisibleRings.get(player.getUniqueId());
+        if (rings != null) {
+            for (Ring ring : rings) {
+                drawRing(player, ring, false);
+            }
+        }
+
+        // Redraw the configuring ring
+        Ring configuringRing = playerConfiguringRing.get(player.getUniqueId());
+        if (configuringRing != null) {
+            drawRing(player, configuringRing, true);
+        }
+
+        // Redraw saved borders
+        List<Border> borders = playerVisibleBorders.get(player.getUniqueId());
+        if (borders != null) {
+            for (Border border : borders) {
+                drawBorder(player, border, Material.LIME_STAINED_GLASS);
+            }
+        }
+
+        // Redraw selection
+        Border selection = playerSelection.get(player.getUniqueId());
+        if (selection != null) {
+            drawBorder(player, selection, Material.ORANGE_STAINED_GLASS);
+        }
+    }
+
     public void setVisibleRings(Player player, Set<Ring> rings) {
         playerVisibleRings.put(player.getUniqueId(), rings);
     }

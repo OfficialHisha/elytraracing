@@ -2,7 +2,9 @@ package com.hishacorp.elytraracing.model;
 
 import org.bukkit.entity.Player;
 
+import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class Racer {
 
@@ -15,6 +17,7 @@ public class Racer {
     private int currentLap;
     private long bestLapTime = -1;
     private long lastLapStartTime;
+    private final Map<Integer, Long> specialRingCooldowns = new ConcurrentHashMap<>();
 
     public Racer(Player player) {
         this.uuid = player.getUniqueId();
@@ -86,5 +89,9 @@ public class Racer {
 
     public void setLastLapStartTime(long lastLapStartTime) {
         this.lastLapStartTime = lastLapStartTime;
+    }
+
+    public Map<Integer, Long> getSpecialRingCooldowns() {
+        return specialRingCooldowns;
     }
 }

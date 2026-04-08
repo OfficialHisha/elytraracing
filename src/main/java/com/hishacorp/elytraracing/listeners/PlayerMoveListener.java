@@ -42,10 +42,16 @@ public class PlayerMoveListener implements Listener {
                     }
 
                     int nextRingIndex = racer.getCurrentRingIndex();
-                    if (nextRingIndex < race.getRings().size()) {
-                        Ring nextRing = race.getRings().get(nextRingIndex);
+                    if (nextRingIndex < race.getRequiredRings().size()) {
+                        Ring nextRing = race.getRequiredRings().get(nextRingIndex);
                         if (player.getLocation().distanceSquared(nextRing.getLocation()) <= nextRing.getRadius() * nextRing.getRadius()) {
                             race.playerPassedRing(player);
+                        }
+                    }
+
+                    for (Ring specialRing : race.getSpecialRings()) {
+                        if (player.getLocation().distanceSquared(specialRing.getLocation()) <= specialRing.getRadius() * specialRing.getRadius()) {
+                            race.playerPassedSpecialRing(player, specialRing);
                         }
                     }
                 }

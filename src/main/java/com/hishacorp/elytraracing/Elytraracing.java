@@ -12,9 +12,12 @@ import com.hishacorp.elytraracing.persistance.DatabaseManager;
 import com.hishacorp.elytraracing.placeholders.StatExpansion;
 import com.hishacorp.elytraracing.scoreboard.ScoreboardManager;
 import com.hishacorp.elytraracing.util.RingRenderer;
+import org.bukkit.Material;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.Map;
 
 public class Elytraracing extends JavaPlugin {
 
@@ -26,6 +29,7 @@ public class Elytraracing extends JavaPlugin {
     private RingManager ringManager;
     private ToolManager toolManager;
     private RingRenderer ringRenderer;
+    private final Map<Material, String> specialRings = new HashMap<>();
 
     @Override
     public void onEnable() {
@@ -53,6 +57,7 @@ public class Elytraracing extends JavaPlugin {
             return;
         }
 
+        loadSpecialRings();
         raceManager.loadRaces();
 
         getCommand("er").setExecutor(new ERCommand(this));
@@ -72,6 +77,32 @@ public class Elytraracing extends JavaPlugin {
         if (databaseManager != null) {
             databaseManager.close();
         }
+    }
+
+    private void loadSpecialRings() {
+        specialRings.clear();
+        if (getConfig().contains("special-rings")) {
+            org.bukkit.configuration.ConfigurationSection section = getConfig().getConfigurationSection("special-rings");
+            if (section != null) {
+                for (String key : section.getKeys(false)) {
+                    try {
+                        Material material = Material.valueOf(key.toUpperCase());
+                        String command = section.getString(key);
+                        specialRings.put(material, command);
+                    } catch (IllegalArgumentException e) {
+                        getLogger().warning("Invalid material in special-rings config: " + key);
+                    }
+                }
+            }
+        }
+    }
+
+    public String getSpecialRingCommand(Material material) {
+        return specialRings.get(material);
+    }
+
+    public boolean isSpecialRing(Material material) {
+        return specialRings.containsKey(material);
     }
 
     public GuiManager getGuiManager() {

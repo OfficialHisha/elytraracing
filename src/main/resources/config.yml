@@ -1,3 +1,11 @@
 firework-replenishment-cooldown: 5
 dnf-timer: 30
 scoreboard-update-interval: 1
+
+# Special rings configuration
+# Format: MATERIAL_NAME: "command to execute"
+# Use %player% as a placeholder for the player's name.
+# These rings are optional and do not count towards race progression.
+special-rings:
+  GOLD_BLOCK: "speed give %player% 5 2"
+  DIAMOND_BLOCK: "firework %player%"

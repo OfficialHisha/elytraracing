@@ -25,6 +25,8 @@ public class Race {
     private Location spawnLocation;
     private final List<Border> borders = new ArrayList<>();
     private final List<Ring> rings = new ArrayList<>();
+    private final List<Ring> requiredRings = new ArrayList<>();
+    private final List<Ring> specialRings = new ArrayList<>();
     private final Map<UUID, Racer> racers = new HashMap<>();
     private final Map<UUID, Player> spectators = new HashMap<>();
     private final Map<UUID, BukkitTask> cooldownTasks = new HashMap<>();
@@ -49,6 +51,15 @@ public class Race {
     public void setRings(List<Ring> rings) {
         this.rings.clear();
         this.rings.addAll(rings);
+        this.requiredRings.clear();
+        this.specialRings.clear();
+        for (Ring ring : rings) {
+            if (plugin.isSpecialRing(ring.getMaterial())) {
+                specialRings.add(ring);
+            } else {
+                requiredRings.add(ring);
+            }
+        }
     }
 
     public void startCountdown(int seconds) {
@@ -137,13 +148,13 @@ public class Race {
         }
 
         int nextRingIndex = racer.getCurrentRingIndex();
-        if (nextRingIndex >= rings.size()) {
+        if (nextRingIndex >= requiredRings.size()) {
             return; // Should not happen
         }
 
         racer.setCurrentRingIndex(nextRingIndex + 1);
 
-        if (racer.getCurrentRingIndex() >= rings.size()) {
+        if (racer.getCurrentRingIndex() >= requiredRings.size()) {
             long now = System.currentTimeMillis();
             long lapTime = now - racer.getLastLapStartTime();
             if (racer.getBestLapTime() == -1 || lapTime < racer.getBestLapTime()) {
@@ -154,14 +165,40 @@ public class Race {
                 racer.setCurrentLap(racer.getCurrentLap() + 1);
                 racer.setCurrentRingIndex(0);
                 racer.setLastLapStartTime(now);
-                plugin.getRaceManager().getRingRenderer().updateRingHighlight(player, rings.get(nextRingIndex), rings.get(0));
+                plugin.getRaceManager().getRingRenderer().updateRingHighlight(player, requiredRings.get(nextRingIndex), requiredRings.get(0));
                 player.sendMessage("§aYou completed lap " + (racer.getCurrentLap() - 1) + "! Best lap: " + formatTime(racer.getBestLapTime()));
             } else {
                 playerFinished(player);
             }
         } else {
-            plugin.getRaceManager().getRingRenderer().updateRingHighlight(player, rings.get(nextRingIndex), rings.get(racer.getCurrentRingIndex()));
+            plugin.getRaceManager().getRingRenderer().updateRingHighlight(player, requiredRings.get(nextRingIndex), requiredRings.get(racer.getCurrentRingIndex()));
             player.sendMessage("§aYou passed a ring! Next ring: " + (racer.getCurrentRingIndex() + 1));
+        }
+    }
+
+    public void playerPassedSpecialRing(Player player, Ring ring) {
+        if (!inProgress) {
+            return;
+        }
+
+        Racer racer = racers.get(player.getUniqueId());
+        if (racer == null || racer.isCompleted()) {
+            return;
+        }
+
+        long now = System.currentTimeMillis();
+        long lastTrigger = racer.getSpecialRingCooldowns().getOrDefault(ring.getId(), 0L);
+        if (now - lastTrigger < 1000) {
+            return;
+        }
+
+        racer.getSpecialRingCooldowns().put(ring.getId(), now);
+
+        String commandTemplate = plugin.getSpecialRingCommand(ring.getMaterial());
+        if (commandTemplate != null) {
+            String command = commandTemplate.replace("%player%", player.getName());
+            plugin.getLogger().info("Executing special ring command: " + command);
+            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command);
         }
     }
 
@@ -363,6 +400,14 @@ public class Race {
         return rings;
     }
 
+    public List<Ring> getRequiredRings() {
+        return requiredRings;
+    }
+
+    public List<Ring> getSpecialRings() {
+        return specialRings;
+    }
+
     public Map<UUID, Racer> getRacers() {
         return racers;
     }
@@ -432,8 +477,8 @@ public class Race {
                 return 0;
             }
 
-            Location nextRingLocation1 = rings.get(r1.getCurrentRingIndex()).getLocation();
-            Location nextRingLocation2 = rings.get(r2.getCurrentRingIndex()).getLocation();
+            Location nextRingLocation1 = requiredRings.get(r1.getCurrentRingIndex()).getLocation();
+            Location nextRingLocation2 = requiredRings.get(r2.getCurrentRingIndex()).getLocation();
 
             double distance1 = p1.getLocation().distanceSquared(nextRingLocation1);
             double distance2 = p2.getLocation().distanceSquared(nextRingLocation2);

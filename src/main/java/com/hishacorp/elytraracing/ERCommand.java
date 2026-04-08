@@ -25,7 +25,7 @@ public class ERCommand implements CommandExecutor {
 
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (args.length == 0) {
-            sender.sendMessage("§eUsage: /er <setup|tool|create|delete|time|setspawn|resetstats|join|leave|rings|list|enable|disable>");
+            sender.sendMessage("§eUsage: /er <setup|tool|create|delete|start|end|time|setspawn|reset|resetstats|join|leave|spectate|rings|list|enable|disable|tp|seespectators>");
             return true;
         }
 
@@ -274,6 +274,18 @@ public class ERCommand implements CommandExecutor {
                         sender.sendMessage("§aRace '" + raceName + "' has been reset.");
                     }
                 }, () -> sender.sendMessage("§cRace not found: " + raceName));
+            }
+
+            case "seespectators" -> {
+                if (!sender.hasPermission(SEESPECTATORS.getPermission())) {
+                    sender.sendMessage("§cYou do not have permission to use this command");
+                    return true;
+                }
+                if (sender instanceof Player player) {
+                    plugin.getRaceManager().toggleSeeSpectators(player);
+                    boolean canSee = plugin.getRaceManager().canSeeSpectators(player);
+                    player.sendMessage("§aSee Spectators: " + (canSee ? "§aON" : "§cOFF"));
+                }
             }
 
             case "list" -> {

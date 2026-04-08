@@ -169,6 +169,8 @@ public class SpectatorTest {
         spectator.nextMessage();
 
         server.execute("er", admin, "start", raceName);
+        server.getScheduler().performOneTick(); // Advance for countdown task
+        server.getScheduler().performTicks(100); // 5 seconds * 20 ticks
         server.execute("er", admin, "end", raceName);
 
         assertTrue(raceManager.isPlayerInRace(spectator));

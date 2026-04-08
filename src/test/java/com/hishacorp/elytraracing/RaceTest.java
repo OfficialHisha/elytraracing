@@ -36,7 +36,7 @@ public class RaceTest {
         // Given
         Race race = new Race(plugin, "test-race");
         PlayerMock player = server.addPlayer();
-        ItemStack[] originalInventory = player.getInventory().getContents();
+        player.getInventory().addItem(new ItemStack(Material.DIAMOND));
         race.addPlayer(player);
 
         // When
@@ -44,6 +44,8 @@ public class RaceTest {
 
         // Then
         player.assertSaid("§aThe race has started!");
+        assertEquals(org.bukkit.GameMode.SURVIVAL, player.getGameMode());
+        assertFalse(player.getInventory().contains(Material.DIAMOND));
         assertNotNull(player.getInventory().getChestplate());
         assertEquals(Material.ELYTRA, player.getInventory().getChestplate().getType());
         assertTrue(player.getInventory().contains(Material.FIREWORK_ROCKET));

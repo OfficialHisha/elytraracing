@@ -55,7 +55,9 @@ public class DatabaseManager {
                     spawn_pitch REAL,
                     enabled INTEGER DEFAULT 1,
                     laps INTEGER DEFAULT 1,
-                    reset_delay INTEGER DEFAULT 0
+                    reset_delay INTEGER DEFAULT 0,
+                    dnf_timer INTEGER DEFAULT 30,
+                    rocket_cooldown INTEGER
                 );
             """);
 
@@ -76,6 +78,12 @@ public class DatabaseManager {
             } catch (SQLException ignored) {}
             try {
                 stmt.executeUpdate("ALTER TABLE races ADD COLUMN reset_delay INTEGER DEFAULT 0;");
+            } catch (SQLException ignored) {}
+            try {
+                stmt.executeUpdate("ALTER TABLE races ADD COLUMN dnf_timer INTEGER DEFAULT 30;");
+            } catch (SQLException ignored) {}
+            try {
+                stmt.executeUpdate("ALTER TABLE races ADD COLUMN rocket_cooldown INTEGER;");
             } catch (SQLException ignored) {}
 
             // Player stats per race
@@ -183,6 +191,28 @@ public class DatabaseManager {
                 "INSERT INTO races (name, world) VALUES (?, ?)")) {
             ps.setString(1, raceName.toLowerCase());
             ps.setString(2, world);
+            ps.executeUpdate();
+        }
+    }
+
+    public synchronized void updateRaceRocketCooldown(String raceName, int cooldown) throws SQLException {
+        try (var ps = connection.prepareStatement(
+                "UPDATE races SET rocket_cooldown = ? WHERE name = ?")) {
+            if (cooldown == -1) {
+                ps.setNull(1, java.sql.Types.INTEGER);
+            } else {
+                ps.setInt(1, cooldown);
+            }
+            ps.setString(2, raceName.toLowerCase());
+            ps.executeUpdate();
+        }
+    }
+
+    public synchronized void updateRaceDnfTimer(String raceName, int dnfTimer) throws SQLException {
+        try (var ps = connection.prepareStatement(
+                "UPDATE races SET dnf_timer = ? WHERE name = ?")) {
+            ps.setInt(1, dnfTimer);
+            ps.setString(2, raceName.toLowerCase());
             ps.executeUpdate();
         }
     }
@@ -296,8 +326,10 @@ public class DatabaseManager {
         public final boolean enabled;
         public final int laps;
         public final int resetDelay;
+        public final int dnfTimer;
+        public final Integer rocketCooldown;
 
-        public RaceData(int id, String name, String world, Location spawn, boolean enabled, int laps, int resetDelay) {
+        public RaceData(int id, String name, String world, Location spawn, boolean enabled, int laps, int resetDelay, int dnfTimer, Integer rocketCooldown) {
             this.id = id;
             this.name = name;
             this.world = world;
@@ -305,6 +337,8 @@ public class DatabaseManager {
             this.enabled = enabled;
             this.laps = laps;
             this.resetDelay = resetDelay;
+            this.dnfTimer = dnfTimer;
+            this.rocketCooldown = rocketCooldown;
         }
     }
 
@@ -328,7 +362,9 @@ public class DatabaseManager {
                         spawn,
                         rs.getInt("enabled") == 1,
                         rs.getInt("laps"),
-                        rs.getInt("reset_delay")
+                        rs.getInt("reset_delay"),
+                        rs.getInt("dnf_timer"),
+                        rs.getInt("rocket_cooldown")
                 );
             }
             return null;

@@ -37,6 +37,7 @@ public class Race {
     private int laps = 1;
     private int resetDelay = 0;
     private int dnfTimer = 30;
+    private Integer rocketCooldown;
 
     public Race(Elytraracing plugin, String name) {
         this.plugin = plugin;
@@ -175,7 +176,8 @@ public class Race {
             cooldownTasks.get(player.getUniqueId()).cancel();
         }
 
-        long cooldown = plugin.getConfig().getLong("firework-replenishment-cooldown", 5) * 20;
+        long cooldownSeconds = rocketCooldown != null ? rocketCooldown : plugin.getConfig().getLong("firework-replenishment-cooldown", 5);
+        long cooldownTicks = cooldownSeconds * 20;
 
         BukkitTask task = Bukkit.getScheduler().runTaskLater(plugin, () -> {
             if (player.isOnline() && getRacers().containsKey(player.getUniqueId())) {
@@ -184,7 +186,7 @@ public class Race {
                 }
             }
             cooldownTasks.remove(player.getUniqueId());
-        }, cooldown);
+        }, cooldownTicks);
 
         cooldownTasks.put(player.getUniqueId(), task);
     }
@@ -394,6 +396,14 @@ public class Race {
 
     public void setDnfTimer(int dnfTimer) {
         this.dnfTimer = dnfTimer;
+    }
+
+    public Integer getRocketCooldown() {
+        return rocketCooldown;
+    }
+
+    public void setRocketCooldown(Integer rocketCooldown) {
+        this.rocketCooldown = rocketCooldown;
     }
 
     public List<Racer> getRankings() {

@@ -27,6 +27,7 @@ public class Race {
     private final List<Ring> rings = new ArrayList<>();
     private final List<Ring> requiredRings = new ArrayList<>();
     private final List<Ring> specialRings = new ArrayList<>();
+    private final Map<Integer, Long> globalSpecialRingCooldowns = new HashMap<>();
     private final Map<UUID, Racer> racers = new HashMap<>();
     private final Map<UUID, Player> spectators = new HashMap<>();
     private final Map<UUID, BukkitTask> cooldownTasks = new HashMap<>();
@@ -186,19 +187,33 @@ public class Race {
             return;
         }
 
-        long now = System.currentTimeMillis();
-        long lastTrigger = racer.getSpecialRingCooldowns().getOrDefault(ring.getId(), 0L);
-        if (now - lastTrigger < 1000) {
+        Elytraracing.SpecialRingConfig config = plugin.getSpecialRingConfig(ring.getMaterial());
+        if (config == null) {
             return;
         }
 
-        racer.getSpecialRingCooldowns().put(ring.getId(), now);
+        long now = System.currentTimeMillis();
+        if (config.global()) {
+            long lastTrigger = globalSpecialRingCooldowns.getOrDefault(ring.getId(), 0L);
+            if (now - lastTrigger < config.cooldown()) {
+                return;
+            }
+            globalSpecialRingCooldowns.put(ring.getId(), now);
+        } else {
+            long lastTrigger = racer.getSpecialRingCooldowns().getOrDefault(ring.getId(), 0L);
+            if (now - lastTrigger < config.cooldown()) {
+                return;
+            }
+            racer.getSpecialRingCooldowns().put(ring.getId(), now);
+        }
 
-        String commandTemplate = plugin.getSpecialRingCommand(ring.getMaterial());
+        String commandTemplate = config.command();
         if (commandTemplate != null) {
             String command = commandTemplate.replace("%player%", player.getName());
-            plugin.getLogger().info("Executing special ring command: " + command);
-            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command);
+            Bukkit.getScheduler().runTask(plugin, () -> {
+                plugin.getLogger().info("Executing special ring command: " + command);
+                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command);
+            });
         }
     }
 
@@ -357,6 +372,7 @@ public class Race {
     public void resetState() {
         this.inProgress = false;
         this.startTime = 0;
+        this.globalSpecialRingCooldowns.clear();
         if (dnfTask != null) {
             dnfTask.cancel();
             dnfTask = null;

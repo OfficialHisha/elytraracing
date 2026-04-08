@@ -3,9 +3,16 @@ dnf-timer: 30
 scoreboard-update-interval: 1
 
 # Special rings configuration
-# Format: MATERIAL_NAME: "command to execute"
 # Use %player% as a placeholder for the player's name.
 # These rings are optional and do not count towards race progression.
+# cooldown is in milliseconds.
+# global-cooldown if true will prevent anyone from using it during the cooldown period.
 special-rings:
-  GOLD_BLOCK: "speed give %player% 5 2"
-  DIAMOND_BLOCK: "firework %player%"
+  GOLD_BLOCK:
+    command: "speed give %player% 5 2"
+    cooldown: 1000
+    global-cooldown: false
+  DIAMOND_BLOCK:
+    command: "firework %player%"
+    cooldown: 5000
+    global-cooldown: true

@@ -29,7 +29,9 @@ public class Elytraracing extends JavaPlugin {
     private RingManager ringManager;
     private ToolManager toolManager;
     private RingRenderer ringRenderer;
-    private final Map<Material, String> specialRings = new HashMap<>();
+    private final Map<Material, SpecialRingConfig> specialRings = new HashMap<>();
+
+    public record SpecialRingConfig(String command, long cooldown, boolean global) {}
 
     @Override
     public void onEnable() {
@@ -87,8 +89,22 @@ public class Elytraracing extends JavaPlugin {
                 for (String key : section.getKeys(false)) {
                     try {
                         Material material = Material.valueOf(key.toUpperCase());
-                        String command = section.getString(key);
-                        specialRings.put(material, command);
+                        String command;
+                        long cooldown = 1000;
+                        boolean global = false;
+
+                        if (section.isConfigurationSection(key)) {
+                            org.bukkit.configuration.ConfigurationSection ringSection = section.getConfigurationSection(key);
+                            command = ringSection.getString("command");
+                            cooldown = ringSection.getLong("cooldown", 1000);
+                            global = ringSection.getBoolean("global-cooldown", false);
+                        } else {
+                            command = section.getString(key);
+                        }
+
+                        if (command != null) {
+                            specialRings.put(material, new SpecialRingConfig(command, cooldown, global));
+                        }
                     } catch (IllegalArgumentException e) {
                         getLogger().warning("Invalid material in special-rings config: " + key);
                     }
@@ -97,7 +113,7 @@ public class Elytraracing extends JavaPlugin {
         }
     }
 
-    public String getSpecialRingCommand(Material material) {
+    public SpecialRingConfig getSpecialRingConfig(Material material) {
         return specialRings.get(material);
     }
 

@@ -25,7 +25,7 @@ public class ERCommand implements CommandExecutor {
 
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (args.length == 0) {
-            sender.sendMessage("§eUsage: /er <setup|tool|create|delete|time|setspawn|resetstats|join|leave|rings|list|enable|disable>");
+            sender.sendMessage("§eUsage: /er <setup|tool|create|delete|start|end|time|setspawn|reset|resetstats|join|leave|spectate|rings|list|enable|disable|tp|seespectators>");
             return true;
         }
 

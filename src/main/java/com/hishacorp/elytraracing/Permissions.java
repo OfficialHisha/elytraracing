@@ -11,13 +11,13 @@ public enum Permissions {
     START("elytraracing.admin.start"),
     END("elytraracing.admin.end"),
     RINGS("elytraracing.admin.rings"),
-    SPECTATE("elytraracing.spectator.spectate"),
-    TP("elytraracing.spectator.tp"),
     LIST("elytraracing.admin.list"),
     ENABLE("elytraracing.admin.enable"),
     DISABLE("elytraracing.admin.disable"),
     RESET("elytraracing.admin.reset"),
     SEESPECTATORS("elytraracing.admin.seespectators"),
+    SPECTATE("elytraracing.spectator.spectate"),
+    TP("elytraracing.spectator.tp"),
     JOIN("elytraracing.racer.join");
 
     private final String permission;

@@ -24,6 +24,7 @@ permissions:
       elytraracing.admin.end: true
       elytraracing.admin.rings: true
       elytraracing.admin.reset: true
+      elytraracing.admin.seespectators: true
   elytraracing.spectator:
     description: "Spectator permissions for the Elytra Racing plugin"
     default: true
@@ -38,5 +39,5 @@ permissions:
 commands:
   er:
     description: "Command for interacting with the Elytra Racing plugin"
-    usage: "/er <setup|tool|create|delete|time|setspawn|resetstats|join|leave|rings|list|enable|disable>"
+    usage: "/er <setup|tool|create|delete|start|end|time|setspawn|reset|resetstats|join|leave|spectate|rings|list|enable|disable|tp|seespectators>"
     aliases: [elytraracing]

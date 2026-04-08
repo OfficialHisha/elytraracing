@@ -355,7 +355,6 @@ public class DatabaseManager {
                     spawn = new Location(world, rs.getDouble("spawn_x"), rs.getDouble("spawn_y"), rs.getDouble("spawn_z"), (float) rs.getDouble("spawn_yaw"), (float) rs.getDouble("spawn_pitch"));
                 }
 
-                Integer rocketCooldown = rs.getObject("rocket_cooldown") != null ? rs.getInt("rocket_cooldown") : null;
                 return new RaceData(
                         rs.getInt("id"),
                         rs.getString("name"),
@@ -365,7 +364,7 @@ public class DatabaseManager {
                         rs.getInt("laps"),
                         rs.getInt("reset_delay"),
                         rs.getInt("dnf_timer"),
-                        rocketCooldown
+                        rs.getInt("rocket_cooldown")
                 );
             }
             return null;

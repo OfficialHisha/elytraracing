@@ -101,7 +101,7 @@ public class RingConfigGui implements Gui {
                 });
                 break;
             case 14: // Material
-                plugin.getGuiManager().openGui(player, new MaterialSelectionGui(allowedMaterials, material -> {
+                plugin.getGuiManager().openGui(player, new MaterialSelectionGui(plugin, allowedMaterials, material -> {
                     ring.setMaterial(material);
                     plugin.getRaceManager().getRace(ring.getRaceId()).ifPresent(race -> {
                         race.setRings(plugin.getRingManager().getRings(ring.getRaceId()));

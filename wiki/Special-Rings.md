@@ -10,16 +10,11 @@ Special rings are defined by their material. You can configure them in the `spec
 
 ```yaml
 special-rings:
-  GOLD_BLOCK:
-    command: "effect give %player% speed 5 2"
-    cooldown: 1000
-    global-cooldown: false
-    enabled: false
   DIAMOND_BLOCK:
-    command: "firework %player%"
+    command: "give %player% minecraft:firework_rocket"
     cooldown: 5000
     global-cooldown: true
-    enabled: false
+    enabled: true
 ```
 
 ### Settings Breakdown

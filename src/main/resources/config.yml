@@ -8,13 +8,8 @@ scoreboard-update-interval: 1
 # cooldown is in milliseconds.
 # global-cooldown if true will prevent anyone from using it during the cooldown period.
 special-rings:
-  GOLD_BLOCK:
-    command: "speed give %player% 5 2"
-    cooldown: 1000
-    global-cooldown: false
-    enabled: false
   DIAMOND_BLOCK:
-    command: "firework %player%"
+    command: "give %player% minecraft:firework_rocket"
     cooldown: 5000
     global-cooldown: true
     enabled: false

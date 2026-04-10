@@ -1,6 +1,6 @@
 # Rings and Borders
 
-Effective track management is key to creating engaging races. All track modifications are handled via the **Elytra Racing Tool**.
+Rings and borders are used to define waypoints and boundaries for your race tracks. All track modifications are handled via the **Elytra Racing Tool**.
 
 ## Managing Rings
 

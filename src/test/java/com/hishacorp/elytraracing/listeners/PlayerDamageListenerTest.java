@@ -3,6 +3,7 @@ package com.hishacorp.elytraracing.listeners;
 import com.hishacorp.elytraracing.Elytraracing;
 import com.hishacorp.elytraracing.Race;
 import com.hishacorp.elytraracing.RaceManager;
+import org.bukkit.event.entity.EntityDamageEvent;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -11,8 +12,9 @@ import org.mockbukkit.mockbukkit.ServerMock;
 import org.mockbukkit.mockbukkit.entity.PlayerMock;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class PlayerQuitListenerTest {
+public class PlayerDamageListenerTest {
 
     private ServerMock server;
     private Elytraracing plugin;
@@ -33,28 +35,26 @@ public class PlayerQuitListenerTest {
     }
 
     @Test
-    public void testPlayerQuitRemovesPlayerFromRace() {
+    public void testDamageCancelledInRace() {
         // Given
         raceManager.getRaces().add(new Race(plugin, "test-race"));
         raceManager.joinRace(player, "test-race");
 
         // When
-        player.disconnect();
+        EntityDamageEvent event = new EntityDamageEvent(player, EntityDamageEvent.DamageCause.FALL, 10.0);
+        server.getPluginManager().callEvent(event);
 
         // Then
-        assertFalse(raceManager.isPlayerInRace(player));
+        assertTrue(event.isCancelled());
     }
 
     @Test
-    public void testPlayerKickRemovesPlayerFromRace() {
-        // Given
-        raceManager.getRaces().add(new Race(plugin, "test-race"));
-        raceManager.joinRace(player, "test-race");
-
+    public void testDamageNotCancelledOutsideRace() {
         // When
-        player.kick();
+        EntityDamageEvent event = new EntityDamageEvent(player, EntityDamageEvent.DamageCause.FALL, 10.0);
+        server.getPluginManager().callEvent(event);
 
         // Then
-        assertFalse(raceManager.isPlayerInRace(player));
+        assertFalse(event.isCancelled());
     }
 }

@@ -1,5 +1,6 @@
 package com.hishacorp.elytraracing.util;
 
+import com.hishacorp.elytraracing.Elytraracing;
 import com.hishacorp.elytraracing.model.Border;
 import com.hishacorp.elytraracing.model.Ring;
 import org.bukkit.Location;
@@ -12,8 +13,11 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class RingRenderer {
 
-    // A map of players to the rings they are currently viewing.
-    private final Map<UUID, Set<Ring>> playerVisibleRings = new ConcurrentHashMap<>();
+    private final Elytraracing plugin;
+    // A map of players to the rings they are viewing because they are in a race.
+    private final Map<UUID, Set<Ring>> racerVisibleRings = new ConcurrentHashMap<>();
+    // A map of players to the rings they are viewing because they are editing a race.
+    private final Map<UUID, Set<Ring>> editorVisibleRings = new ConcurrentHashMap<>();
     // A map of players to the ring they are currently configuring.
     private final Map<UUID, Ring> playerConfiguringRing = new ConcurrentHashMap<>();
     // A map of players to the locations of the blocks that have been changed for them.
@@ -21,18 +25,23 @@ public class RingRenderer {
     // A map of players to a map of block locations to the ring they belong to.
     private final Map<UUID, Map<Location, Ring>> playerRingBlocks = new ConcurrentHashMap<>();
     private final Map<UUID, Integer> playerNextRing = new ConcurrentHashMap<>();
-    private final Map<UUID, List<Border>> playerVisibleBorders = new ConcurrentHashMap<>();
+    // A map of players to the borders they are viewing because they are editing a race.
+    private final Map<UUID, List<Border>> editorVisibleBorders = new ConcurrentHashMap<>();
     private final Map<UUID, Border> playerSelection = new ConcurrentHashMap<>();
     private static final Material HIGHLIGHT_MATERIAL = Material.GOLD_BLOCK;
 
+    public RingRenderer(Elytraracing plugin) {
+        this.plugin = plugin;
+    }
+
     public void addRingForPlayer(Player player, Ring ring) {
-        playerVisibleRings.computeIfAbsent(player.getUniqueId(), k -> new HashSet<>()).add(ring);
+        editorVisibleRings.computeIfAbsent(player.getUniqueId(), k -> new HashSet<>()).add(ring);
         playerRingBlocks.computeIfAbsent(player.getUniqueId(), k -> new HashMap<>()).put(ring.getLocation(), ring);
         updatePlayerView(player);
     }
 
     public void removeRingForPlayer(Player player, Ring ring) {
-        Set<Ring> rings = playerVisibleRings.get(player.getUniqueId());
+        Set<Ring> rings = editorVisibleRings.get(player.getUniqueId());
         if (rings != null) {
             rings.remove(ring);
         }
@@ -48,12 +57,27 @@ public class RingRenderer {
         updatePlayerView(player);
     }
 
+    public void clearRacerView(Player player) {
+        racerVisibleRings.remove(player.getUniqueId());
+        playerNextRing.remove(player.getUniqueId());
+        updatePlayerView(player);
+    }
+
+    public void clearEditorView(Player player) {
+        editorVisibleRings.remove(player.getUniqueId());
+        editorVisibleBorders.remove(player.getUniqueId());
+        playerConfiguringRing.remove(player.getUniqueId());
+        playerSelection.remove(player.getUniqueId());
+        updatePlayerView(player);
+    }
+
     public void clearRingsForPlayer(Player player) {
-        playerVisibleRings.remove(player.getUniqueId());
+        racerVisibleRings.remove(player.getUniqueId());
+        editorVisibleRings.remove(player.getUniqueId());
         playerConfiguringRing.remove(player.getUniqueId());
         playerRingBlocks.computeIfAbsent(player.getUniqueId(), k -> new HashMap<>()).clear();
         playerNextRing.remove(player.getUniqueId());
-        playerVisibleBorders.remove(player.getUniqueId());
+        editorVisibleBorders.remove(player.getUniqueId());
         playerSelection.remove(player.getUniqueId());
         revertBlocksForPlayer(player);
     }
@@ -81,12 +105,19 @@ public class RingRenderer {
         // Clear the mapping of blocks to rings for this player
         playerRingBlocks.computeIfAbsent(player.getUniqueId(), k -> new HashMap<>()).clear();
 
+        // Determine all rings that should be visible
+        Set<Ring> visibleRings = new HashSet<>();
+        Set<Ring> racerRings = racerVisibleRings.get(player.getUniqueId());
+        if (racerRings != null) visibleRings.addAll(racerRings);
+
+        Set<Ring> editorRings = editorVisibleRings.get(player.getUniqueId());
+        if (editorRings != null && plugin.getToolManager().isHoldingTool(player)) {
+            visibleRings.addAll(editorRings);
+        }
+
         // Draw all the rings
-        Set<Ring> rings = playerVisibleRings.get(player.getUniqueId());
-        if (rings != null) {
-            for (Ring ring : rings) {
-                drawRing(player, ring, false);
-            }
+        for (Ring ring : visibleRings) {
+            drawRing(player, ring, false);
         }
 
         // Redraw the configuring ring with a different material
@@ -95,22 +126,29 @@ public class RingRenderer {
             drawRing(player, configuringRing, true);
         }
 
-        // Draw saved borders
-        List<Border> borders = playerVisibleBorders.get(player.getUniqueId());
-        if (borders != null) {
-            for (Border border : borders) {
-                drawBorder(player, border, Material.LIME_STAINED_GLASS);
+        // Determine all borders that should be visible
+        List<Border> visibleBorders = new ArrayList<>();
+
+        if (plugin.getToolManager().isHoldingTool(player)) {
+            List<Border> editorBorders = editorVisibleBorders.get(player.getUniqueId());
+            if (editorBorders != null) {
+                visibleBorders.addAll(editorBorders);
             }
+        }
+
+        // Draw saved borders
+        for (Border border : visibleBorders) {
+            drawBorder(player, border, Material.LIME_STAINED_GLASS, visibleBorders);
         }
 
         // Draw selection
         Border selection = playerSelection.get(player.getUniqueId());
         if (selection != null) {
-            drawBorder(player, selection, Material.ORANGE_STAINED_GLASS);
+            drawBorder(player, selection, Material.ORANGE_STAINED_GLASS, visibleBorders);
         }
     }
 
-    private void drawBorder(Player player, Border border, Material material) {
+    private void drawBorder(Player player, Border border, Material material, List<Border> visibleBorders) {
         Location pos1 = border.getPos1();
         Location pos2 = border.getPos2();
 
@@ -128,9 +166,7 @@ public class RingRenderer {
         BlockData blockData = material.createBlockData();
         Map<Location, BlockData> originalBlocks = playerOriginalBlocks.computeIfAbsent(player.getUniqueId(), k -> new HashMap<>());
 
-        List<Border> otherBorders = new ArrayList<>();
-        List<Border> savedBorders = playerVisibleBorders.get(player.getUniqueId());
-        if (savedBorders != null) otherBorders.addAll(savedBorders);
+        List<Border> otherBorders = new ArrayList<>(visibleBorders);
         Border selection = playerSelection.get(player.getUniqueId());
         if (selection != null) otherBorders.add(selection);
 
@@ -162,6 +198,7 @@ public class RingRenderer {
     }
 
     private void setGhostBlockIfOutside(Player player, org.bukkit.World world, int x, int y, int z, BlockData data, Map<Location, BlockData> originalBlocks, List<Border> others) {
+        if (y < world.getMinHeight() || y >= world.getMaxHeight()) return;
         Location loc = new Location(world, x, y, z);
         if (!loc.isChunkLoaded() && !player.getName().startsWith("Player")) return;
 
@@ -177,19 +214,19 @@ public class RingRenderer {
     }
 
     public void showRaceRings(Player player, List<Ring> rings, int nextRingIndex) {
-        playerVisibleRings.computeIfAbsent(player.getUniqueId(), k -> new HashSet<>()).addAll(rings);
+        racerVisibleRings.computeIfAbsent(player.getUniqueId(), k -> new HashSet<>()).addAll(rings);
         playerNextRing.put(player.getUniqueId(), nextRingIndex);
         updatePlayerView(player);
     }
 
     public void showSpectatorRings(Player player, List<Ring> rings) {
-        playerVisibleRings.computeIfAbsent(player.getUniqueId(), k -> new HashSet<>()).addAll(rings);
+        racerVisibleRings.computeIfAbsent(player.getUniqueId(), k -> new HashSet<>()).addAll(rings);
         playerNextRing.remove(player.getUniqueId());
         updatePlayerView(player);
     }
 
     public void hideRaceRings(Player player, List<Ring> rings) {
-        Set<Ring> visibleRings = playerVisibleRings.get(player.getUniqueId());
+        Set<Ring> visibleRings = racerVisibleRings.get(player.getUniqueId());
         if (visibleRings != null) {
             visibleRings.removeAll(rings);
         }
@@ -226,12 +263,27 @@ public class RingRenderer {
      */
     public void refreshPlayerView(Player player) {
         // Only refresh if player is in a race or holding the tool
-        // (Visible rings/borders sets are only populated in these cases)
-        Set<Ring> rings = playerVisibleRings.get(player.getUniqueId());
-        if (rings != null) {
-            for (Ring ring : rings) {
-                drawRing(player, ring, false);
-            }
+        boolean isHoldingTool = plugin.getToolManager().isHoldingTool(player);
+        boolean inRace = plugin.getRaceManager().isPlayerInRace(player);
+
+        if (!isHoldingTool && !inRace) {
+            revertBlocksForPlayer(player);
+            return;
+        }
+
+        // Determine all rings that should be visible
+        Set<Ring> visibleRings = new HashSet<>();
+        Set<Ring> racerRings = racerVisibleRings.get(player.getUniqueId());
+        if (racerRings != null) visibleRings.addAll(racerRings);
+
+        Set<Ring> editorRings = editorVisibleRings.get(player.getUniqueId());
+        if (editorRings != null && isHoldingTool) {
+            visibleRings.addAll(editorRings);
+        }
+
+        // Draw all the rings
+        for (Ring ring : visibleRings) {
+            drawRing(player, ring, false);
         }
 
         // Redraw the configuring ring
@@ -240,27 +292,34 @@ public class RingRenderer {
             drawRing(player, configuringRing, true);
         }
 
-        // Redraw saved borders
-        List<Border> borders = playerVisibleBorders.get(player.getUniqueId());
-        if (borders != null) {
-            for (Border border : borders) {
-                drawBorder(player, border, Material.LIME_STAINED_GLASS);
+        // Determine all borders that should be visible
+        List<Border> visibleBorders = new ArrayList<>();
+
+        if (isHoldingTool) {
+            List<Border> editorBorders = editorVisibleBorders.get(player.getUniqueId());
+            if (editorBorders != null) {
+                visibleBorders.addAll(editorBorders);
             }
+        }
+
+        // Redraw saved borders
+        for (Border border : visibleBorders) {
+            drawBorder(player, border, Material.LIME_STAINED_GLASS, visibleBorders);
         }
 
         // Redraw selection
         Border selection = playerSelection.get(player.getUniqueId());
         if (selection != null) {
-            drawBorder(player, selection, Material.ORANGE_STAINED_GLASS);
+            drawBorder(player, selection, Material.ORANGE_STAINED_GLASS, visibleBorders);
         }
     }
 
     public void setVisibleRings(Player player, Set<Ring> rings) {
-        playerVisibleRings.put(player.getUniqueId(), rings);
+        editorVisibleRings.put(player.getUniqueId(), rings);
     }
 
     public void setVisibleBorders(Player player, List<Border> borders) {
-        playerVisibleBorders.put(player.getUniqueId(), borders);
+        editorVisibleBorders.put(player.getUniqueId(), borders);
     }
 
     public void setSelection(Player player, Location pos1, Location pos2) {
@@ -272,7 +331,12 @@ public class RingRenderer {
         updatePlayerView(player);
     }
 
+
     private void drawRing(Player player, Ring ring, boolean isBeingConfigured) {
+        if (!isBeingConfigured && plugin.getRaceManager().isSpecialRingOnCooldown(player, ring)) {
+            return;
+        }
+
         Material material = ring.getMaterial();
         Integer nextRingIndex = playerNextRing.get(player.getUniqueId());
         if (nextRingIndex != null && ring.getIndex() == nextRingIndex) {

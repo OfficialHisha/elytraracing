@@ -5,6 +5,7 @@ import com.hishacorp.elytraracing.input.events.DeleteRaceInputEvent;
 import com.hishacorp.elytraracing.input.events.InputEvent;
 import com.hishacorp.elytraracing.model.Border;
 import com.hishacorp.elytraracing.model.Racer;
+import com.hishacorp.elytraracing.model.Ring;
 import com.hishacorp.elytraracing.util.RingRenderer;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
@@ -30,7 +31,7 @@ public class RaceManager {
 
     public RaceManager(Elytraracing plugin) {
         this.plugin = plugin;
-        this.ringRenderer = new RingRenderer();
+        this.ringRenderer = new RingRenderer(plugin);
         startScoreboardUpdateTask();
         startRingRefreshTask();
     }
@@ -40,7 +41,7 @@ public class RaceManager {
             for (Player player : Bukkit.getOnlinePlayers()) {
                 ringRenderer.refreshPlayerView(player);
             }
-        }, 40L, 40L); // Every 2 seconds
+        }, 10L, 10L); // Every 0.5 seconds
     }
 
     private void startScoreboardUpdateTask() {
@@ -213,11 +214,10 @@ public class RaceManager {
     public void leaveRace(Player player) {
         getRace(player).ifPresentOrElse(race -> {
             plugin.getScoreboardManager().removeScoreboard(player);
+            ringRenderer.clearRacerView(player);
             if (race.getRacers().containsKey(player.getUniqueId())) {
-                ringRenderer.hideRaceRings(player, race.getRings());
                 race.removePlayer(player);
             } else if (race.getSpectators().containsKey(player.getUniqueId())) {
-                ringRenderer.hideRaceRings(player, race.getRings());
                 race.removeSpectator(player);
                 // Reset spectator specific state
                 player.setAllowFlight(false);
@@ -377,6 +377,36 @@ public class RaceManager {
 
     public void toggleSeeSpectators(Player player) {
         setSeeSpectators(player, !canSeeSpectators(player));
+    }
+
+    public boolean isSpecialRingOnCooldown(Player player, Ring ring) {
+        if (!plugin.isSpecialRing(ring.getMaterial())) {
+            return false;
+        }
+
+        Elytraracing.SpecialRingConfig config = plugin.getSpecialRingConfig(ring.getMaterial());
+        if (config == null) {
+            return false;
+        }
+
+        Optional<Race> raceOpt = getRace(player);
+        if (raceOpt.isEmpty()) {
+            // Not in a race, maybe editing? If editing we show everything usually, but here we can just return false.
+            return false;
+        }
+
+        Race race = raceOpt.get();
+        long now = System.currentTimeMillis();
+
+        if (config.global()) {
+            long lastTrigger = race.getGlobalSpecialRingCooldowns().getOrDefault(ring.getId(), 0L);
+            return (now - lastTrigger < config.cooldown());
+        } else {
+            Racer racer = race.getRacers().get(player.getUniqueId());
+            if (racer == null) return false;
+            long lastTrigger = racer.getSpecialRingCooldowns().getOrDefault(ring.getId(), 0L);
+            return (now - lastTrigger < config.cooldown());
+        }
     }
 
     public void resetRace(Race race) {

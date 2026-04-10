@@ -425,6 +425,20 @@ public class DatabaseManager {
         return null;
     }
 
+    public synchronized void resetPlayerStats(UUID playerUuid) throws SQLException {
+        try (var ps = connection.prepareStatement("DELETE FROM race_stats WHERE player_uuid = ?")) {
+            ps.setString(1, playerUuid.toString());
+            ps.executeUpdate();
+        }
+    }
+
+    public synchronized void resetRaceStats(int raceId) throws SQLException {
+        try (var ps = connection.prepareStatement("DELETE FROM race_stats WHERE race_id = ?")) {
+            ps.setInt(1, raceId);
+            ps.executeUpdate();
+        }
+    }
+
     public synchronized void saveRaceStat(UUID playerUuid, int raceId, long raceTime, Long bestLapTime, boolean win) throws SQLException {
         try (var ps = connection.prepareStatement(
                 "SELECT id, best_time, best_lap_time, finishes, wins, rounds_played FROM race_stats WHERE race_id = ? AND player_uuid = ?")) {

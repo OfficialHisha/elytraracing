@@ -101,9 +101,10 @@ public class RingConfigGui implements Gui {
                 });
                 break;
             case 14: // Material
-                plugin.getGuiManager().openGui(player, new MaterialSelectionGui(allowedMaterials, material -> {
+                plugin.getGuiManager().openGui(player, new MaterialSelectionGui(plugin, allowedMaterials, material -> {
                     ring.setMaterial(material);
                     plugin.getRaceManager().getRace(ring.getRaceId()).ifPresent(race -> {
+                        race.setRings(plugin.getRingManager().getRings(ring.getRaceId()));
                         plugin.getToolManager().syncRaceView(race.getName());
                     });
                     plugin.getGuiManager().openGui(player, this);
@@ -146,6 +147,7 @@ public class RingConfigGui implements Gui {
                     plugin.getRingManager().deleteRing(ring);
                 }
                 plugin.getRaceManager().getRace(ring.getRaceId()).ifPresent(race -> {
+                    race.setRings(plugin.getRingManager().getRings(ring.getRaceId()));
                     plugin.getToolManager().syncRaceView(race.getName());
                 });
                 plugin.getRingRenderer().removeRingForPlayer(player, ring);
@@ -160,6 +162,7 @@ public class RingConfigGui implements Gui {
                     plugin.getRingManager().updateRing(ring);
                 }
                 plugin.getRaceManager().getRace(ring.getRaceId()).ifPresent(race -> {
+                    race.setRings(plugin.getRingManager().getRings(ring.getRaceId()));
                     plugin.getToolManager().syncRaceView(race.getName());
                 });
                 plugin.getRingRenderer().setConfiguringRingForPlayer(player, null);

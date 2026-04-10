@@ -6,6 +6,7 @@ import com.hishacorp.elytraracing.ToolManager;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerKickEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
 public class PlayerQuitListener implements Listener {
@@ -18,7 +19,15 @@ public class PlayerQuitListener implements Listener {
 
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent event) {
-        Player player = event.getPlayer();
+        handleDisconnect(event.getPlayer());
+    }
+
+    @EventHandler
+    public void onPlayerKick(PlayerKickEvent event) {
+        handleDisconnect(event.getPlayer());
+    }
+
+    private void handleDisconnect(Player player) {
         RaceManager raceManager = plugin.getRaceManager();
         ToolManager toolManager = plugin.getToolManager();
 

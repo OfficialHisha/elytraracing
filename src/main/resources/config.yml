@@ -1,3 +1,15 @@
 firework-replenishment-cooldown: 5
 dnf-timer: 30
 scoreboard-update-interval: 1
+
+# Special rings configuration
+# Use %player% as a placeholder for the player's name.
+# These rings are optional and do not count towards race progression.
+# cooldown is in milliseconds.
+# global-cooldown if true will prevent anyone from using it during the cooldown period.
+special-rings:
+  DIAMOND_BLOCK:
+    command: "give %player% minecraft:firework_rocket"
+    cooldown: 5000
+    global-cooldown: true
+    enabled: false

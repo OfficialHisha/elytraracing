@@ -34,5 +34,6 @@ special-rings:
 ## In-Game Behavior
 
 *   **Optional:** Racers do not need to pass these to finish the race or advance to the next index.
+*   **Visual Hiding:** While a special ring is on cooldown (either globally or for you specifically), it will be hidden from your view. It reappears once it can be triggered again.
 *   **Identification:** In the Ring Configuration GUI, hovering over a material will display its special ring properties (Command, Cooldown, Status) in the tooltip if it's configured as a special ring.
 *   **Disabled Rings:** If a special ring configuration is set to `enabled: false`, it will behave exactly like a normal required ring.

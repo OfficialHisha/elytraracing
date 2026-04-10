@@ -166,6 +166,7 @@ public class RaceManager {
                 Racer racer = race.getRacers().get(player.getUniqueId());
                 if (racer != null) {
                     ringRenderer.showRaceRings(player, race.getRings(), racer.getCurrentRingIndex());
+                    ringRenderer.showRaceBorders(player, race.getBorders());
                 }
                 player.sendMessage("§aYou have joined the race: " + raceName);
             } else {
@@ -196,6 +197,7 @@ public class RaceManager {
 
             race.addSpectator(player);
             ringRenderer.showSpectatorRings(player, race.getRings());
+            ringRenderer.showRaceBorders(player, race.getBorders());
             plugin.getScoreboardManager().showScoreboard(player);
 
             player.setAllowFlight(true);
@@ -214,11 +216,10 @@ public class RaceManager {
     public void leaveRace(Player player) {
         getRace(player).ifPresentOrElse(race -> {
             plugin.getScoreboardManager().removeScoreboard(player);
+            ringRenderer.clearRingsForPlayer(player);
             if (race.getRacers().containsKey(player.getUniqueId())) {
-                ringRenderer.hideRaceRings(player, race.getRings());
                 race.removePlayer(player);
             } else if (race.getSpectators().containsKey(player.getUniqueId())) {
-                ringRenderer.hideRaceRings(player, race.getRings());
                 race.removeSpectator(player);
                 // Reset spectator specific state
                 player.setAllowFlight(false);

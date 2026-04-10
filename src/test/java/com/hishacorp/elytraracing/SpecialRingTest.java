@@ -46,6 +46,42 @@ public class SpecialRingTest {
     }
 
     @Test
+    public void testSpecialRingHidingOnCooldown() {
+        plugin.getConfig().set("special-rings.GOLD_BLOCK.command", "testcommand %player%");
+        plugin.getConfig().set("special-rings.GOLD_BLOCK.cooldown", 5000);
+        plugin.getConfig().set("special-rings.GOLD_BLOCK.enabled", true);
+
+        try {
+            java.lang.reflect.Method loadMethod = Elytraracing.class.getDeclaredMethod("loadSpecialRings");
+            loadMethod.setAccessible(true);
+            loadMethod.invoke(plugin);
+        } catch (Exception e) {
+            fail("Could not reload special rings via reflection: " + e.getMessage());
+        }
+
+        race = new Race(plugin, "test_race");
+        plugin.getRaceManager().getRaces().add(race);
+
+        player = server.addPlayer();
+        race.addPlayer(player);
+
+        List<Ring> rings = new ArrayList<>();
+        rings.add(new Ring(1, 1, new Location(player.getWorld(), 20, 0, 0), 5, Ring.Orientation.HORIZONTAL, Material.GOLD_BLOCK, 0));
+        race.setRings(rings);
+
+        race.start();
+
+        // Initial state: not on cooldown
+        assertFalse(plugin.getRaceManager().isSpecialRingOnCooldown(player, race.getSpecialRings().get(0)));
+
+        // Pass ring
+        race.playerPassedSpecialRing(player, race.getSpecialRings().get(0));
+
+        // Now should be on cooldown
+        assertTrue(plugin.getRaceManager().isSpecialRingOnCooldown(player, race.getSpecialRings().get(0)));
+    }
+
+    @Test
     public void testSpecialRingCategorization() {
         plugin.getConfig().set("special-rings.GOLD_BLOCK.command", "testcommand %player%");
         // Trigger the internal loading logic again

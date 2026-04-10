@@ -199,12 +199,20 @@ public class Race {
                 return;
             }
             globalSpecialRingCooldowns.put(ring.getId(), now);
+            for (UUID uuid : racers.keySet()) {
+                Player p = Bukkit.getPlayer(uuid);
+                if (p != null) plugin.getRaceManager().getRingRenderer().updatePlayerView(p);
+            }
+            for (Player p : spectators.values()) {
+                plugin.getRaceManager().getRingRenderer().updatePlayerView(p);
+            }
         } else {
             long lastTrigger = racer.getSpecialRingCooldowns().getOrDefault(ring.getId(), 0L);
             if (now - lastTrigger < config.cooldown()) {
                 return;
             }
             racer.getSpecialRingCooldowns().put(ring.getId(), now);
+            plugin.getRaceManager().getRingRenderer().updatePlayerView(player);
         }
 
         String commandTemplate = config.command();
@@ -422,6 +430,10 @@ public class Race {
 
     public List<Ring> getSpecialRings() {
         return specialRings;
+    }
+
+    public Map<Integer, Long> getGlobalSpecialRingCooldowns() {
+        return globalSpecialRingCooldowns;
     }
 
     public Map<UUID, Racer> getRacers() {

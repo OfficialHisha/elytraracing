@@ -1,5 +1,6 @@
 package com.hishacorp.elytraracing.util;
 
+import com.hishacorp.elytraracing.Elytraracing;
 import com.hishacorp.elytraracing.model.Border;
 import com.hishacorp.elytraracing.model.Ring;
 import org.bukkit.Location;
@@ -12,6 +13,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class RingRenderer {
 
+    private final Elytraracing plugin;
     // A map of players to the rings they are currently viewing.
     private final Map<UUID, Set<Ring>> playerVisibleRings = new ConcurrentHashMap<>();
     // A map of players to the ring they are currently configuring.
@@ -24,6 +26,10 @@ public class RingRenderer {
     private final Map<UUID, List<Border>> playerVisibleBorders = new ConcurrentHashMap<>();
     private final Map<UUID, Border> playerSelection = new ConcurrentHashMap<>();
     private static final Material HIGHLIGHT_MATERIAL = Material.GOLD_BLOCK;
+
+    public RingRenderer(Elytraracing plugin) {
+        this.plugin = plugin;
+    }
 
     public void addRingForPlayer(Player player, Ring ring) {
         playerVisibleRings.computeIfAbsent(player.getUniqueId(), k -> new HashSet<>()).add(ring);
@@ -273,6 +279,10 @@ public class RingRenderer {
     }
 
     private void drawRing(Player player, Ring ring, boolean isBeingConfigured) {
+        if (!isBeingConfigured && plugin.getRaceManager().isSpecialRingOnCooldown(player, ring)) {
+            return;
+        }
+
         Material material = ring.getMaterial();
         Integer nextRingIndex = playerNextRing.get(player.getUniqueId());
         if (nextRingIndex != null && ring.getIndex() == nextRingIndex) {

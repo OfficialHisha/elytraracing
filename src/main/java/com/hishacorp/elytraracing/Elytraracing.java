@@ -40,10 +40,10 @@ public class Elytraracing extends JavaPlugin {
         guiManager = new GuiManager(this);
         databaseManager = new DatabaseManager(this);
         inputManager = new InputManager(this, guiManager);
-        raceManager = new RaceManager(this);
         ringManager = new RingManager(this);
+        raceManager = new RaceManager(this);
         toolManager = new ToolManager(this);
-        ringRenderer = new RingRenderer();
+        ringRenderer = raceManager.getRingRenderer();
         scoreboardManager = new ScoreboardManager(this);
 
         if (getServer().getPluginManager().getPlugin("PlaceholderAPI") != null) {

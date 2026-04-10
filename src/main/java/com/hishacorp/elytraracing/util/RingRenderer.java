@@ -21,8 +21,8 @@ public class RingRenderer {
     private final Map<UUID, Set<Ring>> editorVisibleRings = new ConcurrentHashMap<>();
     // A map of players to the ring they are currently configuring.
     private final Map<UUID, Ring> playerConfiguringRing = new ConcurrentHashMap<>();
-    // A map of players to the locations of the blocks that have been changed for them.
-    private final Map<UUID, Map<Location, BlockData>> playerOriginalBlocks = new ConcurrentHashMap<>();
+    // A map of players to the locations of the blocks that have been changed for them (for borders).
+    private final Map<UUID, Map<Location, BlockData>> playerBorderOriginalBlocks = new ConcurrentHashMap<>();
     // A map of players to a map of block locations to the ring they belong to.
     private final Map<UUID, Map<Location, Ring>> playerRingBlocks = new ConcurrentHashMap<>();
     // A map of players to the entities they are viewing for rings.
@@ -78,7 +78,8 @@ public class RingRenderer {
         racerVisibleRings.remove(player.getUniqueId());
         editorVisibleRings.remove(player.getUniqueId());
         playerConfiguringRing.remove(player.getUniqueId());
-        playerRingBlocks.computeIfAbsent(player.getUniqueId(), k -> new HashMap<>()).clear();
+        Map<Location, Ring> ringBlocks = playerRingBlocks.get(player.getUniqueId());
+        if (ringBlocks != null) ringBlocks.clear();
         playerNextRing.remove(player.getUniqueId());
         editorVisibleBorders.remove(player.getUniqueId());
         playerSelection.remove(player.getUniqueId());
@@ -106,7 +107,8 @@ public class RingRenderer {
         revertBlocksForPlayer(player);
 
         // Clear the mapping of blocks to rings for this player
-        playerRingBlocks.computeIfAbsent(player.getUniqueId(), k -> new HashMap<>()).clear();
+        Map<Location, Ring> ringBlocks = playerRingBlocks.get(player.getUniqueId());
+        if (ringBlocks != null) ringBlocks.clear();
 
         // Determine all rings that should be visible
         Set<Ring> visibleRings = new HashSet<>();
@@ -167,7 +169,7 @@ public class RingRenderer {
 
         org.bukkit.World world = pos1.getWorld();
         BlockData blockData = material.createBlockData();
-        Map<Location, BlockData> originalBlocks = playerOriginalBlocks.computeIfAbsent(player.getUniqueId(), k -> new HashMap<>());
+        Map<Location, BlockData> originalBlocks = playerBorderOriginalBlocks.computeIfAbsent(player.getUniqueId(), k -> new HashMap<>());
 
         List<Border> otherBorders = new ArrayList<>(visibleBorders);
         Border selection = playerSelection.get(player.getUniqueId());
@@ -246,7 +248,7 @@ public class RingRenderer {
     }
 
     private void revertBlocksForPlayer(Player player) {
-        Map<Location, BlockData> originalBlocks = playerOriginalBlocks.get(player.getUniqueId());
+        Map<Location, BlockData> originalBlocks = playerBorderOriginalBlocks.get(player.getUniqueId());
         if (originalBlocks != null) {
             for (Map.Entry<Location, BlockData> entry : originalBlocks.entrySet()) {
                 player.sendBlockChange(entry.getKey(), entry.getValue());
@@ -382,21 +384,9 @@ public class RingRenderer {
             entities = new ArrayList<>();
         }
 
-        Location center = ring.getLocation();
-        double radius = ring.getRadius();
         Map<Location, Ring> ringBlocks = playerRingBlocks.computeIfAbsent(player.getUniqueId(), k -> new HashMap<>());
 
-        for (int i = 0; i < 360; i += 15) {
-            double angle = Math.toRadians(i);
-            double xOffset = 0, yOffset = 0, zOffset = 0;
-            switch (ring.getOrientation()) {
-                case HORIZONTAL: xOffset = radius * Math.cos(angle); zOffset = radius * Math.sin(angle); break;
-                case VERTICAL_X: yOffset = radius * Math.cos(angle); zOffset = radius * Math.sin(angle); break;
-                case VERTICAL_Z: xOffset = radius * Math.cos(angle); yOffset = radius * Math.sin(angle); break;
-            }
-
-            Location blockLocation = center.clone().add(xOffset, yOffset, zOffset).toBlockLocation();
-
+        for (Location blockLocation : ring.getRingPoints()) {
             // Always update ringBlocks map for tool interaction
             ringBlocks.put(blockLocation, ring);
 
@@ -406,7 +396,7 @@ public class RingRenderer {
                         entity.setBlock(blockData);
                         entity.setPersistent(false);
                         entity.setVisibleByDefault(false);
-                    entity.setViewRange(10.0f);
+                        entity.setViewRange(10.0f);
                     });
                     player.showEntity(plugin, display);
                     entities.add(display);

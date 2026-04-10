@@ -505,8 +505,15 @@ public class Race {
                 return 0;
             }
 
-            Location nextRingLocation1 = requiredRings.get(r1.getCurrentRingIndex()).getLocation();
-            Location nextRingLocation2 = requiredRings.get(r2.getCurrentRingIndex()).getLocation();
+            int idx1 = r1.getCurrentRingIndex();
+            int idx2 = r2.getCurrentRingIndex();
+
+            if (idx1 >= requiredRings.size() || idx2 >= requiredRings.size()) {
+                return Integer.compare(idx2, idx1);
+            }
+
+            Location nextRingLocation1 = requiredRings.get(idx1).getLocation();
+            Location nextRingLocation2 = requiredRings.get(idx2).getLocation();
 
             double distance1 = p1.getLocation().distanceSquared(nextRingLocation1);
             double distance2 = p2.getLocation().distanceSquared(nextRingLocation2);

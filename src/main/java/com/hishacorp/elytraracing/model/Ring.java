@@ -3,6 +3,9 @@ package com.hishacorp.elytraracing.model;
 import org.bukkit.Location;
 import org.bukkit.Material;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class Ring {
 
     private int id;
@@ -77,6 +80,33 @@ public class Ring {
 
     public void setIndex(int index) {
         this.index = index;
+    }
+
+    public List<Location> getRingPoints() {
+        List<Location> points = new ArrayList<>();
+        Location center = location;
+        for (int i = 0; i < 360; i += 15) {
+            double angle = Math.toRadians(i);
+            double xOffset = 0, yOffset = 0, zOffset = 0;
+
+            switch (orientation) {
+                case HORIZONTAL:
+                    xOffset = radius * Math.cos(angle);
+                    zOffset = radius * Math.sin(angle);
+                    break;
+                case VERTICAL_X:
+                    yOffset = radius * Math.cos(angle);
+                    zOffset = radius * Math.sin(angle);
+                    break;
+                case VERTICAL_Z:
+                    xOffset = radius * Math.cos(angle);
+                    yOffset = radius * Math.sin(angle);
+                    break;
+            }
+
+            points.add(center.clone().add(xOffset, yOffset, zOffset).toBlockLocation());
+        }
+        return points;
     }
 
     public enum Orientation {

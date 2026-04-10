@@ -406,6 +406,7 @@ public class RingRenderer {
                         entity.setBlock(blockData);
                         entity.setPersistent(false);
                         entity.setVisibleByDefault(false);
+                    entity.setViewRange(10.0f);
                     });
                     player.showEntity(plugin, display);
                     entities.add(display);

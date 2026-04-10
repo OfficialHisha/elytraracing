@@ -78,6 +78,9 @@ public class Elytraracing extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        if (ringRenderer != null) {
+            ringRenderer.clearAllEntities();
+        }
         if (databaseManager != null) {
             databaseManager.close();
         }

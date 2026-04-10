@@ -5,6 +5,7 @@ import com.hishacorp.elytraracing.model.Border;
 import com.hishacorp.elytraracing.model.Ring;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.entity.BlockDisplay;
 import org.bukkit.entity.Player;
 import org.bukkit.block.data.BlockData;
 
@@ -20,10 +21,12 @@ public class RingRenderer {
     private final Map<UUID, Set<Ring>> editorVisibleRings = new ConcurrentHashMap<>();
     // A map of players to the ring they are currently configuring.
     private final Map<UUID, Ring> playerConfiguringRing = new ConcurrentHashMap<>();
-    // A map of players to the locations of the blocks that have been changed for them.
-    private final Map<UUID, Map<Location, BlockData>> playerOriginalBlocks = new ConcurrentHashMap<>();
+    // A map of players to the locations of the blocks that have been changed for them (for borders).
+    private final Map<UUID, Map<Location, BlockData>> playerBorderOriginalBlocks = new ConcurrentHashMap<>();
     // A map of players to a map of block locations to the ring they belong to.
     private final Map<UUID, Map<Location, Ring>> playerRingBlocks = new ConcurrentHashMap<>();
+    // A map of players to the entities they are viewing for rings.
+    private final Map<UUID, Map<Ring, List<BlockDisplay>>> playerRingEntities = new ConcurrentHashMap<>();
     private final Map<UUID, Integer> playerNextRing = new ConcurrentHashMap<>();
     // A map of players to the borders they are viewing because they are editing a race.
     private final Map<UUID, List<Border>> editorVisibleBorders = new ConcurrentHashMap<>();
@@ -75,7 +78,8 @@ public class RingRenderer {
         racerVisibleRings.remove(player.getUniqueId());
         editorVisibleRings.remove(player.getUniqueId());
         playerConfiguringRing.remove(player.getUniqueId());
-        playerRingBlocks.computeIfAbsent(player.getUniqueId(), k -> new HashMap<>()).clear();
+        Map<Location, Ring> ringBlocks = playerRingBlocks.get(player.getUniqueId());
+        if (ringBlocks != null) ringBlocks.clear();
         playerNextRing.remove(player.getUniqueId());
         editorVisibleBorders.remove(player.getUniqueId());
         playerSelection.remove(player.getUniqueId());
@@ -103,7 +107,8 @@ public class RingRenderer {
         revertBlocksForPlayer(player);
 
         // Clear the mapping of blocks to rings for this player
-        playerRingBlocks.computeIfAbsent(player.getUniqueId(), k -> new HashMap<>()).clear();
+        Map<Location, Ring> ringBlocks = playerRingBlocks.get(player.getUniqueId());
+        if (ringBlocks != null) ringBlocks.clear();
 
         // Determine all rings that should be visible
         Set<Ring> visibleRings = new HashSet<>();
@@ -164,7 +169,7 @@ public class RingRenderer {
 
         org.bukkit.World world = pos1.getWorld();
         BlockData blockData = material.createBlockData();
-        Map<Location, BlockData> originalBlocks = playerOriginalBlocks.computeIfAbsent(player.getUniqueId(), k -> new HashMap<>());
+        Map<Location, BlockData> originalBlocks = playerBorderOriginalBlocks.computeIfAbsent(player.getUniqueId(), k -> new HashMap<>());
 
         List<Border> otherBorders = new ArrayList<>(visibleBorders);
         Border selection = playerSelection.get(player.getUniqueId());
@@ -243,13 +248,27 @@ public class RingRenderer {
     }
 
     private void revertBlocksForPlayer(Player player) {
-        Map<Location, BlockData> originalBlocks = playerOriginalBlocks.get(player.getUniqueId());
+        Map<Location, BlockData> originalBlocks = playerBorderOriginalBlocks.get(player.getUniqueId());
         if (originalBlocks != null) {
             for (Map.Entry<Location, BlockData> entry : originalBlocks.entrySet()) {
                 player.sendBlockChange(entry.getKey(), entry.getValue());
             }
             originalBlocks.clear();
         }
+
+        Map<Ring, List<BlockDisplay>> ringEntities = playerRingEntities.get(player.getUniqueId());
+        if (ringEntities != null) {
+            ringEntities.values().forEach(list -> list.forEach(org.bukkit.entity.Entity::remove));
+            ringEntities.clear();
+        }
+    }
+
+    public void clearAllEntities() {
+        for (Map<Ring, List<BlockDisplay>> ringEntities : playerRingEntities.values()) {
+            ringEntities.values().forEach(list -> list.forEach(org.bukkit.entity.Entity::remove));
+            ringEntities.clear();
+        }
+        playerRingEntities.clear();
     }
 
     public void revertPlayerView(Player player) {
@@ -334,6 +353,11 @@ public class RingRenderer {
 
     private void drawRing(Player player, Ring ring, boolean isBeingConfigured) {
         if (!isBeingConfigured && plugin.getRaceManager().isSpecialRingOnCooldown(player, ring)) {
+            Map<Ring, List<BlockDisplay>> ringEntities = playerRingEntities.get(player.getUniqueId());
+            if (ringEntities != null) {
+                List<BlockDisplay> entities = ringEntities.remove(ring);
+                if (entities != null) entities.forEach(org.bukkit.entity.Entity::remove);
+            }
             return;
         }
 
@@ -344,48 +368,48 @@ public class RingRenderer {
         }
 
         BlockData blockData = material.createBlockData();
-        Map<Location, BlockData> originalBlocks = playerOriginalBlocks.computeIfAbsent(player.getUniqueId(), k -> new HashMap<>());
+        Map<Ring, List<BlockDisplay>> ringEntities = playerRingEntities.computeIfAbsent(player.getUniqueId(), k -> new ConcurrentHashMap<>());
+        List<BlockDisplay> entities = ringEntities.get(ring);
+
+        if (entities != null) {
+            if (entities.isEmpty() || !entities.get(0).isValid() || !entities.get(0).getBlock().equals(blockData)) {
+                entities.forEach(org.bukkit.entity.Entity::remove);
+                ringEntities.remove(ring);
+                entities = null;
+            }
+        }
+
+        boolean spawnEntities = (entities == null);
+        if (spawnEntities) {
+            entities = new ArrayList<>();
+        }
+
         Map<Location, Ring> ringBlocks = playerRingBlocks.computeIfAbsent(player.getUniqueId(), k -> new HashMap<>());
 
-        Location center = ring.getLocation();
-        double radius = ring.getRadius();
-
-        for (int i = 0; i < 360; i += 15) {
-            double angle = Math.toRadians(i);
-            double xOffset = 0;
-            double yOffset = 0;
-            double zOffset = 0;
-
-            switch (ring.getOrientation()) {
-                case HORIZONTAL:
-                    xOffset = radius * Math.cos(angle);
-                    zOffset = radius * Math.sin(angle);
-                    break;
-                case VERTICAL_X:
-                    yOffset = radius * Math.cos(angle);
-                    zOffset = radius * Math.sin(angle);
-                    break;
-                case VERTICAL_Z:
-                    xOffset = radius * Math.cos(angle);
-                    yOffset = radius * Math.sin(angle);
-                    break;
-            }
-
-            Location blockLocation = center.clone().add(xOffset, yOffset, zOffset).toBlockLocation();
-            if (!blockLocation.getWorld().equals(player.getWorld()) || (!blockLocation.isChunkLoaded() && !player.getName().startsWith("Player"))) continue;
-
-            // Store the original block if we haven't already, then send the change
-            if (!originalBlocks.containsKey(blockLocation)) {
-                originalBlocks.put(blockLocation, blockLocation.getBlock().getBlockData());
-            }
-            player.sendBlockChange(blockLocation, blockData);
-
-            // Add to the ring blocks map
+        for (Location blockLocation : ring.getRingPoints()) {
+            // Always update ringBlocks map for tool interaction
             ringBlocks.put(blockLocation, ring);
+
+            if (spawnEntities) {
+                if (blockLocation.getWorld().equals(player.getWorld()) && (blockLocation.isChunkLoaded() || player.getName().startsWith("Player"))) {
+                    BlockDisplay display = blockLocation.getWorld().spawn(blockLocation, BlockDisplay.class, entity -> {
+                        entity.setBlock(blockData);
+                        entity.setPersistent(false);
+                        entity.setVisibleByDefault(false);
+                        entity.setViewRange(10.0f);
+                    });
+                    player.showEntity(plugin, display);
+                    entities.add(display);
+                }
+            }
 
             if (isBeingConfigured) {
                 player.spawnParticle(org.bukkit.Particle.END_ROD, blockLocation.clone().add(0.5, 0.5, 0.5), 1, 0, 0, 0, 0);
             }
+        }
+
+        if (spawnEntities) {
+            ringEntities.put(ring, entities);
         }
     }
 }

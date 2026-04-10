@@ -40,6 +40,7 @@ public class MaterialSelectionGui implements Gui {
                 if (config != null) {
                     List<String> lore = new ArrayList<>();
                     lore.add("§7Special Ring:");
+                    lore.add("§eStatus: " + (config.enabled() ? "§aEnabled" : "§cDisabled"));
                     lore.add("§eCommand: §f" + config.command());
                     lore.add("§eCooldown: §f" + config.cooldown() + "ms");
                     lore.add("§eGlobal: §f" + (config.global() ? "Yes" : "No"));

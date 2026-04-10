@@ -31,7 +31,7 @@ public class Elytraracing extends JavaPlugin {
     private RingRenderer ringRenderer;
     private final Map<Material, SpecialRingConfig> specialRings = new HashMap<>();
 
-    public record SpecialRingConfig(String command, long cooldown, boolean global) {}
+    public record SpecialRingConfig(String command, long cooldown, boolean global, boolean enabled) {}
 
     @Override
     public void onEnable() {
@@ -92,18 +92,20 @@ public class Elytraracing extends JavaPlugin {
                         String command;
                         long cooldown = 1000;
                         boolean global = false;
+                        boolean enabled = true;
 
                         if (section.isConfigurationSection(key)) {
                             org.bukkit.configuration.ConfigurationSection ringSection = section.getConfigurationSection(key);
                             command = ringSection.getString("command");
                             cooldown = ringSection.getLong("cooldown", 1000);
                             global = ringSection.getBoolean("global-cooldown", false);
+                            enabled = ringSection.getBoolean("enabled", true);
                         } else {
                             command = section.getString(key);
                         }
 
                         if (command != null) {
-                            specialRings.put(material, new SpecialRingConfig(command, cooldown, global));
+                            specialRings.put(material, new SpecialRingConfig(command, cooldown, global, enabled));
                         }
                     } catch (IllegalArgumentException e) {
                         getLogger().warning("Invalid material in special-rings config: " + key);
@@ -118,7 +120,8 @@ public class Elytraracing extends JavaPlugin {
     }
 
     public boolean isSpecialRing(Material material) {
-        return specialRings.containsKey(material);
+        SpecialRingConfig config = specialRings.get(material);
+        return config != null && config.enabled();
     }
 
     public GuiManager getGuiManager() {

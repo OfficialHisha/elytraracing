@@ -144,4 +144,29 @@ public class SpecialRingTest {
         // We can't easily verify the global map from here without more reflection or making it public,
         // but the behavior is tested by the lack of double execution in logs if we were looking at them.
     }
+
+    @Test
+    public void testDisabledSpecialRing() {
+        plugin.getConfig().set("special-rings.GOLD_BLOCK.command", "testcommand %player%");
+        plugin.getConfig().set("special-rings.GOLD_BLOCK.enabled", false);
+
+        try {
+            java.lang.reflect.Method loadMethod = Elytraracing.class.getDeclaredMethod("loadSpecialRings");
+            loadMethod.setAccessible(true);
+            loadMethod.invoke(plugin);
+        } catch (Exception e) {
+            fail("Could not reload special rings via reflection: " + e.getMessage());
+        }
+
+        race = new Race(plugin, "test_race");
+        List<Ring> rings = new ArrayList<>();
+        rings.add(new Ring(1, 1, new Location(null, 10, 0, 0), 5, Ring.Orientation.HORIZONTAL, Material.GOLD_BLOCK, 0));
+        race.setRings(rings);
+
+        // Should be a required ring since the special configuration is disabled
+        assertEquals(1, race.getRequiredRings().size());
+        assertEquals(0, race.getSpecialRings().size());
+        assertEquals(Material.GOLD_BLOCK, race.getRequiredRings().get(0).getMaterial());
+        assertFalse(plugin.isSpecialRing(Material.GOLD_BLOCK));
+    }
 }

@@ -26,8 +26,8 @@ Elytra Racing uses a hierarchical permission system to manage access to race con
 | :--- | :--- | :--- |
 | `/er join <race>` | `elytraracing.racer.join` | Join a race as a participant. |
 | `/er leave` | (None) | Leave the current race or spectating session. |
-| `/er spectate <race>` | `elytraracing.admin.spectate` | Join a race as a spectator. |
-| `/er tp` | `elytraracing.admin.tp` | Open the teleportation GUI while spectating. |
+| `/er spectate <race>` | `elytraracing.spectator.spectate` | Join a race as a spectator. |
+| `/er tp` | `elytraracing.spectator.tp` | Open the teleportation GUI while spectating. |
 
 ## Miscellaneous Permissions
 

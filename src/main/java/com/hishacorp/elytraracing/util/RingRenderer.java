@@ -100,7 +100,7 @@ public class RingRenderer {
         if (racerRings != null) visibleRings.addAll(racerRings);
 
         Set<Ring> editorRings = editorVisibleRings.get(player.getUniqueId());
-        if (editorRings != null && plugin.getToolManager().isPlayerUsingTool(player)) {
+        if (editorRings != null && plugin.getToolManager().isHoldingTool(player)) {
             visibleRings.addAll(editorRings);
         }
 
@@ -121,7 +121,7 @@ public class RingRenderer {
         if (racerBorders != null) visibleBorders.addAll(racerBorders);
 
         List<Border> editorBorders = editorVisibleBorders.get(player.getUniqueId());
-        if (editorBorders != null && plugin.getToolManager().isPlayerUsingTool(player)) {
+        if (editorBorders != null && plugin.getToolManager().isHoldingTool(player)) {
             visibleBorders.addAll(editorBorders);
         }
 
@@ -252,10 +252,10 @@ public class RingRenderer {
      */
     public void refreshPlayerView(Player player) {
         // Only refresh if player is in a race or holding the tool
-        boolean isEditing = plugin.getToolManager().isPlayerUsingTool(player);
+        boolean isHoldingTool = plugin.getToolManager().isHoldingTool(player);
         boolean inRace = plugin.getRaceManager().isPlayerInRace(player);
 
-        if (!isEditing && !inRace) {
+        if (!isHoldingTool && !inRace) {
             revertBlocksForPlayer(player);
             return;
         }
@@ -266,7 +266,7 @@ public class RingRenderer {
         if (racerRings != null) visibleRings.addAll(racerRings);
 
         Set<Ring> editorRings = editorVisibleRings.get(player.getUniqueId());
-        if (editorRings != null && isEditing) {
+        if (editorRings != null && isHoldingTool) {
             visibleRings.addAll(editorRings);
         }
 
@@ -287,7 +287,7 @@ public class RingRenderer {
         if (racerBorders != null) visibleBorders.addAll(racerBorders);
 
         List<Border> editorBorders = editorVisibleBorders.get(player.getUniqueId());
-        if (editorBorders != null && isEditing) {
+        if (editorBorders != null && isHoldingTool) {
             visibleBorders.addAll(editorBorders);
         }
 

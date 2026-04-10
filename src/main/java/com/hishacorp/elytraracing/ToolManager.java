@@ -310,6 +310,10 @@ public class ToolManager implements Listener {
         return editingRace.containsKey(player.getUniqueId());
     }
 
+    public boolean isHoldingTool(Player player) {
+        return isTool(player.getInventory().getItemInMainHand()) || isTool(player.getInventory().getItemInOffHand());
+    }
+
     public void stopEditing(Player player) {
         editingRace.remove(player.getUniqueId());
         selections.remove(player.getUniqueId());

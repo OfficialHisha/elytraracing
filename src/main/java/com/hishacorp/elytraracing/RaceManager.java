@@ -216,7 +216,7 @@ public class RaceManager {
     public void leaveRace(Player player) {
         getRace(player).ifPresentOrElse(race -> {
             plugin.getScoreboardManager().removeScoreboard(player);
-            ringRenderer.clearRingsForPlayer(player);
+            ringRenderer.clearRacerView(player);
             if (race.getRacers().containsKey(player.getUniqueId())) {
                 race.removePlayer(player);
             } else if (race.getSpectators().containsKey(player.getUniqueId())) {

@@ -317,7 +317,7 @@ public class ToolManager implements Listener {
     public void stopEditing(Player player) {
         editingRace.remove(player.getUniqueId());
         selections.remove(player.getUniqueId());
-        plugin.getRingRenderer().clearRingsForPlayer(player);
+        plugin.getRingRenderer().clearEditorView(player);
     }
 
     public String getRaceNameFromTool(ItemStack tool) {

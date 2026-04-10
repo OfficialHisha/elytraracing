@@ -59,6 +59,21 @@ public class RingRenderer {
         updatePlayerView(player);
     }
 
+    public void clearRacerView(Player player) {
+        racerVisibleRings.remove(player.getUniqueId());
+        racerVisibleBorders.remove(player.getUniqueId());
+        playerNextRing.remove(player.getUniqueId());
+        updatePlayerView(player);
+    }
+
+    public void clearEditorView(Player player) {
+        editorVisibleRings.remove(player.getUniqueId());
+        editorVisibleBorders.remove(player.getUniqueId());
+        playerConfiguringRing.remove(player.getUniqueId());
+        playerSelection.remove(player.getUniqueId());
+        updatePlayerView(player);
+    }
+
     public void clearRingsForPlayer(Player player) {
         racerVisibleRings.remove(player.getUniqueId());
         editorVisibleRings.remove(player.getUniqueId());

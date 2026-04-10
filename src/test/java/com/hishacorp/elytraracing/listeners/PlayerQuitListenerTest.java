@@ -44,4 +44,17 @@ public class PlayerQuitListenerTest {
         // Then
         assertFalse(raceManager.isPlayerInRace(player));
     }
+
+    @Test
+    public void testPlayerKickRemovesPlayerFromRace() {
+        // Given
+        raceManager.getRaces().add(new Race(plugin, "test-race"));
+        raceManager.joinRace(player, "test-race");
+
+        // When
+        player.kick();
+
+        // Then
+        assertFalse(raceManager.isPlayerInRace(player));
+    }
 }

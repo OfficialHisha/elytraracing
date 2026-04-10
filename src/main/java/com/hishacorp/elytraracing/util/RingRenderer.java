@@ -25,8 +25,6 @@ public class RingRenderer {
     // A map of players to a map of block locations to the ring they belong to.
     private final Map<UUID, Map<Location, Ring>> playerRingBlocks = new ConcurrentHashMap<>();
     private final Map<UUID, Integer> playerNextRing = new ConcurrentHashMap<>();
-    // A map of players to the borders they are viewing because they are in a race.
-    private final Map<UUID, List<Border>> racerVisibleBorders = new ConcurrentHashMap<>();
     // A map of players to the borders they are viewing because they are editing a race.
     private final Map<UUID, List<Border>> editorVisibleBorders = new ConcurrentHashMap<>();
     private final Map<UUID, Border> playerSelection = new ConcurrentHashMap<>();
@@ -61,7 +59,6 @@ public class RingRenderer {
 
     public void clearRacerView(Player player) {
         racerVisibleRings.remove(player.getUniqueId());
-        racerVisibleBorders.remove(player.getUniqueId());
         playerNextRing.remove(player.getUniqueId());
         updatePlayerView(player);
     }
@@ -80,7 +77,6 @@ public class RingRenderer {
         playerConfiguringRing.remove(player.getUniqueId());
         playerRingBlocks.computeIfAbsent(player.getUniqueId(), k -> new HashMap<>()).clear();
         playerNextRing.remove(player.getUniqueId());
-        racerVisibleBorders.remove(player.getUniqueId());
         editorVisibleBorders.remove(player.getUniqueId());
         playerSelection.remove(player.getUniqueId());
         revertBlocksForPlayer(player);
@@ -132,12 +128,12 @@ public class RingRenderer {
 
         // Determine all borders that should be visible
         List<Border> visibleBorders = new ArrayList<>();
-        List<Border> racerBorders = racerVisibleBorders.get(player.getUniqueId());
-        if (racerBorders != null) visibleBorders.addAll(racerBorders);
 
-        List<Border> editorBorders = editorVisibleBorders.get(player.getUniqueId());
-        if (editorBorders != null && plugin.getToolManager().isHoldingTool(player)) {
-            visibleBorders.addAll(editorBorders);
+        if (plugin.getToolManager().isHoldingTool(player)) {
+            List<Border> editorBorders = editorVisibleBorders.get(player.getUniqueId());
+            if (editorBorders != null) {
+                visibleBorders.addAll(editorBorders);
+            }
         }
 
         // Draw saved borders
@@ -298,12 +294,12 @@ public class RingRenderer {
 
         // Determine all borders that should be visible
         List<Border> visibleBorders = new ArrayList<>();
-        List<Border> racerBorders = racerVisibleBorders.get(player.getUniqueId());
-        if (racerBorders != null) visibleBorders.addAll(racerBorders);
 
-        List<Border> editorBorders = editorVisibleBorders.get(player.getUniqueId());
-        if (editorBorders != null && isHoldingTool) {
-            visibleBorders.addAll(editorBorders);
+        if (isHoldingTool) {
+            List<Border> editorBorders = editorVisibleBorders.get(player.getUniqueId());
+            if (editorBorders != null) {
+                visibleBorders.addAll(editorBorders);
+            }
         }
 
         // Redraw saved borders
@@ -335,10 +331,6 @@ public class RingRenderer {
         updatePlayerView(player);
     }
 
-    public void showRaceBorders(Player player, List<Border> borders) {
-        racerVisibleBorders.put(player.getUniqueId(), borders);
-        updatePlayerView(player);
-    }
 
     private void drawRing(Player player, Ring ring, boolean isBeingConfigured) {
         if (!isBeingConfigured && plugin.getRaceManager().isSpecialRingOnCooldown(player, ring)) {

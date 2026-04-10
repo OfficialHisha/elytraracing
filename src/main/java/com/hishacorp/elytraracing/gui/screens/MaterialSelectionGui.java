@@ -37,10 +37,9 @@ public class MaterialSelectionGui implements Gui {
             if (meta != null) {
                 meta.setDisplayName("§a" + material.name().replace("_", " "));
                 Elytraracing.SpecialRingConfig config = plugin.getSpecialRingConfig(material);
-                if (config != null) {
+                if (config != null && config.enabled()) {
                     List<String> lore = new ArrayList<>();
                     lore.add("§7Special Ring:");
-                    lore.add("§eStatus: " + (config.enabled() ? "§aEnabled" : "§cDisabled"));
                     lore.add("§eCommand: §f" + config.command());
                     lore.add("§eCooldown: §f" + config.cooldown() + "ms");
                     lore.add("§eGlobal: §f" + (config.global() ? "Yes" : "No"));

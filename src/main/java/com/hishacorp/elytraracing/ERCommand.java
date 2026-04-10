@@ -6,6 +6,7 @@ import com.hishacorp.elytraracing.input.events.CreateRaceInputEvent;
 import com.hishacorp.elytraracing.input.events.DeleteRaceInputEvent;
 import com.hishacorp.elytraracing.model.Ring;
 import com.hishacorp.elytraracing.util.WorldUtil;
+import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import java.sql.SQLException;
 import java.util.List;
@@ -146,11 +147,34 @@ public class ERCommand implements CommandExecutor {
                     sender.sendMessage("§cYou do not have permission to use this command");
                     return true;
                 }
-                if (args.length < 2) {
-                    sender.sendMessage("§cUsage: /er resetstats <player|race>");
+                if (args.length < 3) {
+                    sender.sendMessage("§cUsage: /er resetstats <player|race> <name>");
                     return true;
                 }
-                sender.sendMessage("Resetting stats for " + args[1]);
+
+                String type = args[1].toLowerCase();
+                String target = args[2];
+
+                try {
+                    if (type.equals("player")) {
+                        org.bukkit.OfflinePlayer player = Bukkit.getOfflinePlayer(target);
+                        plugin.getDatabaseManager().resetPlayerStats(player.getUniqueId());
+                        sender.sendMessage("§aStats for player '" + target + "' have been reset.");
+                    } else if (type.equals("race")) {
+                        int raceId = plugin.getDatabaseManager().getRaceId(target);
+                        if (raceId == -1) {
+                            sender.sendMessage("§cRace not found: " + target);
+                            return true;
+                        }
+                        plugin.getDatabaseManager().resetRaceStats(raceId);
+                        sender.sendMessage("§aStats for race '" + target + "' have been reset.");
+                    } else {
+                        sender.sendMessage("§cInvalid type. Use 'player' or 'race'.");
+                    }
+                } catch (SQLException e) {
+                    sender.sendMessage("§cAn error occurred while resetting stats.");
+                    plugin.getLogger().severe("Failed to reset stats: " + e.getMessage());
+                }
             }
 
             case "join" -> {

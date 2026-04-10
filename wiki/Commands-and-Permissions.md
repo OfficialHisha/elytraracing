@@ -13,6 +13,7 @@ Elytra Racing uses a hierarchical permission system to manage access to race con
 | `/er start <race>` | `elytraracing.admin.start` | Starts the 5-second countdown for a race. |
 | `/er end <race>` | `elytraracing.admin.end` | Forcefully ends an active race. |
 | `/er reset <race> [delay]` | `elytraracing.admin.reset` | Resets a race immediately or sets an auto-reset delay. |
+| `/er resetstats <player\|race> <name>` | `elytraracing.admin.stats` | Resets stats for a specific player or an entire race. |
 | `/er setspawn` | `elytraracing.admin.setspawn` | Sets the spawn point for the race you are editing. |
 | `/er list` | `elytraracing.admin.list` | Lists all created races and their associated worlds. |
 | `/er enable <race>` | `elytraracing.admin.enable` | Enables a race for joining. |
@@ -32,4 +33,3 @@ Elytra Racing uses a hierarchical permission system to manage access to race con
 ## Miscellaneous Permissions
 
 *   `elytraracing.admin.*`: Grants access to all administrative commands.
-*   `elytraracing.admin.stats`: Allows resetting race statistics (Note: command `/er resetstats` exists but is currently a placeholder).

@@ -8,6 +8,7 @@ All placeholders follow one of these formats:
 
 1.  **Statistic Value:** `%elytraracing_<race>_<stat>_<pos>%`
 2.  **Player Name:** `%elytraracing_<race>_<stat>_player_<pos>%`
+3.  **Personal Stats:** `%elytraracing_<race>_me_<stat>%`
 
 *   `<race>`: The name of the race (case-sensitive).
 *   `<stat>`: The category to sort by and display.
@@ -34,6 +35,8 @@ When you request a placeholder, the system automatically sorts the leaderboard b
 | Show the 2nd best lap time in 'OceanDrive' | `%elytraracing_OceanDrive_bestlap_2%` |
 | Show who has played 'SkyDash' the most | `%elytraracing_SkyDash_rounds_player_1%` |
 | Show how many rounds the top player played in 'SkyDash' | `%elytraracing_SkyDash_rounds_1%` |
+| Show **my** best time in 'SkyDash' | `%elytraracing_SkyDash_me_time%` |
+| Show **my** total wins in 'CanyonRun' | `%elytraracing_CanyonRun_me_wins%` |
 
 ## Note on Race Names
 

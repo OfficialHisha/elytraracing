@@ -105,6 +105,10 @@ public class DatabaseManager {
                 stmt.executeUpdate("ALTER TABLE race_stats ADD COLUMN best_lap_time INTEGER;");
             } catch (SQLException ignored) {}
 
+            try {
+                stmt.executeUpdate("ALTER TABLE race_stats ADD COLUMN finishes INTEGER DEFAULT 0;");
+            } catch (SQLException ignored) {}
+
             // Rings
             stmt.executeUpdate("""
                 CREATE TABLE IF NOT EXISTS rings (
@@ -401,12 +405,36 @@ public class DatabaseManager {
         return raceNames;
     }
 
-    public RaceStat getTopTimeByRace(String raceName, int position) {
+    public RaceStat getTopStatByRace(String raceName, String category, int position) {
+        String orderBy;
+        String filter = "";
+        switch (category.toLowerCase()) {
+            case "time":
+                orderBy = "rs.best_time ASC";
+                filter = "AND rs.best_time > 0";
+                break;
+            case "bestlap":
+                orderBy = "rs.best_lap_time ASC";
+                filter = "AND rs.best_lap_time > 0";
+                break;
+            case "wins":
+                orderBy = "rs.wins DESC";
+                break;
+            case "rounds_played":
+                orderBy = "rs.rounds_played DESC";
+                break;
+            case "finishes":
+                orderBy = "rs.finishes DESC";
+                break;
+            default:
+                return null;
+        }
+
         try (var ps = connection.prepareStatement(
-                "SELECT player_uuid, best_time, best_lap_time, wins, rounds_played FROM race_stats rs " +
+                "SELECT player_uuid, best_time, best_lap_time, wins, rounds_played, finishes FROM race_stats rs " +
                         "JOIN races r ON rs.race_id = r.id " +
-                        "WHERE r.name = ? AND rs.best_time IS NOT NULL " +
-                        "ORDER BY rs.best_time ASC LIMIT 1 OFFSET ?")) {
+                        "WHERE r.name = ? " + filter + " " +
+                        "ORDER BY " + orderBy + " LIMIT 1 OFFSET ?")) {
             ps.setString(1, raceName);
             ps.setInt(2, position - 1);
             var rs = ps.executeQuery();
@@ -416,11 +444,12 @@ public class DatabaseManager {
                         rs.getLong("best_time"),
                         rs.getLong("best_lap_time"),
                         rs.getInt("wins"),
-                        rs.getInt("rounds_played")
+                        rs.getInt("rounds_played"),
+                        rs.getInt("finishes")
                 );
             }
         } catch (SQLException e) {
-            plugin.getLogger().severe("Failed to get top time by race: " + e.getMessage());
+            plugin.getLogger().severe("Failed to get top stat by race: " + e.getMessage());
         }
         return null;
     }

@@ -81,4 +81,33 @@ public class DatabaseManagerTest {
 
         assertNull(databaseManager.getRing(retrievedRing.getId()));
     }
+
+    @Test
+    public void testGetTopStatByRace() throws SQLException {
+        World world = MockBukkit.getMock().addSimpleWorld("test_world");
+        databaseManager.createRace("test_race", world.getName());
+        int raceId = databaseManager.getRaceId("test_race");
+
+        java.util.UUID uuid1 = java.util.UUID.randomUUID();
+        java.util.UUID uuid2 = java.util.UUID.randomUUID();
+
+        // uuid1: better time, worse wins
+        databaseManager.saveRaceStat(uuid1, raceId, 1000L, 500L, false);
+        databaseManager.saveRaceStat(uuid1, raceId, 1000L, 500L, false); // rounds = 2, wins = 0, time = 1000
+
+        // uuid2: worse time, better wins
+        databaseManager.saveRaceStat(uuid2, raceId, 2000L, 1000L, true); // rounds = 1, wins = 1, time = 2000
+
+        com.hishacorp.elytraracing.persistance.data.RaceStat topTime = databaseManager.getTopStatByRace("test_race", "time", 1);
+        assertEquals(uuid1, topTime.getPlayerUUID());
+        assertEquals(1000L, topTime.getBestTime());
+
+        com.hishacorp.elytraracing.persistance.data.RaceStat topWins = databaseManager.getTopStatByRace("test_race", "wins", 1);
+        assertEquals(uuid2, topWins.getPlayerUUID());
+        assertEquals(1, topWins.getWins());
+
+        com.hishacorp.elytraracing.persistance.data.RaceStat topRounds = databaseManager.getTopStatByRace("test_race", "rounds_played", 1);
+        assertEquals(uuid1, topRounds.getPlayerUUID());
+        assertEquals(2, topRounds.getRoundsPlayed());
+    }
 }

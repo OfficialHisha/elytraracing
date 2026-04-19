@@ -40,16 +40,28 @@ public class StatExpansion extends PlaceholderExpansion {
     public String onRequest(OfflinePlayer player, @NotNull String params) {
         String[] keywords = {"time", "bestlap", "wins", "rounds", "finishes"};
 
-        // Handle me stats: %elytraracing_<race>_<stat>_me%
+        // Handle me stats: %elytraracing_<race>_<stat>(_position)_me%
         if (params.toLowerCase().endsWith("_me")) {
             if (player == null) return "N/A";
             String remaining = params.substring(0, params.length() - 3);
+
+            boolean isPosition = false;
+            if (remaining.toLowerCase().endsWith("_position")) {
+                isPosition = true;
+                remaining = remaining.substring(0, remaining.length() - 9);
+            }
+
             for (String keyword : keywords) {
                 if (remaining.toLowerCase().endsWith("_" + keyword)) {
                     String raceName = remaining.substring(0, remaining.length() - keyword.length() - 1);
-                    RaceStat stat = plugin.getDatabaseManager().getPlayerStat(raceName, player.getUniqueId());
-                    if (stat == null) return "N/A";
-                    return formatStat(stat, keyword);
+                    if (isPosition) {
+                        int rank = plugin.getDatabaseManager().getPlayerRank(raceName, player.getUniqueId(), keyword);
+                        return rank == -1 ? "N/A" : String.valueOf(rank);
+                    } else {
+                        RaceStat stat = plugin.getDatabaseManager().getPlayerStat(raceName, player.getUniqueId());
+                        if (stat == null) return "N/A";
+                        return formatStat(stat, keyword);
+                    }
                 }
             }
         }
@@ -81,10 +93,7 @@ public class StatExpansion extends PlaceholderExpansion {
                 }
             }
             if (!foundKeyword) {
-                // Legacy support or just %elytraracing_<race>_player_<pos>%
-                // In both cases, we sort by time and return player name
-                sortBy = "time";
-                remaining = temp;
+                return null;
             }
         } else {
             for (String keyword : keywords) {

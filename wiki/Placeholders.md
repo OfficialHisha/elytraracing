@@ -37,11 +37,9 @@ When you request a placeholder, the system automatically sorts the leaderboard b
 | Show how many rounds the top player played in 'SkyDash' | `%elytraracing_SkyDash_rounds_1%` |
 | Show **my** best time in 'SkyDash' | `%elytraracing_SkyDash_time_me%` |
 | Show **my** total wins in 'CanyonRun' | `%elytraracing_CanyonRun_wins_me%` |
+| Show **my rank** (by time) in 'SkyDash' | `%elytraracing_SkyDash_time_position_me%` |
+| Show **my rank** for wins in 'CanyonRun' | `%elytraracing_CanyonRun_wins_position_me%` |
 
 ## Note on Race Names
 
 It is strongly recommended to **not use underscores** in race names. While the system attempts to handle them, race names that end with statistic keywords (e.g., `My_Race_wins`) will cause parsing conflicts and may not work correctly as placeholders.
-
-## Legacy Support
-
-The old placeholder format `%elytraracing_<race>_player_<pos>%` is still supported and defaults to sorting by completion time.

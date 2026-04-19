@@ -454,6 +454,65 @@ public class DatabaseManager {
         return null;
     }
 
+    public synchronized int getPlayerRank(String raceName, UUID playerUuid, String category) {
+        RaceStat playerStat = getPlayerStat(raceName, playerUuid);
+        if (playerStat == null) return -1;
+
+        String columnName;
+        String comparison;
+        String filter = "";
+        long playerValue;
+
+        switch (category.toLowerCase()) {
+            case "time":
+                columnName = "best_time";
+                playerValue = playerStat.getBestTime();
+                if (playerValue <= 0) return -1;
+                comparison = "<";
+                filter = "AND " + columnName + " > 0 ";
+                break;
+            case "bestlap":
+                columnName = "best_lap_time";
+                playerValue = playerStat.getBestLapTime();
+                if (playerValue <= 0) return -1;
+                comparison = "<";
+                filter = "AND " + columnName + " > 0 ";
+                break;
+            case "wins":
+                columnName = "wins";
+                playerValue = playerStat.getWins();
+                comparison = ">";
+                break;
+            case "rounds":
+                columnName = "rounds_played";
+                playerValue = playerStat.getRoundsPlayed();
+                comparison = ">";
+                break;
+            case "finishes":
+                columnName = "finishes";
+                playerValue = playerStat.getFinishes();
+                comparison = ">";
+                break;
+            default:
+                return -1;
+        }
+
+        try (var ps = connection.prepareStatement(
+                "SELECT COUNT(*) FROM race_stats rs " +
+                        "JOIN races r ON rs.race_id = r.id " +
+                        "WHERE r.name = ? " + filter + "AND " + columnName + " " + comparison + " ?")) {
+            ps.setString(1, raceName.toLowerCase());
+            ps.setLong(2, playerValue);
+            var rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1) + 1;
+            }
+        } catch (SQLException e) {
+            plugin.getLogger().severe("Failed to get player rank: " + e.getMessage());
+        }
+        return -1;
+    }
+
     public synchronized RaceStat getPlayerStat(String raceName, UUID playerUuid) {
         try (var ps = connection.prepareStatement(
                 "SELECT player_uuid, best_time, best_lap_time, wins, rounds_played, finishes FROM race_stats rs " +

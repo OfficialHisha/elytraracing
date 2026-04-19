@@ -40,14 +40,17 @@ public class StatExpansion extends PlaceholderExpansion {
     public String onRequest(OfflinePlayer player, @NotNull String params) {
         String[] keywords = {"time", "bestlap", "wins", "rounds", "finishes"};
 
-        // Handle me stats: %elytraracing_<race>_me_<stat>%
-        for (String keyword : keywords) {
-            if (params.toLowerCase().endsWith("_me_" + keyword)) {
-                if (player == null) return "N/A";
-                String raceName = params.substring(0, params.length() - keyword.length() - 4);
-                RaceStat stat = plugin.getDatabaseManager().getPlayerStat(raceName, player.getUniqueId());
-                if (stat == null) return "N/A";
-                return formatStat(stat, keyword);
+        // Handle me stats: %elytraracing_<race>_<stat>_me%
+        if (params.toLowerCase().endsWith("_me")) {
+            if (player == null) return "N/A";
+            String remaining = params.substring(0, params.length() - 3);
+            for (String keyword : keywords) {
+                if (remaining.toLowerCase().endsWith("_" + keyword)) {
+                    String raceName = remaining.substring(0, remaining.length() - keyword.length() - 1);
+                    RaceStat stat = plugin.getDatabaseManager().getPlayerStat(raceName, player.getUniqueId());
+                    if (stat == null) return "N/A";
+                    return formatStat(stat, keyword);
+                }
             }
         }
 

@@ -38,48 +38,53 @@ public class StatExpansion extends PlaceholderExpansion {
 
     @Override
     public String onRequest(OfflinePlayer player, @NotNull String params) {
-        String[] parts = params.split("_");
-        if (parts.length < 3) {
-            return null;
-        }
+        int lastUnderscore = params.lastIndexOf('_');
+        if (lastUnderscore == -1) return null;
 
         int position;
         try {
-            position = Integer.parseInt(parts[parts.length - 1]);
+            position = Integer.parseInt(params.substring(lastUnderscore + 1));
         } catch (NumberFormatException e) {
             return null;
         }
 
-        String raceName;
+        String remaining = params.substring(0, lastUnderscore);
+        String sortBy = "";
         boolean returnPlayer = false;
-        String sortBy;
 
-        // %elytraracing_<race>_<stat>_player_<pos>%
-        if (parts.length >= 4 && parts[parts.length - 2].equalsIgnoreCase("player")) {
+        String[] keywords = {"time", "bestlap", "wins", "rounds_played", "finishes"};
+
+        if (remaining.toLowerCase().endsWith("_player")) {
             returnPlayer = true;
-            sortBy = parts[parts.length - 3].toLowerCase();
-            StringBuilder sb = new StringBuilder();
-            for (int i = 0; i < parts.length - 3; i++) {
-                if (i > 0) sb.append("_");
-                sb.append(parts[i]);
+            String temp = remaining.substring(0, remaining.length() - 7);
+            boolean foundKeyword = false;
+            for (String keyword : keywords) {
+                if (temp.toLowerCase().endsWith("_" + keyword)) {
+                    sortBy = keyword;
+                    remaining = temp.substring(0, temp.length() - keyword.length() - 1);
+                    foundKeyword = true;
+                    break;
+                }
             }
-            raceName = sb.toString();
+            if (!foundKeyword) {
+                // Legacy support or just %elytraracing_<race>_player_<pos>%
+                // In both cases, we sort by time and return player name
+                sortBy = "time";
+                remaining = temp;
+            }
         } else {
-            // %elytraracing_<race>_<stat>_<pos>%
-            sortBy = parts[parts.length - 2].toLowerCase();
-            StringBuilder sb = new StringBuilder();
-            for (int i = 0; i < parts.length - 2; i++) {
-                if (i > 0) sb.append("_");
-                sb.append(parts[i]);
+            for (String keyword : keywords) {
+                if (remaining.toLowerCase().endsWith("_" + keyword)) {
+                    sortBy = keyword;
+                    remaining = remaining.substring(0, remaining.length() - keyword.length() - 1);
+                    break;
+                }
             }
-            raceName = sb.toString();
         }
 
-        // Special case for old %elytraracing_<race>_player_<pos>% which should sort by time
-        if (sortBy.equals("player")) {
-            sortBy = "time";
-            returnPlayer = true;
-        }
+        if (sortBy.isEmpty()) return null;
+
+        String raceName = remaining;
 
         RaceStat stat = plugin.getDatabaseManager().getTopStatByRace(raceName, sortBy, position);
 

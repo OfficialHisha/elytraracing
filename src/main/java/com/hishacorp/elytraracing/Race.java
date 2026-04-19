@@ -115,6 +115,11 @@ public class Race {
             resetTask = null;
         }
 
+        int raceId = -1;
+        try {
+            raceId = plugin.getDatabaseManager().getRaceId(name);
+        } catch (Exception ignored) {}
+
         for (UUID playerUUID : racers.keySet()) {
             Player player = Bukkit.getPlayer(playerUUID);
             if (player == null) {
@@ -123,6 +128,14 @@ public class Race {
 
             if (spawnLocation != null) {
                 player.teleport(spawnLocation);
+            }
+
+            if (raceId != -1) {
+                try {
+                    plugin.getDatabaseManager().incrementRoundsPlayed(playerUUID, raceId);
+                } catch (Exception e) {
+                    plugin.getLogger().severe("Failed to increment rounds played for " + player.getName() + ": " + e.getMessage());
+                }
             }
 
             Racer racer = racers.get(playerUUID);

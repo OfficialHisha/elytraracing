@@ -92,11 +92,14 @@ public class DatabaseManagerTest {
         java.util.UUID uuid2 = java.util.UUID.randomUUID();
 
         // uuid1: better time, worse wins
+        databaseManager.incrementRoundsPlayed(uuid1, raceId);
+        databaseManager.incrementRoundsPlayed(uuid1, raceId);
         databaseManager.saveRaceStat(uuid1, raceId, 1000L, 500L, false);
-        databaseManager.saveRaceStat(uuid1, raceId, 1000L, 500L, false); // rounds = 2, wins = 0, time = 1000
+        databaseManager.saveRaceStat(uuid1, raceId, 1000L, 500L, false); // finishes = 2, wins = 0, time = 1000, rounds = 2
 
         // uuid2: worse time, better wins
-        databaseManager.saveRaceStat(uuid2, raceId, 2000L, 1000L, true); // rounds = 1, wins = 1, time = 2000
+        databaseManager.incrementRoundsPlayed(uuid2, raceId);
+        databaseManager.saveRaceStat(uuid2, raceId, 2000L, 1000L, true); // finishes = 1, wins = 1, time = 2000, rounds = 1
 
         com.hishacorp.elytraracing.persistance.data.RaceStat topTime = databaseManager.getTopStatByRace("test_race", "time", 1);
         assertEquals(uuid1, topTime.getPlayerUUID());

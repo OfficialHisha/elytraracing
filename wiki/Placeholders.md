@@ -25,7 +25,6 @@ When you request a placeholder, the system automatically sorts the leaderboard b
 | `wins` | Total number of first-place finishes. | Highest to Lowest |
 | `rounds` | Total number of times a player started a race. | Highest to Lowest |
 | `finishes` | Total number of times a player finished a race. | Highest to Lowest |
-| `position` | The player's rank on the leaderboard. | Calculated from Stat |
 
 ## Examples
 
@@ -38,7 +37,7 @@ When you request a placeholder, the system automatically sorts the leaderboard b
 | Show how many rounds the top player played in 'SkyDash' | `%elytraracing_SkyDash_rounds_1%` |
 | Show **my** best time in 'SkyDash' | `%elytraracing_SkyDash_time_me%` |
 | Show **my** total wins in 'CanyonRun' | `%elytraracing_CanyonRun_wins_me%` |
-| Show **my rank** (by time) in 'SkyDash' | `%elytraracing_SkyDash_position_me%` |
+| Show **my rank** (by time) in 'SkyDash' | `%elytraracing_SkyDash_time_position_me%` |
 | Show **my rank** for wins in 'CanyonRun' | `%elytraracing_CanyonRun_wins_position_me%` |
 
 ## Note on Race Names

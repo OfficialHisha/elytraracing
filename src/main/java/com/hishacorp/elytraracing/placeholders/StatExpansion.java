@@ -44,6 +44,21 @@ public class StatExpansion extends PlaceholderExpansion {
         if (params.toLowerCase().endsWith("_me")) {
             if (player == null) return "N/A";
             String remaining = params.substring(0, params.length() - 3);
+
+            if (remaining.toLowerCase().endsWith("_position")) {
+                String sub = remaining.substring(0, remaining.length() - 9);
+                String sortBy = "time";
+                for (String keyword : keywords) {
+                    if (sub.toLowerCase().endsWith("_" + keyword)) {
+                        sortBy = keyword;
+                        sub = sub.substring(0, sub.length() - keyword.length() - 1);
+                        break;
+                    }
+                }
+                int rank = plugin.getDatabaseManager().getPlayerRank(sub, player.getUniqueId(), sortBy);
+                return rank == -1 ? "N/A" : String.valueOf(rank);
+            }
+
             for (String keyword : keywords) {
                 if (remaining.toLowerCase().endsWith("_" + keyword)) {
                     String raceName = remaining.substring(0, remaining.length() - keyword.length() - 1);

@@ -115,6 +115,41 @@ public class DatabaseManagerTest {
     }
 
     @Test
+    public void testGetPlayerRank() throws SQLException {
+        World world = MockBukkit.getMock().addSimpleWorld("test_world");
+        databaseManager.createRace("test_race", world.getName());
+        int raceId = databaseManager.getRaceId("test_race");
+
+        java.util.UUID uuid1 = java.util.UUID.randomUUID();
+        java.util.UUID uuid2 = java.util.UUID.randomUUID();
+        java.util.UUID uuid3 = java.util.UUID.randomUUID();
+
+        // uuid1: best time (1000)
+        databaseManager.saveRaceStat(uuid1, raceId, 1000L, 500L, true);
+        // uuid2: second best time (2000)
+        databaseManager.saveRaceStat(uuid2, raceId, 2000L, 1000L, false);
+        // uuid3: third best time (3000)
+        databaseManager.saveRaceStat(uuid3, raceId, 3000L, 1500L, false);
+
+        assertEquals(1, databaseManager.getPlayerRank("test_race", uuid1, "time"));
+        assertEquals(2, databaseManager.getPlayerRank("test_race", uuid2, "time"));
+        assertEquals(3, databaseManager.getPlayerRank("test_race", uuid3, "time"));
+
+        // Test with wins
+        // uuid1: 1 win
+        // uuid2: 0 wins
+        // uuid3: 0 wins
+        assertEquals(1, databaseManager.getPlayerRank("test_race", uuid1, "wins"));
+        assertEquals(2, databaseManager.getPlayerRank("test_race", uuid2, "wins")); // Tied with uuid3, but only uuid1 is better
+
+        // Test non-existent player
+        assertEquals(-1, databaseManager.getPlayerRank("test_race", java.util.UUID.randomUUID(), "time"));
+
+        // Test non-existent race
+        assertEquals(-1, databaseManager.getPlayerRank("non_existent_race", uuid1, "time"));
+    }
+
+    @Test
     public void testGetPlayerStat() throws SQLException {
         World world = MockBukkit.getMock().addSimpleWorld("test_world");
         databaseManager.createRace("test_race", world.getName());

@@ -113,4 +113,30 @@ public class DatabaseManagerTest {
         assertEquals(uuid1, topRounds.getPlayerUUID());
         assertEquals(2, topRounds.getRoundsPlayed());
     }
+
+    @Test
+    public void testGetPlayerStat() throws SQLException {
+        World world = MockBukkit.getMock().addSimpleWorld("test_world");
+        databaseManager.createRace("test_race", world.getName());
+        int raceId = databaseManager.getRaceId("test_race");
+
+        java.util.UUID uuid = java.util.UUID.randomUUID();
+
+        databaseManager.incrementRoundsPlayed(uuid, raceId);
+        databaseManager.saveRaceStat(uuid, raceId, 1500L, 750L, true);
+
+        com.hishacorp.elytraracing.persistance.data.RaceStat stat = databaseManager.getPlayerStat("test_race", uuid);
+
+        assertNotNull(stat);
+        assertEquals(uuid, stat.getPlayerUUID());
+        assertEquals(1500L, stat.getBestTime());
+        assertEquals(750L, stat.getBestLapTime());
+        assertEquals(1, stat.getWins());
+        assertEquals(1, stat.getRoundsPlayed());
+        assertEquals(1, stat.getFinishes());
+
+        // Test non-existent stat
+        assertNull(databaseManager.getPlayerStat("test_race", java.util.UUID.randomUUID()));
+        assertNull(databaseManager.getPlayerStat("non_existent_race", uuid));
+    }
 }

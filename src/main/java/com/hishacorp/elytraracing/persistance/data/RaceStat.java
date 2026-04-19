@@ -7,14 +7,16 @@ public class RaceStat {
     private final long bestTime;
     private final long bestLapTime;
     private final int wins;
-    private final int roundsPlayed;
+    private final int rounds;
+    private final int finishes;
 
-    public RaceStat(UUID playerUUID, long bestTime, long bestLapTime, int wins, int roundsPlayed) {
+    public RaceStat(UUID playerUUID, long bestTime, long bestLapTime, int wins, int rounds, int finishes) {
         this.playerUUID = playerUUID;
         this.bestTime = bestTime;
         this.bestLapTime = bestLapTime;
         this.wins = wins;
-        this.roundsPlayed = roundsPlayed;
+        this.rounds = rounds;
+        this.finishes = finishes;
     }
 
     public UUID getPlayerUUID() {
@@ -34,6 +36,10 @@ public class RaceStat {
     }
 
     public int getRoundsPlayed() {
-        return roundsPlayed;
+        return rounds;
+    }
+
+    public int getFinishes() {
+        return finishes;
     }
 }

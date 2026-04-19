@@ -105,6 +105,10 @@ public class DatabaseManager {
                 stmt.executeUpdate("ALTER TABLE race_stats ADD COLUMN best_lap_time INTEGER;");
             } catch (SQLException ignored) {}
 
+            try {
+                stmt.executeUpdate("ALTER TABLE race_stats ADD COLUMN finishes INTEGER DEFAULT 0;");
+            } catch (SQLException ignored) {}
+
             // Rings
             stmt.executeUpdate("""
                 CREATE TABLE IF NOT EXISTS rings (
@@ -401,13 +405,37 @@ public class DatabaseManager {
         return raceNames;
     }
 
-    public RaceStat getTopTimeByRace(String raceName, int position) {
+    public RaceStat getTopStatByRace(String raceName, String category, int position) {
+        String orderBy;
+        String filter = "";
+        switch (category.toLowerCase()) {
+            case "time":
+                orderBy = "rs.best_time ASC";
+                filter = "AND rs.best_time > 0";
+                break;
+            case "bestlap":
+                orderBy = "rs.best_lap_time ASC";
+                filter = "AND rs.best_lap_time > 0";
+                break;
+            case "wins":
+                orderBy = "rs.wins DESC";
+                break;
+            case "rounds":
+                orderBy = "rs.rounds_played DESC";
+                break;
+            case "finishes":
+                orderBy = "rs.finishes DESC";
+                break;
+            default:
+                return null;
+        }
+
         try (var ps = connection.prepareStatement(
-                "SELECT player_uuid, best_time, best_lap_time, wins, rounds_played FROM race_stats rs " +
+                "SELECT player_uuid, best_time, best_lap_time, wins, rounds_played, finishes FROM race_stats rs " +
                         "JOIN races r ON rs.race_id = r.id " +
-                        "WHERE r.name = ? AND rs.best_time IS NOT NULL " +
-                        "ORDER BY rs.best_time ASC LIMIT 1 OFFSET ?")) {
-            ps.setString(1, raceName);
+                        "WHERE r.name = ? " + filter + " " +
+                        "ORDER BY " + orderBy + " LIMIT 1 OFFSET ?")) {
+            ps.setString(1, raceName.toLowerCase());
             ps.setInt(2, position - 1);
             var rs = ps.executeQuery();
             if (rs.next()) {
@@ -416,11 +444,12 @@ public class DatabaseManager {
                         rs.getLong("best_time"),
                         rs.getLong("best_lap_time"),
                         rs.getInt("wins"),
-                        rs.getInt("rounds_played")
+                        rs.getInt("rounds_played"),
+                        rs.getInt("finishes")
                 );
             }
         } catch (SQLException e) {
-            plugin.getLogger().severe("Failed to get top time by race: " + e.getMessage());
+            plugin.getLogger().severe("Failed to get top stat by race: " + e.getMessage());
         }
         return null;
     }
@@ -439,9 +468,36 @@ public class DatabaseManager {
         }
     }
 
+    public synchronized void incrementRoundsPlayed(UUID playerUuid, int raceId) throws SQLException {
+        try (var ps = connection.prepareStatement(
+                "SELECT id, rounds_played FROM race_stats WHERE race_id = ? AND player_uuid = ?")) {
+            ps.setInt(1, raceId);
+            ps.setString(2, playerUuid.toString());
+            var rs = ps.executeQuery();
+
+            if (rs.next()) {
+                int id = rs.getInt("id");
+                int rounds = rs.getInt("rounds_played");
+                try (var updatePs = connection.prepareStatement(
+                        "UPDATE race_stats SET rounds_played = ? WHERE id = ?")) {
+                    updatePs.setInt(1, rounds + 1);
+                    updatePs.setInt(2, id);
+                    updatePs.executeUpdate();
+                }
+            } else {
+                try (var insertPs = connection.prepareStatement(
+                        "INSERT INTO race_stats (race_id, player_uuid, rounds_played) VALUES (?, ?, 1)")) {
+                    insertPs.setInt(1, raceId);
+                    insertPs.setString(2, playerUuid.toString());
+                    insertPs.executeUpdate();
+                }
+            }
+        }
+    }
+
     public synchronized void saveRaceStat(UUID playerUuid, int raceId, long raceTime, Long bestLapTime, boolean win) throws SQLException {
         try (var ps = connection.prepareStatement(
-                "SELECT id, best_time, best_lap_time, finishes, wins, rounds_played FROM race_stats WHERE race_id = ? AND player_uuid = ?")) {
+                "SELECT id, best_time, best_lap_time, finishes, wins FROM race_stats WHERE race_id = ? AND player_uuid = ?")) {
             ps.setInt(1, raceId);
             ps.setString(2, playerUuid.toString());
             var rs = ps.executeQuery();
@@ -454,7 +510,6 @@ public class DatabaseManager {
                 if (rs.wasNull()) currentBestLap = Long.MAX_VALUE;
                 int finishes = rs.getInt("finishes");
                 int wins = rs.getInt("wins");
-                int rounds = rs.getInt("rounds_played");
 
                 long newBest = Math.min(currentBest, raceTime);
                 long newBestLap = currentBestLap;
@@ -463,7 +518,7 @@ public class DatabaseManager {
                 }
 
                 try (var updatePs = connection.prepareStatement(
-                        "UPDATE race_stats SET best_time = ?, best_lap_time = ?, finishes = ?, wins = ?, rounds_played = ? WHERE id = ?")) {
+                        "UPDATE race_stats SET best_time = ?, best_lap_time = ?, finishes = ?, wins = ? WHERE id = ?")) {
                     updatePs.setLong(1, newBest);
                     if (newBestLap == Long.MAX_VALUE) {
                         updatePs.setNull(2, java.sql.Types.INTEGER);
@@ -472,13 +527,12 @@ public class DatabaseManager {
                     }
                     updatePs.setInt(3, finishes + 1);
                     updatePs.setInt(4, win ? wins + 1 : wins);
-                    updatePs.setInt(5, rounds + 1);
-                    updatePs.setInt(6, id);
+                    updatePs.setInt(5, id);
                     updatePs.executeUpdate();
                 }
             } else {
                 try (var insertPs = connection.prepareStatement(
-                        "INSERT INTO race_stats (race_id, player_uuid, best_time, best_lap_time, finishes, wins, rounds_played) VALUES (?, ?, ?, ?, ?, ?, ?)")) {
+                        "INSERT INTO race_stats (race_id, player_uuid, best_time, best_lap_time, finishes, wins) VALUES (?, ?, ?, ?, 1, ?)")) {
                     insertPs.setInt(1, raceId);
                     insertPs.setString(2, playerUuid.toString());
                     insertPs.setLong(3, raceTime);
@@ -487,9 +541,7 @@ public class DatabaseManager {
                     } else {
                         insertPs.setLong(4, bestLapTime);
                     }
-                    insertPs.setInt(5, 1);
-                    insertPs.setInt(6, win ? 1 : 0);
-                    insertPs.setInt(7, 1);
+                    insertPs.setInt(5, win ? 1 : 0);
                     insertPs.executeUpdate();
                 }
             }

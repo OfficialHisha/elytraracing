@@ -38,22 +38,66 @@ public class StatExpansion extends PlaceholderExpansion {
 
     @Override
     public String onRequest(OfflinePlayer player, @NotNull String params) {
-        String[] parts = params.split("_");
-        if (parts.length != 3) {
+        int lastUnderscore = params.lastIndexOf('_');
+        if (lastUnderscore == -1) return null;
+
+        int position;
+        try {
+            position = Integer.parseInt(params.substring(lastUnderscore + 1));
+        } catch (NumberFormatException e) {
             return null;
         }
 
-        String raceName = parts[0];
-        String type = parts[1];
-        int position = Integer.parseInt(parts[2]);
+        String remaining = params.substring(0, lastUnderscore);
+        String sortBy = "";
+        boolean returnPlayer = false;
 
-        RaceStat stat = plugin.getDatabaseManager().getTopTimeByRace(raceName, position);
+        String[] keywords = {"time", "bestlap", "wins", "rounds", "finishes"};
+
+        if (remaining.toLowerCase().endsWith("_player")) {
+            returnPlayer = true;
+            String temp = remaining.substring(0, remaining.length() - 7);
+            boolean foundKeyword = false;
+            for (String keyword : keywords) {
+                if (temp.toLowerCase().endsWith("_" + keyword)) {
+                    sortBy = keyword;
+                    remaining = temp.substring(0, temp.length() - keyword.length() - 1);
+                    foundKeyword = true;
+                    break;
+                }
+            }
+            if (!foundKeyword) {
+                // Legacy support or just %elytraracing_<race>_player_<pos>%
+                // In both cases, we sort by time and return player name
+                sortBy = "time";
+                remaining = temp;
+            }
+        } else {
+            for (String keyword : keywords) {
+                if (remaining.toLowerCase().endsWith("_" + keyword)) {
+                    sortBy = keyword;
+                    remaining = remaining.substring(0, remaining.length() - keyword.length() - 1);
+                    break;
+                }
+            }
+        }
+
+        if (sortBy.isEmpty()) return null;
+
+        String raceName = remaining;
+
+        RaceStat stat = plugin.getDatabaseManager().getTopStatByRace(raceName, sortBy, position);
 
         if (stat == null) {
             return "N/A";
         }
 
-        switch (type.toLowerCase()) {
+        if (returnPlayer) {
+            OfflinePlayer p = plugin.getServer().getOfflinePlayer(stat.getPlayerUUID());
+            return p.getName() != null ? p.getName() : "Unknown";
+        }
+
+        switch (sortBy) {
             case "time":
                 long time = stat.getBestTime();
                 long minutes = TimeUnit.MILLISECONDS.toMinutes(time);
@@ -62,17 +106,17 @@ public class StatExpansion extends PlaceholderExpansion {
                 return String.format("%02d:%02d.%03d", minutes, seconds, millis);
             case "bestlap":
                 long lapTime = stat.getBestLapTime();
-                if (lapTime == 0) return "N/A";
+                if (lapTime <= 0) return "N/A";
                 long lapMinutes = TimeUnit.MILLISECONDS.toMinutes(lapTime);
                 long lapSeconds = TimeUnit.MILLISECONDS.toSeconds(lapTime) % 60;
                 long lapMillis = lapTime % 1000;
                 return String.format("%02d:%02d.%03d", lapMinutes, lapSeconds, lapMillis);
-            case "player":
-                return plugin.getServer().getOfflinePlayer(stat.getPlayerUUID()).getName();
             case "wins":
                 return String.valueOf(stat.getWins());
-            case "rounds_played":
+            case "rounds":
                 return String.valueOf(stat.getRoundsPlayed());
+            case "finishes":
+                return String.valueOf(stat.getFinishes());
         }
 
         return null;

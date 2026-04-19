@@ -18,3 +18,4 @@ Welcome to the Elytra Racing documentation! This plugin allows you to create and
 3.  [[Race Configuration]] - Adjusting race settings through the dashboard.
 4.  [[Rings and Borders]] - Mastering track management and visualization.
 5.  [[Special Rings]] - How to configure interactive special rings in `config.yml`.
+6.  [[Placeholders]] - Full list of PlaceholderAPI placeholders for leaderboards.

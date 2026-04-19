@@ -454,6 +454,30 @@ public class DatabaseManager {
         return null;
     }
 
+    public synchronized RaceStat getPlayerStat(String raceName, UUID playerUuid) {
+        try (var ps = connection.prepareStatement(
+                "SELECT player_uuid, best_time, best_lap_time, wins, rounds_played, finishes FROM race_stats rs " +
+                        "JOIN races r ON rs.race_id = r.id " +
+                        "WHERE r.name = ? AND rs.player_uuid = ?")) {
+            ps.setString(1, raceName.toLowerCase());
+            ps.setString(2, playerUuid.toString());
+            var rs = ps.executeQuery();
+            if (rs.next()) {
+                return new RaceStat(
+                        UUID.fromString(rs.getString("player_uuid")),
+                        rs.getLong("best_time"),
+                        rs.getLong("best_lap_time"),
+                        rs.getInt("wins"),
+                        rs.getInt("rounds_played"),
+                        rs.getInt("finishes")
+                );
+            }
+        } catch (SQLException e) {
+            plugin.getLogger().severe("Failed to get player stat: " + e.getMessage());
+        }
+        return null;
+    }
+
     public synchronized void resetPlayerStats(UUID playerUuid) throws SQLException {
         try (var ps = connection.prepareStatement("DELETE FROM race_stats WHERE player_uuid = ?")) {
             ps.setString(1, playerUuid.toString());

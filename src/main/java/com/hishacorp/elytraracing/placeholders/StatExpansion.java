@@ -38,6 +38,22 @@ public class StatExpansion extends PlaceholderExpansion {
 
     @Override
     public String onRequest(OfflinePlayer player, @NotNull String params) {
+        String[] keywords = {"time", "bestlap", "wins", "rounds", "finishes"};
+
+        // Handle me stats: %elytraracing_<race>_<stat>_me%
+        if (params.toLowerCase().endsWith("_me")) {
+            if (player == null) return "N/A";
+            String remaining = params.substring(0, params.length() - 3);
+            for (String keyword : keywords) {
+                if (remaining.toLowerCase().endsWith("_" + keyword)) {
+                    String raceName = remaining.substring(0, remaining.length() - keyword.length() - 1);
+                    RaceStat stat = plugin.getDatabaseManager().getPlayerStat(raceName, player.getUniqueId());
+                    if (stat == null) return "N/A";
+                    return formatStat(stat, keyword);
+                }
+            }
+        }
+
         int lastUnderscore = params.lastIndexOf('_');
         if (lastUnderscore == -1) return null;
 
@@ -51,8 +67,6 @@ public class StatExpansion extends PlaceholderExpansion {
         String remaining = params.substring(0, lastUnderscore);
         String sortBy = "";
         boolean returnPlayer = false;
-
-        String[] keywords = {"time", "bestlap", "wins", "rounds", "finishes"};
 
         if (remaining.toLowerCase().endsWith("_player")) {
             returnPlayer = true;
@@ -97,9 +111,14 @@ public class StatExpansion extends PlaceholderExpansion {
             return p.getName() != null ? p.getName() : "Unknown";
         }
 
-        switch (sortBy) {
+        return formatStat(stat, sortBy);
+    }
+
+    private String formatStat(RaceStat stat, String sortBy) {
+        switch (sortBy.toLowerCase()) {
             case "time":
                 long time = stat.getBestTime();
+                if (time <= 0) return "N/A";
                 long minutes = TimeUnit.MILLISECONDS.toMinutes(time);
                 long seconds = TimeUnit.MILLISECONDS.toSeconds(time) % 60;
                 long millis = time % 1000;
@@ -117,8 +136,8 @@ public class StatExpansion extends PlaceholderExpansion {
                 return String.valueOf(stat.getRoundsPlayed());
             case "finishes":
                 return String.valueOf(stat.getFinishes());
+            default:
+                return "N/A";
         }
-
-        return null;
     }
 }

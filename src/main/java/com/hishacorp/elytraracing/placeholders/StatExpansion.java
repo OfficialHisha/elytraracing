@@ -93,10 +93,7 @@ public class StatExpansion extends PlaceholderExpansion {
                 }
             }
             if (!foundKeyword) {
-                // Legacy support or just %elytraracing_<race>_player_<pos>%
-                // In both cases, we sort by time and return player name
-                sortBy = "time";
-                remaining = temp;
+                return null;
             }
         } else {
             for (String keyword : keywords) {

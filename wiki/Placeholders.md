@@ -43,7 +43,3 @@ When you request a placeholder, the system automatically sorts the leaderboard b
 ## Note on Race Names
 
 It is strongly recommended to **not use underscores** in race names. While the system attempts to handle them, race names that end with statistic keywords (e.g., `My_Race_wins`) will cause parsing conflicts and may not work correctly as placeholders.
-
-## Legacy Support
-
-The old placeholder format `%elytraracing_<race>_player_<pos>%` is still supported and defaults to sorting by completion time.

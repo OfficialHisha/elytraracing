@@ -52,7 +52,7 @@ public class StatExpansion extends PlaceholderExpansion {
         String sortBy = "";
         boolean returnPlayer = false;
 
-        String[] keywords = {"time", "bestlap", "wins", "rounds_played", "finishes"};
+        String[] keywords = {"time", "bestlap", "wins", "rounds", "finishes"};
 
         if (remaining.toLowerCase().endsWith("_player")) {
             returnPlayer = true;
@@ -113,7 +113,7 @@ public class StatExpansion extends PlaceholderExpansion {
                 return String.format("%02d:%02d.%03d", lapMinutes, lapSeconds, lapMillis);
             case "wins":
                 return String.valueOf(stat.getWins());
-            case "rounds_played":
+            case "rounds":
                 return String.valueOf(stat.getRoundsPlayed());
             case "finishes":
                 return String.valueOf(stat.getFinishes());

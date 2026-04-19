@@ -420,7 +420,7 @@ public class DatabaseManager {
             case "wins":
                 orderBy = "rs.wins DESC";
                 break;
-            case "rounds_played":
+            case "rounds":
                 orderBy = "rs.rounds_played DESC";
                 break;
             case "finishes":

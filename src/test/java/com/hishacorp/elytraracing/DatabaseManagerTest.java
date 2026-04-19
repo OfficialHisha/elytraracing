@@ -109,7 +109,7 @@ public class DatabaseManagerTest {
         assertEquals(uuid2, topWins.getPlayerUUID());
         assertEquals(1, topWins.getWins());
 
-        com.hishacorp.elytraracing.persistance.data.RaceStat topRounds = databaseManager.getTopStatByRace("test_race", "rounds_played", 1);
+        com.hishacorp.elytraracing.persistance.data.RaceStat topRounds = databaseManager.getTopStatByRace("test_race", "rounds", 1);
         assertEquals(uuid1, topRounds.getPlayerUUID());
         assertEquals(2, topRounds.getRoundsPlayed());
     }
